@@ -14,7 +14,7 @@ cd ~/
 
 ## Get latest changes
 ```
-git pull origin maset
+git pull origin master
 git submodule update --rebase --recursive --remote --init
 ./initial_setup.sh
 ```
