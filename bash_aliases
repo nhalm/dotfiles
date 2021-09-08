@@ -203,7 +203,7 @@ function start_sezzle_db()
 		mkdir $mount_dir
 	fi
 
-	cmd='echo "CREATE DATABASE IF NOT EXISTS card; CREATE DATABASE IF NOT EXISTS marqeta; CREATE DATABASE IF NOT EXISTS nacha; CREATE DATABASE IF NOT EXISTS test; CREATE DATABASE IF NOT EXISTS vault; CREATE DATABASE IF NOT EXISTS sezzle; CREATE DATABASE IF NOT EXISTS sezzle_card; CREATE DATABASE IF NOT EXISTS product_events_test; CREATE DATABASE IF NOT EXISTS product_events; CREATE DATABASE IF NOT EXISTS bank_provider; GRANT ALL ON \`card\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`marqeta\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`nacha\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`product_events_test\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`test\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`product_events\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`sezzle_card\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`sezzle\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`bank_provider\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`vault\`.* TO '\''sezzle'\''@'\''%'\''; " > /docker-entrypoint-initdb.d/init.sql; /usr/local/bin/docker-entrypoint.sh mysqld'
+	cmd='echo "GRANT RELOAD, LOCK TABLES, PROCESS, REPLICATION CLIENT ON *.* TO '\''sezzle'\''@'\''%'\''; CREATE DATABASE IF NOT EXISTS currencycloud; CREATE DATABASE IF NOT EXISTS eft; CREATE DATABASE IF NOT EXISTS card; CREATE DATABASE IF NOT EXISTS marqeta; CREATE DATABASE IF NOT EXISTS nacha; CREATE DATABASE IF NOT EXISTS test; CREATE DATABASE IF NOT EXISTS vault; CREATE DATABASE IF NOT EXISTS sezzle; CREATE DATABASE IF NOT EXISTS sezzle_card; CREATE DATABASE IF NOT EXISTS product_events_test; CREATE DATABASE IF NOT EXISTS product_events; CREATE DATABASE IF NOT EXISTS card_processor; CREATE DATABASE IF NOT EXISTS bank_provider; GRANT ALL ON \`currencycloud\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`eft\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`card\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`marqeta\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`nacha\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`product_events_test\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`test\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`product_events\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`sezzle_card\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`sezzle\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`bank_provider\`.* TO '\''sezzle'\''@'\''%'\''; GRANT ALL ON \`card_processor\`.* TO '\''sezzle'\''@'\''%'\'';  GRANT ALL ON \`vault\`.* TO '\''sezzle'\''@'\''%'\''; " > /docker-entrypoint-initdb.d/init.sql; /usr/local/bin/docker-entrypoint.sh mysqld'
 
 	docker run -d -p 3306:3306 \
 		-e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
@@ -223,7 +223,7 @@ function restart_sezzle_db()
 	start_sezzle_db
 }
 
-function mysql_s() {
+function mysql_local() {
 	docker run --rm \
 		-it \
 		--network=host \
@@ -231,10 +231,23 @@ function mysql_s() {
 		mysql -u sezzle -D sezzle --protocol=tcp -p${MYSQL_PASSWORD}
 }
 
+function mysql_s() {
+	local this_host=${MYSQL_HOST:=localhost}
+	local this_username=${MYSQL_USER:=sezzle}
+
+	echo ${this_host}
+	echo ${this_username}
+
+	docker run --rm \
+		-it \
+		--network=host \
+		mysql:${MYSQL_VERSION} \
+		mysql -h ${this_host} -u ${this_username} --protocol=tcp -p
+}
+
 function mysql_dump() {
 	local this_host=${MYSQL_HOST:=localhost}
 	local this_username=${MYSQL_USER:=sezzle}
-	# local args="--lock-tables=false $@"
 
 	echo ${this_host}
 	echo ${this_username}
@@ -292,6 +305,20 @@ function check_out_elixir_dir()
 		mix prepare
 }
 
+##############
+#            #
+# Go Helpers #
+#            #
+##############
+
+function golangci_lint() {
+	 docker run --rm \
+                -v $(pwd):/app \
+                -v ${GOPATH}/pkg/mod:/go/pkg/mod \
+                -w /app \
+                golangci/golangci-lint:latest golangci-lint run -v
+}
+
 #################
 #               #
 # Miscellaneous #
@@ -322,6 +349,7 @@ function get_platform()
 function aws_mfa(){
 	unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 	local token="$1"
+	local sn=030664766007
 
 	echo -n "MFA Token: "
 	read token
@@ -351,16 +379,37 @@ function login_data_lake() {
 	echo 'You can view your temporary password via `echo $PGPASSWORD`'
 }
 
+
+function login_masked_data() {
+	if [[ -z "${AWS_SESSION_TOKEN}" ]]; then
+		aws_mfa
+	fi
+
+	local result=$(aws redshift get-cluster-credentials \
+			--cluster-identifier data-lake \
+			--db-user ${AWS_USERNAME} \
+			--db-name staging \
+			--duration-seconds 3600 \
+			--auto-create \
+			--db-groups analysis)
+
+	export MASK_USER=$(echo "$result" | jq -r '.DbUser')
+	export MASK_PASS=$(echo "$result" | jq -r '.DbPassword')
+
+	echo 'You can connect via if on the VPN: `pgcli -h data-lake.sezzle.internal -p 5439 -U "$MASK_USER" staging`'
+	echo 'You can view your temporary password via `echo $MASK_PASS`'
+}
+
 function pgcli_rs() {
 	docker run --rm -it \
 		--network=host \
+		-v $(pwd):/shared \
 		-v ${HOME}/.psql_history/:/root/.psql_history/ \
 		-v ${HOME}/.psqlrc:/root/.psqlrc \
 		-e PGUSER \
 		-e PGPASSWORD \
-		postgres:alpine psql dev -h data-lake.sezzle.internal -p 5439
+		postgres:alpine psql dev -h data-lake.sezzle.internal -p 5439 $@
 }
-
 
 function golangci_lint() {
 	docker run --rm \
@@ -368,4 +417,11 @@ function golangci_lint() {
 		-v ${GOPATH}/pkg/mod:/go/pkg/mod \
 		-w /app \
 		golangci/golangci-lint:latest-alpine golangci-lint run -v
+}
+
+function xgolangci_lint() {
+	docker run --rm \
+		-v $(pwd):/builds/pkg/sezgateway/.git/ \
+		registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine \
+		golangci-lint run --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
 }
