@@ -37,10 +37,6 @@ function _install_brew() {
 	fi
 }
 
-function _install_node() {
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
-}
-
 function _install_yarn() {
 	npm install -g yarn
 }
@@ -58,7 +54,7 @@ function _install_vs_code_brew() {
 	code --install-extension neilding.language-liquid
 	code --install-extension william-voyek.vscode-nginx
 	code --install-extension ms-azuretools.vscode-docker
-	code --install-extension jdinhlife.gruvbox 
+	code --install-extension jdinhlife.gruvbox
 }
 
 function _install_docker_brew() {
@@ -97,50 +93,62 @@ function _mac() {
 
 
 	# Install other useful binaries.
-	brew install neovim \
-		git \
-		ack \
-		git-lfs \
-		gs \
-		lua \
-		lynx \
-		p7zip \
-		pigz \
-		pv \
-		rename \
-		rlwrap \
-		ssh-copy-id \
-		tree \
-		vbindiff \
-		zopfli \
-		tmux \
-		openssh \
-		grep \
-		golang \
-		adoptopenjdk \
-		google-chrome \
-		dbeaver-community \
-		postman \
-		slack \
-		iterm2 \
-		zoom \
-		spotify \
-		1password \
-		dialpad \
-		openvpn-connect \
-		ngrok \
-		adobe-acrobat-reader \
-		google-drive
+	brew install neovim
+	brew install git
+	brew install ack
+	brew install git-lfs
+	brew install gs
+	brew install lua
+	brew install lynx
+	brew install p7zip
+	brew install pigz
+	brew install pv
+	brew install rename
+	brew install rlwrap
+	brew install ssh-copy-id
+	brew install tree
+	brew install vbindiff
+	brew install zopfli
+	brew install tmux
+	brew install openssh
+	brew install grep
+	brew install golang
+	brew install adoptopenjdk
+	brew install google-chrome
+	brew install brew install
+	brew install dbeaver-community
+	brew install slack
+	brew install iterm2
+	brew install zoom
+	brew install spotify
+	brew install 1password
+	brew install dialpad
+	brew install openvpn-connect
+	brew install ngrok
+	brew install adobe-acrobat-reader
+	brew install google-drive
+	brew install node
+	brew install slack
+	brew install 1password
+	brew install brave-browser
+	brew install evernote
+	brew install aws-vault
+	brew install awscli
+	brew install jq
 
+	brew install homebrew/cask-fonts/font-jetbrains-mono
+	brew install homebrew/cask-fonts/font-hack-nerd-font
+	brew install homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font
+	brew install homebrew/cask-fonts/font-fira-code-nerd-font
+	brew install homebrew/cask-fonts/font-inconsolata-nerd-font
 
 	_install_vs_code_brew
 	_install_docker_brew
+	_install_yarn
 
 	# Remove outdated versions from the cellar.
 	brew cleanup	
 
-	_install_node
-	_install_yarn
 }
 
 _setup_platform
