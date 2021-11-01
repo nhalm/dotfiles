@@ -1,6 +1,7 @@
 local M = {}
 
 local lsp_providers = {
+    bashls = true,
     gopls = true,
     sumneko_lua = true,
 }
