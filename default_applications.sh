@@ -135,6 +135,7 @@ function _mac() {
 	brew install aws-vault
 	brew install awscli
 	brew install jq
+	brew install stow
 
 	brew install homebrew/cask-fonts/font-jetbrains-mono
 	brew install homebrew/cask-fonts/font-hack-nerd-font
