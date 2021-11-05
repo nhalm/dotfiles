@@ -3,3 +3,4 @@
 !vim/autoload
 /tmux/*
 !/tmux/plugins/tpm
+/nvim/.config/nvim/lua/packer_compiled.lua
