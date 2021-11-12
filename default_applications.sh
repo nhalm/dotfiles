@@ -93,6 +93,8 @@ function _mac() {
 
 
 	# Install other useful binaries.
+	# I would do a single command but it seems that 
+	# brew doesn't appreciate many applications at once. 🤷
 	brew install neovim
 	brew install git
 	brew install ack
@@ -136,6 +138,7 @@ function _mac() {
 	brew install awscli
 	brew install jq
 	brew install stow
+	brew install webex
 
 	brew install homebrew/cask-fonts/font-jetbrains-mono
 	brew install homebrew/cask-fonts/font-hack-nerd-font

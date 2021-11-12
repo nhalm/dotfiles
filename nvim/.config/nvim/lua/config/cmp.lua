@@ -31,7 +31,7 @@ function M.setup()
           path = "[Path]",
           spell = "[Spell]",
           calc = "[Calc]",
-          emoji = "[Emoji]",
+          -- emoji = "[Emoji]",
           treesitter = "[treesitter]",
           neorg = "[Neorg]",
         })[entry.source.name]
@@ -103,10 +103,10 @@ function M.setup()
     sources = {
       { name = "buffer" },
       { name = "nvim_lsp" },
-      { name = "ultisnips" },
+      -- { name = "ultisnips" },
       { name = "nvim_lua" },
       { name = "path" },
-      { name = "emoji" },
+      -- { name = "emoji" },
       { name = "treesitter" },
       { name = "neorg" },
       { name = "crates" },

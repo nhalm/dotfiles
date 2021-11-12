@@ -172,23 +172,32 @@ function M.setup()
     -- LSP config
     use { "williamboman/nvim-lsp-installer" }
     use { "jose-elias-alvarez/null-ls.nvim" }
-    use {
-      "tamago324/nlsp-settings.nvim",
-      event = "BufReadPre",
-      config = function()
-        require("config.nlsp-settings").setup()
-      end,
-    }
+    -- use {
+    --   "tamago324/nlsp-settings.nvim",
+    --   event = "BufReadPre",
+    --   config = function()
+    --     require("config.nlsp-settings").setup()
+    --   end,
+    -- }
     use {
       "neovim/nvim-lspconfig",
       opt = true,
       event = "BufReadPre",
+      requires = {
+        "ray-x/go.nvim",
+      },
       config = function()
         require("config.lsp").setup()
       end,
     }
 
-
+    -- use {
+    --   "ray-x/go.nvim",
+    --   event = "BufWritePre",
+    --   config = function()
+    --     -- require('config.go').setup()
+    --   end,
+    -- }
     -- Completion - use either one of this
     use {
       "hrsh7th/nvim-cmp",
@@ -258,7 +267,7 @@ function M.setup()
     use {
       "folke/todo-comments.nvim",
       cmd = { "TodoTrouble", "TodoTelescope" },
-      event = "BufReadPost",
+      -- event = "BufReadPost",
       config = function()
         require("todo-comments").setup {}
       end,
@@ -283,7 +292,7 @@ function M.setup()
     -- }
     use {
       "SirVer/ultisnips",
-      requires = { "honza/vim-snippets" },
+      requires = { { "honza/vim-snippets", rtp = "." } },
       event = "VimEnter",
       config = function()
         vim.g.UltiSnipsRemoveSelectModeMappings = 0
@@ -345,12 +354,12 @@ function M.setup()
     }
 
     -- Dashboard
---     use {
---       "glepnir/dashboard-nvim",
---       config = function()
---         require("config.dashboard").setup()
---       end,
---     }
+    use {
+      "glepnir/dashboard-nvim",
+      config = function()
+        require("config.dashboard").setup()
+      end,
+    }
 
     -- use {
     --   "goolord/alpha-nvim",
@@ -476,7 +485,7 @@ function M.setup()
       config = function()
         require("better_escape").setup()
       end,
-      event = "InsertEnter",
+      -- event = "InsertEnter",
     }
 
     use { "rhysd/vim-grammarous", ft = {"markdown"}}
