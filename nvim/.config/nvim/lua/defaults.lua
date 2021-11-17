@@ -32,7 +32,7 @@ function M.setup()
   o.history = 100
   o.lazyredraw = true
   o.synmaxcol = 240
-  o.mouse = "a"
+  -- o.mouse = "a" -- this is crazy annoying.
   wo.number = true
   wo.relativenumber = false
   wo.scrolloff = 8
