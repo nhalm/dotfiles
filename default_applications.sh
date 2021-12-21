@@ -1,20 +1,12 @@
 #!/usr/bin/env bash
 
-platform=""
-
 function _setup_platform() {
-	local unameOut="$(uname -s)"
-
-	case "${unameOut}" in
-	    Linux*)     platform=Linux
-		    	_linux
-			;;
-	    Darwin*)    platform=Mac
-		    	_mac
-			;;
-	    CYGWIN*)    platform=Cygwin;;
-	    MINGW*)     platform=MinGw;;
-	    *)          platform="UNKNOWN:${unameOut}"
+	case "$(uname -s)" in
+	    Linux*) _linux;;
+	    Darwin*) _mac;;
+	    CYGWIN*) echo "cygwin not supported";;
+	    MINGW*) echo "MinGw not supported";;
+		*)      echo "$(uname -s)  not supported"
 	esac
 }
 
@@ -66,7 +58,7 @@ function _install_docker_brew() {
 function _mac() {
 	_install_brew
 
-	local brew_prefix=$(brew --prefix)
+	brew_prefix=$(brew --prefix)
 
 	echo "Upgrading Brew"
 	brew upgrade
@@ -86,7 +78,7 @@ function _mac() {
 		bash-completion
 
 	# Switch to using brew-installed bash as default shell
-	if ! fgrep -q "${brew_prefix}/bin/bash" /etc/shells; then
+	if ! grep -Fq "${brew_prefix}/bin/bash" /etc/shells; then
 		echo "${brew_prefix}/bin/bash" | sudo tee -a /etc/shells;
 		chsh -s "${brew_prefix}/bin/bash";
 	fi;
@@ -139,6 +131,7 @@ function _mac() {
 	brew install jq
 	brew install stow
 	brew install webex
+	brew install wget
 
 	brew install homebrew/cask-fonts/font-jetbrains-mono
 	brew install homebrew/cask-fonts/font-hack-nerd-font
@@ -150,9 +143,13 @@ function _mac() {
 	_install_docker_brew
 	_install_yarn
 
+
+	yarn global add @fsouza/prettierd \
+		eslind_d \
+		shellcheck
+
 	# Remove outdated versions from the cellar.
 	brew cleanup	
-
 }
 
 _setup_platform

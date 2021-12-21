@@ -4,6 +4,7 @@ local lsp_providers = {
     bashls = true,
     gopls = true,
     sumneko_lua = true,
+    yamlls = true,
 }
 
 local function setup_servers()
