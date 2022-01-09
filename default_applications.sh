@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
+ARM64=false
+
 function _setup_platform() {
 	case "$(uname -s)" in
 	    Linux*) _linux;;
-	    Darwin*) _mac;;
+	    Darwin*) 
+		if [[ `uname -m` == 'arm64' ]]; then
+			ARM64=true
+		fi
+		_mac;;
 	    CYGWIN*) echo "cygwin not supported";;
 	    MINGW*) echo "MinGw not supported";;
 		*)      echo "$(uname -s)  not supported"
@@ -27,10 +33,12 @@ function _install_brew() {
 	else
 		brew update
 	fi
+	eval "$(/opt/homebrew/bin/brew shellenv)"
 }
 
 function _install_yarn() {
 	npm install -g yarn
+	export PATH="$(yarn global bin):$PATH"
 }
 
 function _install_vs_code_brew() {
@@ -78,11 +86,19 @@ function _mac() {
 		bash-completion
 
 	# Switch to using brew-installed bash as default shell
-	if ! grep -Fq "${brew_prefix}/bin/bash" /etc/shells; then
-		echo "${brew_prefix}/bin/bash" | sudo tee -a /etc/shells;
-		chsh -s "${brew_prefix}/bin/bash";
-	fi;
+#	if ! grep -Fq "${brew_prefix}/bin/bash" /etc/shells; then
+#		echo "${brew_prefix}/bin/bash" | sudo tee -a /etc/shells;
+#		chsh -s "${brew_prefix}/bin/bash";
+#	fi;
 
+
+	chsh -s /bin/zsh
+
+	if [[ ARM64 == false ]]; then
+		brew install adoptopenjdk
+	else
+		brew install openjdk
+	fi
 
 	# Install other useful binaries.
 	# I would do a single command but it seems that 
@@ -107,7 +123,6 @@ function _mac() {
 	brew install openssh
 	brew install grep
 	brew install golang
-	brew install adoptopenjdk
 	brew install google-chrome
 	brew install brew install
 	brew install dbeaver-community
@@ -132,6 +147,7 @@ function _mac() {
 	brew install stow
 	brew install webex
 	brew install wget
+	brew install starship
 
 	brew install homebrew/cask-fonts/font-jetbrains-mono
 	brew install homebrew/cask-fonts/font-hack-nerd-font
@@ -145,7 +161,7 @@ function _mac() {
 
 
 	yarn global add @fsouza/prettierd \
-		eslind_d \
+		eslint \
 		shellcheck
 
 	# Remove outdated versions from the cellar.
