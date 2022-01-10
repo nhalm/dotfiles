@@ -107,18 +107,18 @@ function _mac() {
 	brew install git
 	brew install ack
 	brew install git-lfs
-	brew install gs
+	# brew install gs
 	brew install lua
-	brew install lynx
+	# brew install lynx
 	brew install p7zip
-	brew install pigz
+	# brew install pigz
 	brew install pv
-	brew install rename
-	brew install rlwrap
-	brew install ssh-copy-id
+	# brew install rename
+	# brew install rlwrap
+	# brew install ssh-copy-id
 	brew install tree
-	brew install vbindiff
-	brew install zopfli
+	# brew install vbindiff
+	# brew install zopfli
 	brew install tmux
 	brew install openssh
 	brew install grep
@@ -131,10 +131,10 @@ function _mac() {
 	brew install zoom
 	brew install spotify
 	brew install 1password
-	brew install dialpad
-	brew install openvpn-connect
+	# brew install dialpad
+	# brew install openvpn-connect
 	brew install ngrok
-	brew install adobe-acrobat-reader
+	# brew install adobe-acrobat-reader
 	brew install google-drive
 	brew install node
 	brew install slack
