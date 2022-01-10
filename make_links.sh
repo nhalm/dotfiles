@@ -5,4 +5,4 @@ echo "stow-ing configuration"
 stow nvim
 stow home
 stow iterm2
-stow statship
+stow starship
