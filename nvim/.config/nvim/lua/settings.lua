@@ -8,7 +8,7 @@ function M.auto_cmds()
   ]]
   vim.g.material_terminal_italics = 1
   vim.g.material_theme_style = ' palenight'
-  vim.cmd 'colorscheme material'
+  vim.cmd 'colorscheme sonokai'
 
   -- Highlight on yank
   -- cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'

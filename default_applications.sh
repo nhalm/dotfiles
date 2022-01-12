@@ -71,7 +71,7 @@ function _mac() {
 	echo "Upgrading Brew"
 	brew upgrade
 
-	brew install openssl@1.1
+	brew install openssl
 	# Install GNU core utilities
 	brew install coreutils
 
@@ -82,10 +82,9 @@ function _mac() {
 	# Install GNU `sed`, overwriting the built-in `sed`.
 	brew install gnu-sed
 	# Install a modern version of Bash.
-	brew install bash \
-		bash-completion
+	# brew install bash \
+	# 	bash-completion
 
-	# Switch to using brew-installed bash as default shell
 #	if ! grep -Fq "${brew_prefix}/bin/bash" /etc/shells; then
 #		echo "${brew_prefix}/bin/bash" | sudo tee -a /etc/shells;
 #		chsh -s "${brew_prefix}/bin/bash";
@@ -162,7 +161,8 @@ function _mac() {
 
 	yarn global add @fsouza/prettierd \
 		eslint \
-		shellcheck
+		shellcheck \
+		neovim
 
 	# Specify the preferences directory
 	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "~/.config/iterm2/"

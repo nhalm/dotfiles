@@ -44,10 +44,10 @@ export VISUAL='nvim'
 
 # platform specific setups
 if [[ ${PLATFORM} == "Mac" ]]; then
-	OPENSSL_VERSION="1.1"
-	#For compilers to find things you may need to set:
-	export LDFLAGS="-L/usr/local/opt/gettext/lib -L/usr/local/opt/openssl@${OPENSSL_VERSION}/lib"
-	export CPPFLAGS="-I/usr/local/opt/gettext/include -I/usr/local/opt/openssl${OPENSSL_VERSION}/include"
+	#OPENSSL_VERSION="1.1"
+	##For compilers to find things you may need to set:
+	#export LDFLAGS="-L/usr/local/opt/gettext/lib -L/usr/local/opt/openssl@${OPENSSL_VERSION}/lib"
+	#export CPPFLAGS="-I/usr/local/opt/gettext/include -I/usr/local/opt/openssl${OPENSSL_VERSION}/include"
 
 	# if we are originating from a tmux session 
 	# we do not need to rebuild the path.
@@ -76,5 +76,7 @@ if type nvim > /dev/null 2>&1; then
 	alias vi='nvim'
 	alias vim='nvim'
 fi
+
+if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
 eval "$(starship init zsh)"
