@@ -26,14 +26,15 @@ function _error_exit() {
 }
 
 function _install_brew() {
+	eval "$(/opt/homebrew/bin/brew shellenv)"
 	which -s brew
 	if [[ $? != 0 ]]; then
 		echo "installing brew"
 		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+	eval "$(/opt/homebrew/bin/brew shellenv)"
 	else
 		brew update
 	fi
-	eval "$(/opt/homebrew/bin/brew shellenv)"
 }
 
 function _install_yarn() {
@@ -66,7 +67,7 @@ function _install_docker_brew() {
 function _mac() {
 	_install_brew
 
-	brew_prefix=$(brew --prefix)
+#	brew_prefix=$(brew --prefix)
 
 	echo "Upgrading Brew"
 	brew upgrade
@@ -172,6 +173,7 @@ function _mac() {
 
 	# Remove outdated versions from the cellar.
 	brew cleanup	
+
 }
 
 _setup_platform
