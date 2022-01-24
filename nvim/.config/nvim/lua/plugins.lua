@@ -1,5 +1,4 @@
 local M = {}
-
 function M.setup()
   local packer = require "packer"
 
@@ -13,7 +12,7 @@ function M.setup()
     -- Packer can manage itself as an optional plugin
     use {
       "wbthomason/packer.nvim",
-      opt = true,
+      -- opt = true,
     }
 
     use { "nvim-lua/plenary.nvim" }
