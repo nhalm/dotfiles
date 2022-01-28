@@ -25,6 +25,8 @@ PLATFORM=$(_get_platform)
 
 # handle adding brew to path
 eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(pyenv init --path)"
+eval "$(frum init)"
 
 # add yarn to path
 export PATH="$(yarn global bin):$PATH"
@@ -48,6 +50,13 @@ if [[ ${PLATFORM} == "Mac" ]]; then
 	##For compilers to find things you may need to set:
 	#export LDFLAGS="-L/usr/local/opt/gettext/lib -L/usr/local/opt/openssl@${OPENSSL_VERSION}/lib"
 	#export CPPFLAGS="-I/usr/local/opt/gettext/include -I/usr/local/opt/openssl${OPENSSL_VERSION}/include"
+
+	## Ruby stuff
+	# export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+	# export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
+	# export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
+	# export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
+
 
 	# if we are originating from a tmux session 
 	# we do not need to rebuild the path.

@@ -53,6 +53,8 @@ function M.setup()
     - "2" -- I'm not in gradeschool anymore
 
   -- g.python3_host_prog = "/usr/local/bin/python3"
+  -- g.python_host_prog = "/usr/local/bin/python"
+  -- g.python_host_prog  = '/path/to/python'
   g.loaded_python_provider = 0
   g.vim_markdown_fenced_languages = { "html", "javascript", "typescript", "css", "python", "lua", "vim" }
 end

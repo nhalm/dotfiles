@@ -81,21 +81,21 @@ function M.setup()
       end,
     }
    -- use {'chrisbra/NrrwRgn'}
---    use {
---      "kyazdani42/nvim-tree.lua",
---      cmd = { "NvimTreeToggle", "NvimTreeClose" },
---      config = function()
---        require("nvim-tree").setup {}
---      end,
---    }
---    use { "windwp/nvim-spectre", event = "VimEnter" }
---    use {
---      "ruifm/gitlinker.nvim",
---      event = "VimEnter",
---      config = function()
---        require("gitlinker").setup()
---      end,
---    }
+   use {
+     "kyazdani42/nvim-tree.lua",
+     cmd = { "NvimTreeToggle", "NvimTreeClose" },
+     config = function()
+       require("nvim-tree").setup {}
+     end,
+   }
+   use { "windwp/nvim-spectre", event = "VimEnter" }
+   use {
+     "ruifm/gitlinker.nvim",
+     event = "VimEnter",
+     config = function()
+       require("gitlinker").setup()
+     end,
+   }
 --    -- use {
 --    --   "rmagatti/session-lens",
 --    --   requires = { "rmagatti/auto-session" },
@@ -305,14 +305,14 @@ function M.setup()
 --    --         'golang/vscode-go', 'rust-lang/vscode-rust'
 --    --     }
 --    -- }
---    use {
---      "SirVer/ultisnips",
---      requires = { { "honza/vim-snippets", rtp = "." } },
---      event = "VimEnter",
---      config = function()
---        vim.g.UltiSnipsRemoveSelectModeMappings = 0
---      end,
---    }
+   use {
+     "SirVer/ultisnips",
+     requires = { { "honza/vim-snippets", rtp = "." } },
+     event = "VimEnter",
+     config = function()
+       vim.g.UltiSnipsRemoveSelectModeMappings = 0
+     end,
+   }
     -- Lua development
     use { "folke/lua-dev.nvim", event = "VimEnter" }
 -- ----    use {

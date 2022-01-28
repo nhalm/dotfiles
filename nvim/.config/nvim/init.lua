@@ -4,7 +4,7 @@ vim.g.maplocalleader = ","
 
 local cmd = vim.cmd
 
-pcall(require, "imaptient")
+pcall(require, "impatient")
 
 if require "config.first_load"() then
 	return
