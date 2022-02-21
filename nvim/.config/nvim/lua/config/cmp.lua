@@ -24,7 +24,7 @@ function M.setup()
         vim_item.menu = ({
           buffer = "[Buffer]",
           nvim_lsp = "[LSP]",
-          ultisnips = "[UltiSnips]",
+          -- ultisnips = "[UltiSnips]",
           nvim_lua = "[Lua]",
           cmp_tabnine = "[TabNine]",
           look = "[Look]",
@@ -52,9 +52,9 @@ function M.setup()
       },
       ["<C-Space>"] = cmp.mapping(function(fallback)
         if cmp.visible() then
-          if vim.fn["UltiSnips#CanExpandSnippet"]() == 1 then
-            return press "<C-R>=UltiSnips#ExpandSnippet()<CR>"
-          end
+          -- if vim.fn["UltiSnips#CanExpandSnippet"]() == 1 then
+          --   return press "<C-R>=UltiSnips#ExpandSnippet()<CR>"
+          -- end
 
           cmp.select_next_item()
         elseif has_any_words_before() then
@@ -67,10 +67,11 @@ function M.setup()
         "s",
       }),
       ["<Tab>"] = cmp.mapping(function(fallback)
-        if vim.fn.complete_info()["selected"] == -1 and vim.fn["UltiSnips#CanExpandSnippet"]() == 1 then
-          press "<C-R>=UltiSnips#ExpandSnippet()<CR>"
-        elseif vim.fn["UltiSnips#CanJumpForwards"]() == 1 then
-          press "<ESC>:call UltiSnips#JumpForwards()<CR>"
+        -- if vim.fn.complete_info()["selected"] == -1 and vim.fn["UltiSnips#CanExpandSnippet"]() == 1 then
+        --   press "<C-R>=UltiSnips#ExpandSnippet()<CR>"
+        -- elseif vim.fn["UltiSnips#CanJumpForwards"]() == 1 then
+        --   press "<ESC>:call UltiSnips#JumpForwards()<CR>"
+        if false then
         elseif cmp.visible() then
           cmp.select_next_item()
         elseif has_any_words_before() then
@@ -83,8 +84,9 @@ function M.setup()
         "s",
       }),
       ["<S-Tab>"] = cmp.mapping(function(fallback)
-        if vim.fn["UltiSnips#CanJumpBackwards"]() == 1 then
-          press "<ESC>:call UltiSnips#JumpBackwards()<CR>"
+        -- if vim.fn["UltiSnips#CanJumpBackwards"]() == 1 then
+        --   press "<ESC>:call UltiSnips#JumpBackwards()<CR>"
+        if false then
         elseif cmp.visible() then
           cmp.select_prev_item()
         else
@@ -97,7 +99,7 @@ function M.setup()
     },
     snippet = {
       expand = function(args)
-        vim.fn["UltiSnips#Anon"](args.body)
+        -- vim.fn["UltiSnips#Anon"](args.body)
       end,
     },
     sources = {
@@ -112,7 +114,7 @@ function M.setup()
       { name = "crates" },
       -- { name = "look" },
       -- { name = "calc" },
-      -- { name = "spell" },
+      { name = "spell" },
       -- {name = 'cmp_tabnine'}
     },
     completion = { completeopt = "menu,menuone,noinsert" },
@@ -122,6 +124,8 @@ function M.setup()
   local cmp_autopairs = require "nvim-autopairs.completion.cmp"
   local cmp = require "cmp"
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done { map_char = { tex = "" } })
+  -- add a lisp filetype (wrap my-function), FYI: Hardcoded = { "clojure", "clojurescript", "fennel", "janet" }
+  cmp_autopairs.lisp[#cmp_autopairs.lisp+1] = "racket"
 
   -- TabNine
   -- local tabnine = require "cmp_tabnine.config"

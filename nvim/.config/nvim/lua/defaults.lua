@@ -38,6 +38,8 @@ function M.setup()
   wo.scrolloff = 8
   wo.cursorline = true
   opt.pumblend = 17
+  opt.spell = false
+  opt.spelllang = { 'en_us' }
 
   opt.formatoptions = opt.formatoptions
     - "a" -- Auto formatting is BAD.
@@ -50,7 +52,10 @@ function M.setup()
     + "j" -- Auto-remove comments if possible.
     - "2" -- I'm not in gradeschool anymore
 
-  g.python3_host_prog = "/usr/local/bin/python3"
+  -- g.python3_host_prog = "/usr/local/bin/python3"
+  -- g.python_host_prog = "/usr/local/bin/python"
+  -- g.python_host_prog  = '/path/to/python'
+  g.loaded_python_provider = 0
   g.vim_markdown_fenced_languages = { "html", "javascript", "typescript", "css", "python", "lua", "vim" }
 end
 
