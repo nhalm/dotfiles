@@ -23,17 +23,15 @@ function _get_platform()
 
 PLATFORM=$(_get_platform)
 
-# handle adding brew to path
-eval "$(/opt/homebrew/bin/brew shellenv)"
-eval "$(pyenv init --path)"
-eval "$(frum init)"
-
 # add yarn to path
-export PATH="$(yarn global bin):$PATH"
+if [[ ${PLATFORM} == "Mac" ]]; then
+	export PATH="$(yarn global bin):$PATH"
+fi
 
 # handle setting up Golang
 GOPATH=$HOME/go
 export GOPATH=$GOPATH
+export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:$GOPATH/bin
 
 if [ ! -d $GOPATH ]; then
@@ -44,8 +42,15 @@ fi
 export EDITOR='nvim'
 export VISUAL='nvim'
 
+if [[ ${PLATFORM} == "Linux" ]]; then
+	# export PATH=$HOME/.fnm:$PATH
+fi
+
 # platform specific setups
 if [[ ${PLATFORM} == "Mac" ]]; then
+	# handle adding brew to path
+	eval "$(/opt/homebrew/bin/brew shellenv)"
+
 	#OPENSSL_VERSION="1.1"
 	##For compilers to find things you may need to set:
 	#export LDFLAGS="-L/usr/local/opt/gettext/lib -L/usr/local/opt/openssl@${OPENSSL_VERSION}/lib"
@@ -65,6 +70,11 @@ if [[ ${PLATFORM} == "Mac" ]]; then
 		export PATH="$PATH:/usr/local/opt/libpq/bin"
 		export PATH="$PATH:$HOME/.cargo/bin"
 	fi
+fi
+
+if [[ ${PLATFORM} == "Mac" ]]; then
+	eval "$(pyenv init --path)"
+	eval "$(frum init)"
 fi
 
 MY_SSH_AUTH_SOCK=${HOME}/.ssh/ssh_auth_sock
@@ -88,4 +98,10 @@ fi
 
 if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
-eval "$(starship init zsh)"
+# if [[ ${PLATFORM} == "Mac" ]]; then
+	eval "$(starship init zsh)"
+# fi
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

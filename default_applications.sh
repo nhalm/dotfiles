@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
 ARM64=false
+PLATFORM=""
 
 function _setup_platform() {
 	case "$(uname -s)" in
-	    Linux*) _linux;;
+	    Linux*) 
+		    PLATFORM="Linux"
+		    _linux;;
 	    Darwin*) 
 		if [[ `uname -m` == 'arm64' ]]; then
 			ARM64=true
 		fi
+		PLATFORM="Mac"
 		_mac;;
 	    CYGWIN*) echo "cygwin not supported";;
 	    MINGW*) echo "MinGw not supported";;
@@ -38,8 +42,10 @@ function _install_brew() {
 }
 
 function _install_yarn() {
-	npm install -g yarn
-	export PATH="$(yarn global bin):$PATH"
+	if [[ $PLATFORM == "Mac" ]]; then
+		npm install --global yarn
+		export PATH="$(yarn global bin):$PATH"
+	fi
 
 	yarn global add @fsouza/prettierd \
 		eslint \
@@ -69,7 +75,7 @@ function _install_docker_brew() {
 	ln -s /Applications/Docker.app/Contents/Resources/bin/docker /usr/local/bin/
 }
 
-function _install_python() {
+function _install_python_brew() {
 	brew install pyenv
 
 	eval "$(pyenv init --path)"
@@ -85,7 +91,7 @@ function _install_python() {
 	python3 -m pip install --user --upgrade pynvim
 }
 
-function _install_ruby() {
+function _install_ruby_brew() {
 	brew install frum
 	
 	local ruby_version="3.1.0"
@@ -106,6 +112,70 @@ function _install_ruby() {
 
 }
 
+function _install_node_fnm() {
+	curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "./.fnm" --skip-shell
+}
+
+function _install_nvm() {
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+	export NVM_DIR="$HOME/.nvm"
+	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+	nvm install lts/gallium
+	corepack enable
+}
+
+function _add_1password_apt() {
+	# Add the key for the 1Password apt repository
+	curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+	# Add the 1Password apt repository
+	echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | sudo tee /etc/apt/sources.list.d/1password.list
+
+	# Add the debsig-verify policy
+	sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+	curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+	sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+	curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+}
+
+function _install_golang() {
+	version=1.17.8
+	curl -OL https://golang.org/dl/go${version}.linux-amd64.tar.gz
+	sudo tar -C /usr/local -xvf go${version}.linux-amd64.tar.gz
+	rm go${version}.linux-amd64.tar.gz
+}
+
+function _linux() {
+	sudo add-apt-repository ppa:neovim-ppa/unstable
+	_add_1password_apt
+
+	sudo apt update \
+		&& sudo apt upgrade -y \
+		&& sudo apt install -y \
+			git \
+			lua5.3 \
+			neovim \
+			tree \
+			tmux \
+			jq \
+			stow \
+			curl \
+			ca-certificates \
+			wget \
+			zsh \
+			1password \
+			fonts-firacode
+
+	
+
+	curl -fsSL https://starship.rs/install.sh | sh
+	chsh -s /usr/bin/zsh root
+
+	_install_golang
+	_install_nvm	
+	_install_yarn
+}
+
 function _mac() {
 	_install_brew
 
@@ -114,8 +184,8 @@ function _mac() {
 
 	# get these before python to make the install faster
 	brew install openssl readline
-	_install_python
-	_install_ruby
+	_install_python_brew
+	_install_ruby_brew
 
 	brew install openssl
 	# Install GNU core utilities
