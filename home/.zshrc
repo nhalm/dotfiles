@@ -31,6 +31,7 @@ fi
 # handle setting up Golang
 GOPATH=$HOME/go
 export GOPATH=$GOPATH
+export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:$GOPATH/bin
 
 if [ ! -d $GOPATH ]; then

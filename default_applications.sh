@@ -138,6 +138,13 @@ function _add_1password_apt() {
 	curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
 }
 
+function _install_golang() {
+	version=1.17.8
+	curl -OL https://golang.org/dl/go${version}.linux-amd64.tar.gz
+	sudo tar -C /usr/local -xvf go${version}.linux-amd64.tar.gz
+	rm go${version}.linux-amd64.tar.gz
+}
+
 function _linux() {
 	sudo add-apt-repository ppa:neovim-ppa/unstable
 	_add_1password_apt
@@ -164,6 +171,7 @@ function _linux() {
 	curl -fsSL https://starship.rs/install.sh | sh
 	chsh -s /usr/bin/zsh root
 
+	_install_golang
 	_install_nvm	
 	_install_yarn
 }
