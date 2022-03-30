@@ -50,7 +50,8 @@ function _install_yarn() {
 	yarn global add @fsouza/prettierd \
 		eslint \
 		shellcheck \
-		neovim
+		neovim \
+		intelephense
 }
 
 function _install_vs_code_brew() {
@@ -143,6 +144,45 @@ function _install_golang() {
 	curl -OL https://golang.org/dl/go${version}.linux-amd64.tar.gz
 	sudo tar -C /usr/local -xvf go${version}.linux-amd64.tar.gz
 	rm go${version}.linux-amd64.tar.gz
+}
+
+function _install_php_mac() {
+	brew install php
+
+	EXPECTED_CHECKSUM="$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')"
+	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+	ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+
+	if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
+	then
+		>&2 echo 'ERROR: Invalid installer checksum'
+		rm composer-setup.php
+		exit 1
+	fi
+
+	FILENAME=composer
+	php composer-setup.php --filename=$FILENAME
+	RESULT=$?
+
+	if [[ -f ${FILENAME} ]]; then
+		sudo cp $FILENAME /usr/local/bin/$FILENAME
+		rm $FILENAME
+	fi
+
+	rm composer-setup.php
+	if [[ $RESULT -ne 0 ]]; then
+		echo "php compose fail install"
+		exit $RESULT
+	fi
+
+	composer global require \
+		php-stubs/wordpress-globals \
+		php-stubs/wordpress-stubs \
+		php-stubs/woocommerce-stubs \
+		php-stubs/acf-pro-stubs \
+		wpsyntex/polylang-stubs \
+		php-stubs/genesis-stubs \
+		php-stubs/wp-cli-stubs
 }
 
 function _linux() {
@@ -254,6 +294,7 @@ function _mac() {
 	_install_vs_code_brew
 	_install_docker_brew
 	_install_yarn
+	_install_php_mac
 
 	# Specify the preferences directory
 	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "~/.config/iterm2/"

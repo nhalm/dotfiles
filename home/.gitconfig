@@ -94,3 +94,5 @@
 	email = nick.halm@sezzle.com
 [pull]
 	rebase = false
+[init]
+	defaultBranch = main

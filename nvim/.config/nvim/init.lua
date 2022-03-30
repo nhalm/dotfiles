@@ -19,11 +19,24 @@ end
 -- cmd [[command! PackerCompile packadd packer.nvim | lua require('plugins2').compile()]]
 -- 
 
+vim.lsp.set_log_level("debug")
+
+   local function setup_lsp_diags()
+      vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+         vim.lsp.diagnostic.on_publish_diagnostics,
+         {
+            virtual_text = false,
+            signs = true,
+            update_in_insert = false,
+            underline = true,
+         }
+      )
+   end
+setup_lsp_diags()
 require "config.globals"
 require "defaults".setup()
 require "settings".setup()
 require "plugins".setup()
-
 -- 
 -- local fn = vim.fn
 -- local execute = vim.api.nvim_command

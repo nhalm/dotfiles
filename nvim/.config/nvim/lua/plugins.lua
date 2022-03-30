@@ -81,6 +81,12 @@ function M.setup()
       end,
     }
    -- use {'chrisbra/NrrwRgn'}
+
+
+
+
+
+
    use {
      "kyazdani42/nvim-tree.lua",
      cmd = { "NvimTreeToggle", "NvimTreeClose" },
@@ -115,14 +121,14 @@ function M.setup()
 --    -- use {'liuchengxu/vista.vim'}
 --
 ---- color scheme
-    use {'kaicataldo/material.vim'}
-    use { "sainnhe/gruvbox-material" }
+   use {'kaicataldo/material.vim'}
+   use { "sainnhe/gruvbox-material" }
 --    use { "NLKNguyen/papercolor-theme" }
 --    use { "folke/tokyonight.nvim" }
 --    use { "sainnhe/everforest" }
 --    use { "folke/lsp-colors.nvim" }
 --    use { "navarasu/onedark.nvim" }
-    use { 'sainnhe/sonokai' }
+   use { 'sainnhe/sonokai' }
 --
 --    -- Testing
 ----     use {
@@ -135,7 +141,7 @@ function M.setup()
 ----     }
 --
 --    -- Telescope
-    use { "nvim-lua/popup.nvim" }
+   use { "nvim-lua/popup.nvim" }
     use {
       "nvim-telescope/telescope.nvim",
       cmd = { "Telescope" },
@@ -178,8 +184,8 @@ function M.setup()
     use {'airblade/vim-rooter'}
 
 --    -- LSP config
-    use { "williamboman/nvim-lsp-installer" }
-    use { "jose-elias-alvarez/null-ls.nvim" }
+   use { "williamboman/nvim-lsp-installer" }
+   use { "jose-elias-alvarez/null-ls.nvim" }
 --    -- use {
 --    --   "tamago324/nlsp-settings.nvim",
 --    --   event = "BufReadPre",
@@ -497,11 +503,12 @@ function M.setup()
 
     use { "rhysd/vim-grammarous", ft = {"markdown"}}
 --
---    use {
---      "dstein64/vim-startuptime",
---      cmd = "StartupTime",
---      config = [[vim.g.startuptime_tries = 10]],
---    }
+    use {
+      "dstein64/vim-startuptime",
+      cmd = "StartupTime",
+      config = [[vim.g.startuptime_tries = 10]],
+    }
+
   end)
 end
 
