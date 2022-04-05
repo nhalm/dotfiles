@@ -2,6 +2,7 @@ local M = {}
 
 function M.setup()
   local lualine = require "lualine"
+  local gps = require "nvim-gps"
 
   -- Color table for highlights
   local colors = {
@@ -93,13 +94,13 @@ function M.setup()
         n = colors.red,
         i = colors.green,
         v = colors.blue,
-        [""] = colors.blue,
+        [""] = colors.blue,
         V = colors.blue,
         c = colors.magenta,
         no = colors.red,
         s = colors.orange,
         S = colors.orange,
-        [""] = colors.orange,
+        [""] = colors.orange,
         ic = colors.yellow,
         R = colors.violet,
         Rv = colors.violet,
@@ -164,6 +165,15 @@ function M.setup()
 
   -- Insert mid section. You can make any number of sections in neovim :)
   -- for lualine it's any number greater then 2
+  ins_left {
+    gps.get_location,
+    cond = gps.is_available,
+  }
+
+  -- ins_left {
+  --   require("github-notifications").statusline_notification_count,
+  -- }
+
   ins_left {
     function()
       return "%="

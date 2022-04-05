@@ -1,5 +1,21 @@
 local M = {}
 
+local lsp_keymappings = {
+
+  normal_mode = {
+    ["K"] = "<Cmd>lua vim.lsp.buf.hover()<CR>",
+    ["gD"] = "<Cmd>lua vim.lsp.buf.declaration()<CR>",
+    ["gd"] = "<Cmd>lua vim.lsp.buf.definition()<CR>",
+    ["gi"] = "<Cmd>lua vim.lsp.buf.implementation()<CR>",
+    ["gr"] = "<Cmd>lua vim.lsp.buf.references()<CR>",
+    ["<C-k>"] = "<Cmd>lua vim.lsp.buf.signature_help()<CR>",
+    ["[d"] = "<Cmd>lua vim.diagnostic.goto_prev()<CR>",
+    ["]d"] = "<Cmd>lua vim.diagnostic.goto_next()<CR>",
+    ["[e"] = "<Cmd>Lspsaga diagnostic_jump_next<CR>",
+    ["]e"] = "<Cmd>Lspsaga diagnostic_jump_prev<CR>",
+  },
+}
+
 function M.lsp_diagnostics()
   vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
     virtual_text = true,
@@ -11,26 +27,34 @@ function M.lsp_diagnostics()
   local on_references = vim.lsp.handlers["textDocument/references"]
   vim.lsp.handlers["textDocument/references"] = vim.lsp.with(on_references, { loclist = true, virtual_text = true })
 
-  -- Send diagnostics to quickfix list
-  do
-    local method = "textDocument/publishDiagnostics"
-    local default_handler = vim.lsp.handlers[method]
-    vim.lsp.handlers[method] = function(err, meth, result, client_id, bufnr, config)
-      default_handler(err, meth, result, client_id, bufnr, config)
-      local diagnostics = vim.lsp.diagnostic.get()
-      local qflist = {}
-      for buf, diagnostic in pairs(diagnostics) do
-        for _, d in ipairs(diagnostic) do
-          d.bufnr = buf
-          d.lnum = d.range.start.line + 1
-          d.col = d.range.start.character + 1
-          d.text = d.message
-          table.insert(qflist, d)
-        end
-      end
-      vim.lsp.util.set_qflist(qflist)
-    end
-  end
+  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+    border = "rounded",
+  })
+
+  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+    border = "rounded",
+  })
+
+  -- -- Send diagnostics to quickfix list
+  -- do
+  --   local method = "textDocument/publishDiagnostics"
+  --   local default_handler = vim.lsp.handlers[method]
+  --   vim.lsp.handlers[method] = function(err, meth, result, client_id, bufnr, config)
+  --     default_handler(err, meth, result, client_id, bufnr, config)
+  --     local diagnostics = vim.diagnostic.get()
+  --     local qflist = {}
+  --     for buf, diagnostic in pairs(diagnostics) do
+  --       for _, d in ipairs(diagnostic) do
+  --         d.bufnr = buf
+  --         d.lnum = d.range.start.line + 1
+  --         d.col = d.range.start.character + 1
+  --         d.text = d.message
+  --         table.insert(qflist, d)
+  --       end
+  --     end
+  --     vim.diagnostic.setqflist(qflist)
+  --   end
+  -- end
 end
 
 function M.lsp_highlight(client, bufnr)
@@ -63,15 +87,22 @@ function M.lsp_config(client, bufnr)
   buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
   -- Key mappings
-  local lspkeymappings = require "keymappings"
-  lspkeymappings.setup_lsp_mappings()
+  local keymap = require "utils.keymap"
+  for mode, mapping in pairs(lsp_keymappings) do
+    keymap.map(mode, mapping)
+  end
 
   -- LSP and DAP menu
-  local whichkey = require "config.which-key"
+  local whichkey = require "config.whichkey"
   whichkey.register_lsp(client)
 
+  if client.name == "tsserver" or client.name == "jsonls" then
+    client.resolved_capabilities.document_formatting = false
+    client.resolved_capabilities.document_range_formatting = false
+  end
+
   if client.resolved_capabilities.document_formatting then
-    vim.cmd "autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting()"
+    vim.cmd "autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()"
   end
 end
 
