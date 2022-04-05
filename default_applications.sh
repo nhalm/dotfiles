@@ -9,7 +9,7 @@ function _setup_platform() {
 		    PLATFORM="Linux"
 		    _linux;;
 	    Darwin*) 
-		if [[ `uname -m` == 'arm64' ]]; then
+				if [[ $(uname -m) == 'arm64' ]]; then
 			ARM64=true
 		fi
 		PLATFORM="Mac"
@@ -44,7 +44,8 @@ function _install_brew() {
 function _install_yarn() {
 	if [[ $PLATFORM == "Mac" ]]; then
 		npm install --global yarn
-		export PATH="$(yarn global bin):$PATH"
+		yarn_path="$(yarn global bin)"
+		export PATH=$yarn_path:$PATH
 	fi
 
 	yarn global add @fsouza/prettierd \
@@ -79,11 +80,12 @@ function _install_python_brew() {
 	brew install pyenv
 
 	eval "$(pyenv init --path)"
-	local python2_version=$(pyenv install -l | grep --extended-regexp "\s2.*\.[0-9]*$" | tail -n 1)
-	local python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1)
-	pyenv install $python2_version
-	pyenv install $python3_version
-	pyenv global $python3_version
+	python2_version=$(pyenv install -l | grep --extended-regexp "\s2.*\.[0-9]*$" | tail -n 1)
+	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1)
+
+	pyenv install "$python2_version"
+	pyenv install "$python3_version"
+	pyenv global "$python3_version"
 
 	python2 -m pip install --upgrade pip
 	python3 -m pip install --upgrade pip
@@ -98,7 +100,6 @@ function _install_ruby_brew() {
 	eval "$(frum init)"
 
 	echo "ruby_version=${ruby_version}"
-	echo $PATH
 	frum install ${ruby_version}
 	frum global ${ruby_version}
 
@@ -187,36 +188,27 @@ function _mac() {
 	_install_python_brew
 	_install_ruby_brew
 
-	brew install openssl
-	# Install GNU core utilities
-	brew install coreutils
-
-	# Install some other useful utilities like `sponge`.
-	brew install moreutils
-	# Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed.
-	brew install findutils
-	# Install GNU `sed`, overwriting the built-in `sed`.
-	brew install gnu-sed
-
-#	if ! grep -Fq "${brew_prefix}/bin/bash" /etc/shells; then
-#		echo "${brew_prefix}/bin/bash" | sudo tee -a /etc/shells;
-#		chsh -s "${brew_prefix}/bin/bash";
-#	fi;
-
-
-	chsh -s /bin/zsh
-
-	if [[ ARM64 == false ]]; then
+	if [[ $ARM64 == false ]]; then
 		brew install adoptopenjdk
 	else
 		brew install openjdk
 	fi
 
+	# Install GNU core utilities
+	brew install coreutils \
+		moreutils \
+		gnu-sed
+
+	chsh -s /bin/zsh
+
+	brew install lua5.1 --HEAD
+	brew install luajit --HEAD
+	brew install neovim --HEAD
+
 	# Install other useful binaries.
 	brew install git \
 		ack \
 		git-lfs \
-		lua \
 		p7zip \
 		tree \
 		tmux \
@@ -225,7 +217,6 @@ function _mac() {
 		golang \
 		google-chrome \
 		dbeaver-community \
-		neovim \
 		slack \
 		iterm2 \
 		zoom \
@@ -233,7 +224,6 @@ function _mac() {
 		1password \
 		google-drive \
 		node \
-		slack \
 		1password \
 		brave-browser \
 		evernote \
@@ -243,8 +233,13 @@ function _mac() {
 		stow \
 		webex \
 		wget \
+		ripgrep \
+		fd \
+		glow \
+		bat \
 		starship
 
+	
 	brew install homebrew/cask-fonts/font-jetbrains-mono \
 		homebrew/cask-fonts/font-hack-nerd-font \
 		homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
@@ -256,7 +251,7 @@ function _mac() {
 	_install_yarn
 
 	# Specify the preferences directory
-	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "~/.config/iterm2/"
+	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$HOME/.config/iterm2/"
 	# Tell iTerm2 to use the custom preferences in the directory
 	defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
 	defaults write com.apple.desktopservices DSDontWriteNetworkStores true

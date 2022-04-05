@@ -1,50 +1,6 @@
 local M = {}
 
 function M.setup()
-
-    vim.wo.foldmethod = 'expr'
-    vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
-    vim.wo.foldenable = false
-
-    local config = {
-        ensure_installed = "maintained",
-        highlight = {
-            enable = true,
-            disable = {},
-        },
-        incremental_selection = {
-            enable = true,
-            init_selecction = "gnn",
-            node_incremental = "grn",
-            scope_incremental = "grc",
-            node_decremental = "grm",
-        },
-        indent = {
-            enable = true
-        },
-        context_commentstring = {
-            enable = true
-        },
-        textsubjects = {
-            enable = true,
-            keymaps = {
-                ["."] = "textsubjects-smart",
-                [";"] = "textsubjects-container-outer",
-            },
-        },
-        matchup = {
-            enable = true,
-        },
-        rainbow = {
-            enable = true,
-            extended_mode = true,
-        },
-    }
-
-    require("nvim-treesitter.configs").setup(config)
-end
-
-function M.setup_2()
   local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
 
   parser_configs.norg = {
@@ -60,6 +16,7 @@ function M.setup_2()
     highlight = {
       enable = true,
       disable = {},
+      additional_vim_regex_highlighting = true,
       -- custom_captures = {["new_import"] = "CustomImportName"}
     },
     incremental_selection = {
@@ -147,7 +104,7 @@ function M.setup_2()
       --     }
       -- }
     },
-    context_commentstring = { enable = true },
+    context_commentstring = { enable = true, enable_autocmd = false },
     textsubjects = {
       enable = true,
       keymaps = {

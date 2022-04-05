@@ -34,6 +34,12 @@ function M.setup()
       media_files = {
         filetypes = { "png", "jpg", "mp4", "webm", "pdf", "gif" },
       },
+      bookmarks = {
+        selected_browser = "brave",
+        url_open_command = "xdg-open",
+        url_open_plugin = "open_browser",
+        firefox_profile_name = nil,
+      },
     },
     defaults = {
       mappings = {
@@ -48,17 +54,24 @@ function M.setup()
   }
 
   -- require('telescope').load_extension('snippets')
-  -- require('telescope').load_extension('gh')
   -- require('telescope').load_extension('hop')
+
+  require("telescope").load_extension "bookmarks"
+  require("telescope").load_extension "neoclip"
+  require("telescope").load_extension "zoxide"
+  require("telescope").load_extension "ultisnips"
+  require("telescope").load_extension "repo"
+  require("telescope").load_extension "gh"
   -- require("telescope").load_extension "arecibo"
   require("telescope").load_extension "media_files"
   require("telescope").load_extension "frecency"
   -- require("telescope").load_extension "gkeep"
+  require("telescope").load_extension "file_browser"
 
   M.search_dotfiles = function()
     require("telescope.builtin").find_files {
       prompt_title = "< VimRC >",
-      cwd = "$HOME/workspace/dev/alpha2phi/dotfiles/",
+      cwd = "$HOME/workspace/alpha2phi/dotfiles/",
     }
   end
 

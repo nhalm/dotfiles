@@ -1,40 +1,40 @@
 local M = {}
 
 local lsp_providers = {
-    bashls = true,
-    gopls = true,
-    sumneko_lua = true,
-    yamlls = true,
+  rust_analyzer = true,
+  tsserver = true,
+  pyright = true,
+  gopls = true,
+  sumneko_lua = true,
+  jsonls = true,
 }
 
 local function setup_servers()
-    local lsp_installer = require("nvim-lsp-installer")
+  local lsp_installer = require "nvim-lsp-installer"
 
-    require("config.lsp.null-ls").setup()
+  require("config.lsp.null-ls").setup()
 
-    -- lsp_installer.on_server_ready(function(server)
--- --        if server.name == "sumneko_lua" then
-    --         require("config.lsp." .. server.name).setup(server)
--- --        end
-    -- end)
-   lsp_installer.on_server_ready(function(server)
-       if lsp_providers[server.name] then
-           require("config.lsp." .. server.name).setup(server)
-       else
-           local opts = {}
-           server:setup(opts)
-       end
-   end)
---    local servers = {'pyright', 'gopls'}
---    for _, lsp in ipairs(servers) do
---        nvim_lsp[lsp].setup {
---            on_attach = on_attach
---        }
---    end
+  lsp_installer.on_server_ready(function(server)
+    if lsp_providers[server.name] then
+      local server_opts = require("config.lsp." .. server.name).setup(server)
+      if server_opts then
+        server:setup(server_opts)
+      end
+    else
+      local lsputils = require "config.lsp.utils"
+      local opts = {
+        on_attach = lsputils.lsp_attach,
+        capabilities = lsputils.get_capabilities(),
+        on_init = lsputils.lsp_init,
+        on_exit = lsputils.lsp_exit,
+      }
+      server:setup(opts)
+    end
+  end)
 end
 
 function M.setup()
-    setup_servers()
+  setup_servers()
 end
 
 return M
