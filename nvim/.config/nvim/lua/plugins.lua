@@ -24,7 +24,7 @@ packer_init()
 function M.setup()
   local conf = {
     compile_path = vim.fn.stdpath "config" .. "/lua/packer_compiled.lua",
-    max_jobs = 50,
+    max_jobs = 10,
     display = {
       open_fn = function()
         return require("packer.util").float { border = "rounded" }
@@ -98,9 +98,9 @@ function M.setup()
     use {
       "kyazdani42/nvim-tree.lua",
       event = "BufWinEnter",
-      config = function()
-        require("nvim-tree").setup {}
-      end,
+      -- config = function()
+      --   require("nvim-tree").setup {}
+      -- end,
     }
     use { "windwp/nvim-spectre", event = "VimEnter" }
     use {
@@ -187,7 +187,7 @@ function M.setup()
         {
           "nvim-telescope/telescope-arecibo.nvim",
           rocks = { "openssl", "lua-http-parser" },
-          disable = true,
+          -- disable = true,
         },
         {
           "nvim-telescope/telescope-frecency.nvim",
@@ -197,7 +197,7 @@ function M.setup()
           "nvim-telescope/telescope-vimspector.nvim",
           event = "BufWinEnter",
         },
-        { "nvim-telescope/telescope-dap.nvim" },
+        -- { "nvim-telescope/telescope-dap.nvim" },
       },
       config = function()
         require("config.telescope").setup()
@@ -231,7 +231,7 @@ function M.setup()
       opt = true,
       config = function()
         require("config.lsp").setup()
-        require("config.dap").setup()
+        -- require("config.dap").setup()
       end,
     }
 
@@ -363,7 +363,7 @@ function M.setup()
         {
           "romgrk/nvim-treesitter-context",
           config = function()
-            require("treesitter-context.config").setup { enable = true }
+            require("treesitter-context").setup { enable = true }
           end,
         },
         {
@@ -440,19 +440,19 @@ function M.setup()
     use { "puremourning/vimspector", event = "InsertEnter" }
 
     -- DAP
-    use { "mfussenegger/nvim-dap", event = "BufWinEnter", as = "nvim-dap" }
-    use { "mfussenegger/nvim-dap-python", after = "nvim-dap" }
-    use {
-      "theHamsta/nvim-dap-virtual-text",
-      after = "nvim-dap",
-      config = function()
-        require("nvim-dap-virtual-text").setup {}
-      end,
-    }
-    use { "rcarriga/nvim-dap-ui", after = "nvim-dap" }
-    use { "Pocco81/DAPInstall.nvim", after = "nvim-dap" }
-    use { "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" }
-
+    -- use { "mfussenegger/nvim-dap", event = "BufWinEnter", as = "nvim-dap" }
+    -- use { "mfussenegger/nvim-dap-python", after = "nvim-dap" }
+    -- use {
+    --   "theHamsta/nvim-dap-virtual-text",
+    --   after = "nvim-dap",
+    --   config = function()
+    --     require("nvim-dap-virtual-text").setup {}
+    --   end,
+    -- }
+    -- use { "rcarriga/nvim-dap-ui", after = "nvim-dap" }
+    -- use { "Pocco81/DAPInstall.nvim", after = "nvim-dap" }
+    -- use { "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" }
+    --
     -- Development workflow
     use { "voldikss/vim-browser-search", event = "VimEnter" }
     use { "tyru/open-browser.vim", event = "VimEnter" }
