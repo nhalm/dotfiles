@@ -27,7 +27,7 @@ function M.setup()
   opt.ignorecase = true
   opt.inccommand = "split"
   opt.lazyredraw = true
-  opt.mouse = "a"
+  -- opt.mouse = "a"
   opt.number = true
   opt.pumblend = 17
   opt.relativenumber = true

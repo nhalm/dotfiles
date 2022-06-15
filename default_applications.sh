@@ -80,8 +80,8 @@ function _install_python_brew() {
 	brew install pyenv
 
 	eval "$(pyenv init --path)"
-	python2_version=$(pyenv install -l | grep --extended-regexp "\s2.*\.[0-9]*$" | tail -n 1)
-	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1)
+	python2_version=$(pyenv install -l | grep --extended-regexp "\s2.*\.[0-9]*$" | tail -n 1 | xargs)
+	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1 | xargs)
 
 	pyenv install "$python2_version"
 	pyenv install "$python3_version"

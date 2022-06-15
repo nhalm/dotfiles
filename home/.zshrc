@@ -23,11 +23,6 @@ function _get_platform()
 
 PLATFORM=$(_get_platform)
 
-# add yarn to path
-if [[ ${PLATFORM} == "Mac" ]]; then
-	export PATH="$(yarn global bin):$PATH"
-fi
-
 # handle setting up Golang
 GOPATH=$HOME/go
 export GOPATH=$GOPATH
@@ -71,6 +66,7 @@ if [[ ${PLATFORM} == "Mac" ]]; then
 		export PATH="$PATH:$HOME/.cargo/bin"
 	fi
 
+	export PATH="$(yarn global bin):$PATH"
 	# https://egeek.me/2020/04/18/enabling-locate-on-osx/
 	if which glocate > /dev/null; then
 		alias locate="glocate -d $HOME/locatedb"
