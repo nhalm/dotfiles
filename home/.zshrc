@@ -73,13 +73,12 @@ if [[ ${PLATFORM} == "Mac" ]]; then
 		[[ -f "$HOME/locatedb" ]] && export LOCATE_PATH="$HOME/locatedb"
 	fi
 	alias loaddb="gupdatedb --localpaths=$HOME --prunepaths=/Volumes --output=$HOME/locatedb"
-fi
 
-if [[ ${PLATFORM} == "Mac" ]]; then
 	eval "$(pyenv init --path)"
 	eval "$(frum init)"
 fi
 
+autoload -Uz compinit && compinit
 MY_SSH_AUTH_SOCK=${HOME}/.ssh/ssh_auth_sock
 
 __start_ssh_agent() {
