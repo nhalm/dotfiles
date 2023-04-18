@@ -126,6 +126,13 @@ function _install_nvm() {
 	corepack enable
 }
 
+function _install_terraform() {
+		if [[ $PLATFORM == "Mac" ]]; then
+			brew install terraform
+			terraform -install-autocomplete
+		fi
+}
+
 function _add_1password_apt() {
 	# Add the key for the 1Password apt repository
 	curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
@@ -249,6 +256,7 @@ function _mac() {
 	_install_vs_code_brew
 	_install_docker_brew
 	_install_yarn
+	_install_terraform
 
 	# Specify the preferences directory
 	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$HOME/.config/iterm2/"

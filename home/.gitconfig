@@ -87,10 +87,18 @@
 		&& git po; \
 		}; f"
 
+	upmain = "!f() { \
+		git fetch \
+		&& git co main \
+		&& git po; \
+		}; f"
+
+
 	publish = "!git push -u origin $(git bn)"
 
 [user]
 	name = Nick Halm
-	email = nick.halm@sezzle.com
+	email = nick.halm@justifi.ai
+
 [pull]
 	rebase = false

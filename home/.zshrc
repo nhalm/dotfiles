@@ -34,6 +34,7 @@ if [ ! -d $GOPATH ]; then
 	mkdir -p $GOPATH/bin
 fi
 
+export PATH=$PATH:/opt/homebrew/bin/aws_autocompleter
 export EDITOR='nvim'
 export VISUAL='nvim'
 
@@ -107,3 +108,6 @@ if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /opt/homebrew/bin/terraform terraform
