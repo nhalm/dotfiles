@@ -201,9 +201,11 @@ function _mac() {
 
 	chsh -s /bin/zsh
 
-	brew install lua5.1 --HEAD
-	brew install luajit --HEAD
-	brew install neovim --HEAD
+	# brew install lua5.1 --HEAD
+	# brew install luajit --HEAD
+	# brew install neovim --HEAD
+
+	brew install neovim
 
 	# Install other useful binaries.
 	brew install git \
@@ -215,10 +217,8 @@ function _mac() {
 		openssh \
 		grep \
 		golang \
-		google-chrome \
-		dbeaver-community \
 		slack \
-		iterm2 \
+		kitty \
 		spotify \
 		google-drive \
 		node \
@@ -236,14 +236,10 @@ function _mac() {
 		glow \
 		bat \
 		raycast \
-		cleanshot \
-		starship
+		cleanshot 
 
 	
-	brew install homebrew/cask-fonts/font-jetbrains-mono \
-		homebrew/cask-fonts/font-hack-nerd-font \
-		homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
-		homebrew/cask-fonts/font-fira-code-nerd-font \
+	brew homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
 		homebrew/cask-fonts/font-inconsolata-nerd-font
 
 	_install_vs_code_brew
@@ -251,10 +247,6 @@ function _mac() {
 	_install_yarn
 
 	# Specify the preferences directory
-	defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$HOME/.config/iterm2/"
-	# Tell iTerm2 to use the custom preferences in the directory
-	defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
-	defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 
 	# Remove outdated versions from the cellar.
 	brew cleanup	
