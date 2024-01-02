@@ -18,6 +18,8 @@ function _setup_platform() {
 	    MINGW*) echo "MinGw not supported";;
 		*)      echo "$(uname -s)  not supported"
 	esac
+
+  _install_oh_my_zsh
 }
 
 function _error_exit() {
@@ -27,6 +29,10 @@ function _error_exit() {
 	echo ""
 
 	exit 1
+}
+
+function _install_oh_my_zsh() {
+  sh -c "$(curl -fsSL https://install.ohmyz.sh)"
 }
 
 function _install_brew() {
@@ -217,7 +223,6 @@ function _mac() {
 		openssh \
 		grep \
 		golang \
-		slack \
 		kitty \
 		spotify \
 		google-drive \
@@ -239,8 +244,9 @@ function _mac() {
 		cleanshot 
 
 	
-	brew homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
-		homebrew/cask-fonts/font-inconsolata-nerd-font
+	brew install homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
+		homebrew/cask-fonts/font-inconsolata-nerd-font \
+    homebrew/cask-fonts/font-meslo-lg-nerd-font
 
 	_install_vs_code_brew
 	_install_docker_brew
