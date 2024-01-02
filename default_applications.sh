@@ -219,9 +219,7 @@ function _mac() {
 		dbeaver-community \
 		slack \
 		iterm2 \
-		zoom \
 		spotify \
-		1password \
 		google-drive \
 		node \
 		1password \
@@ -237,6 +235,8 @@ function _mac() {
 		fd \
 		glow \
 		bat \
+		raycast \
+		cleanshot \
 		starship
 
 	
