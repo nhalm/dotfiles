@@ -65,34 +65,10 @@ fi
 export EDITOR='nvim'
 export VISUAL='nvim'
 
-if [[ ${PLATFORM} == "Linux" ]]; then
-	# export PATH=$HOME/.fnm:$PATH
-fi
-
 # platform specific setups
 if [[ ${PLATFORM} == "Mac" ]]; then
 	# handle adding brew to path
 	eval "$(/opt/homebrew/bin/brew shellenv)"
-
-	#OPENSSL_VERSION="1.1"
-	##For compilers to find things you may need to set:
-	#export LDFLAGS="-L/usr/local/opt/gettext/lib -L/usr/local/opt/openssl@${OPENSSL_VERSION}/lib"
-	#export CPPFLAGS="-I/usr/local/opt/gettext/include -I/usr/local/opt/openssl${OPENSSL_VERSION}/include"
-
-	## Ruby stuff
-	# export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-	# export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
-	# export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
-	# export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
-
-
-	# if we are originating from a tmux session 
-	# we do not need to rebuild the path.
-	if [ -z "${TMUX+x}" ]; then
-		export PATH="$PATH:/usr/local/opt/mysql@5.6/bin"
-		export PATH="$PATH:/usr/local/opt/libpq/bin"
-		export PATH="$PATH:$HOME/.cargo/bin"
-	fi
 
 	export PATH="$(yarn global bin):$PATH"
 	# https://egeek.me/2020/04/18/enabling-locate-on-osx/
@@ -128,9 +104,6 @@ fi
 
 if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
-# if [[ ${PLATFORM} == "Mac" ]]; then
-#	eval "$(starship init zsh)"
-# fi
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
