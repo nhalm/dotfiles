@@ -27,7 +27,7 @@ return {
     mason_lspconfig.setup({
       -- list of servers for mason to install
       ensure_installed = {
-        "tsserver",
+        "ts_ls",
         "html",
         "cssls",
         "tailwindcss",
@@ -38,6 +38,7 @@ return {
         "prismals",
         "pyright",
         "marksman",
+        "gopls",
       },
       -- auto-install configured servers (with lspconfig)
       automatic_installation = true, -- not the same as ensure_installed
@@ -52,6 +53,12 @@ return {
         "pylint", -- python linter
         "eslint_d", -- js linter
         "markdownlint",
+        "gofumpt",
+        "golines",
+        "goimports",
+        "gotests",
+        "golangci-lint",
+        "luacheck"
       },
     })
   end,

@@ -41,6 +41,9 @@ opt.splitbelow = true -- split horizontal window to the bottom
 -- turn off swapfile
 opt.swapfile = false
 
+-- turn on backup copy for inotify
+-- opt.backupcopy = "yes"
+
 vim.filetype.add({
   extension = {
     mdx = "markdown"

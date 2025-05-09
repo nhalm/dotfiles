@@ -77,7 +77,7 @@ return {
     })
 
     -- configure typescript server with plugin
-    lspconfig["tsserver"].setup({
+    lspconfig["ts_ls"].setup({
       capabilities = capabilities,
       on_attach = on_attach,
     })
@@ -144,6 +144,26 @@ return {
       filetypes = { "markdown", "markdown.mdx" },
     })
 
+    -- configure go server
+    lspconfig["gopls"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      cmd = {"gopls"},
+      filetypes = { "go", "gomod", "gowork", "gotmpl"},
+      -- root_dir = util.root_pattern("go.work", "go.mod", ".git"),
+      settings = {
+        gopls = {
+          completeUnimported = true,
+          usePlaceholders = true,
+          analyses = {
+            unusedparams = true
+          },
+          staticcheck = true,
+          gofumpt = true,
+        }
+      }
+    })
+
     -- configure lua server (with special settings)
     lspconfig["lua_ls"].setup({
       capabilities = capabilities,
@@ -158,7 +178,7 @@ return {
             -- make language server aware of runtime files
             library = {
               [vim.fn.expand("$VIMRUNTIME/lua")] = true,
-              [vim.fn.stdpath("config") .. "/lua"] = true,
+              [vim.fn.stdpath("config") .. "/lua"] = true,17
             },
           },
         },

@@ -76,11 +76,11 @@ function _install_vs_code_brew() {
 	code --install-extension jdinhlife.gruvbox
 }
 
-function _install_docker_brew() {
-	brew install docker
-	xattr -r -d com.apple.quarantine '/Applications/Docker.app'
-	ln -s /Applications/Docker.app/Contents/Resources/bin/docker /usr/local/bin/
-}
+#function _install_docker_brew() {
+#	brew install docker
+#	xattr -r -d com.apple.quarantine '/Applications/Docker.app'
+#	ln -s /Applications/Docker.app/Contents/Resources/bin/docker /usr/local/bin/
+#}
 
 function _install_python_brew() {
 	brew install pyenv
@@ -194,12 +194,6 @@ function _mac() {
 	_install_python_brew
 	_install_ruby_brew
 
-	if [[ $ARM64 == false ]]; then
-		brew install adoptopenjdk
-	else
-		brew install openjdk
-	fi
-
 	# Install GNU core utilities
 	brew install coreutils \
 		moreutils \
@@ -207,14 +201,11 @@ function _mac() {
 
 	chsh -s /bin/zsh
 
-	# brew install lua5.1 --HEAD
-	# brew install luajit --HEAD
-	# brew install neovim --HEAD
-
-	brew install neovim
-
 	# Install other useful binaries.
 	brew install git \
+		openjdk \
+		neovim \
+		docker \
 		ack \
 		git-lfs \
 		p7zip \
@@ -249,7 +240,7 @@ function _mac() {
     homebrew/cask-fonts/font-meslo-lg-nerd-font
 
 	_install_vs_code_brew
-	_install_docker_brew
+	# _install_docker_brew
 	_install_yarn
 
 	# Specify the preferences directory

@@ -32,12 +32,12 @@ $cdir/make_links.sh
 echo "finished setting symlinks"
 echo
 
-if [[ ${platform} == "Mac" ]]; then
-	echo "setting up nfs..."
-	$cdir/darwin_nfs.sh
-	echo "finished setting up nfs"
-	echo ""
-fi
+# if [[ ${platform} == "Mac" ]]; then
+# 	echo "setting up nfs..."
+# 	$cdir/darwin_nfs.sh
+# 	echo "finished setting up nfs"
+# 	echo ""
+# fi
 
 # echo "configuring fonts..."
 # $cdir/fonts/install.sh

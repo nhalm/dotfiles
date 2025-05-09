@@ -17,4 +17,4 @@ esac
 
 stow nvim
 stow home
-stow starship
+stow bin
