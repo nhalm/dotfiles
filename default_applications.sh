@@ -60,28 +60,6 @@ function _install_yarn() {
 		neovim
 }
 
-function _install_vs_code_brew() {
-	brew install visual-studio-code
-	xattr -r -d com.apple.quarantine '/Applications/Visual Studio Code.app'
-
-	code --install-extension ms-vscode.go
-	code --install-extension dbaeumer.vscode-eslint
-	code --install-extension ms-vscode.vscode-typescript-tslint-plugin
-	code --install-extension shinnn.stylelint
-	code --install-extension editorconfig.editorconfig
-	code --install-extension ivory-lab.jenkinsfile-support
-	code --install-extension neilding.language-liquid
-	code --install-extension william-voyek.vscode-nginx
-	code --install-extension ms-azuretools.vscode-docker
-	code --install-extension jdinhlife.gruvbox
-}
-
-#function _install_docker_brew() {
-#	brew install docker
-#	xattr -r -d com.apple.quarantine '/Applications/Docker.app'
-#	ln -s /Applications/Docker.app/Contents/Resources/bin/docker /usr/local/bin/
-#}
-
 function _install_python_brew() {
 	brew install pyenv
 
@@ -184,25 +162,20 @@ function _linux() {
 }
 
 function _mac() {
-	_install_brew
-
-
-	brew upgrade
-
-	# get these before python to make the install faster
-	brew install openssl readline
-	_install_python_brew
-	_install_ruby_brew
-
-	# Install GNU core utilities
-	brew install coreutils \
-		moreutils \
-		gnu-sed
+  _install_brew
 
 	chsh -s /bin/zsh
 
+	brew upgrade
+
 	# Install other useful binaries.
-	brew install git \
+	brew install openssl \
+    git \
+    readline \
+    moreutils \
+    gnu-sed \
+    coreutils \
+    uv \
 		openjdk \
 		neovim \
 		docker \
@@ -220,7 +193,6 @@ function _mac() {
 		node \
 		1password \
 		brave-browser \
-		evernote \
 		aws-vault \
 		awscli \
 		jq \
@@ -232,6 +204,10 @@ function _mac() {
 		glow \
 		bat \
 		raycast \
+    visual-studio-code \
+    fzf \
+    cusrosr \
+    colima \
 		cleanshot 
 
 	
@@ -239,9 +215,7 @@ function _mac() {
 		homebrew/cask-fonts/font-inconsolata-nerd-font \
     homebrew/cask-fonts/font-meslo-lg-nerd-font
 
-	_install_vs_code_brew
-	# _install_docker_brew
-	_install_yarn
+	# _install_yarn
 
 	# Specify the preferences directory
 
