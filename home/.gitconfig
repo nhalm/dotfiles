@@ -1,5 +1,5 @@
-[url "ssh://git@sez:"]
-	insteadOf = https://gitlab.sezzle.com
+[url "ssh://git@gh:"]
+	insteadOf = https://github.com
 
 [alias]
 	# reword the last commit
@@ -75,6 +75,12 @@
 		&& git po; \
 		}; f"
 
+	upmain = "!f() { \
+		git fetch \
+		&& git co main \
+		&& git po; \
+		}; f"
+
 	upmaster = "!f() { \
 		git fetch \
 		&& git co master \
@@ -93,4 +99,6 @@
 	name = Nick Halm
 	email = nick.halm@justifi.tech
 [pull]
-	rebase = false
+	rebase = true
+[init]
+	defaultBranch = main
