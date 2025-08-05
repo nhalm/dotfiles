@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 ARM64=false
 PLATFORM=""
@@ -19,7 +20,7 @@ function _setup_platform() {
 		*)      echo "$(uname -s)  not supported"
 	esac
 
-  _install_oh_my_zsh
+  #_install_oh_my_zsh
 }
 
 function _error_exit() {
@@ -36,13 +37,13 @@ function _install_oh_my_zsh() {
 }
 
 function _install_brew() {
-	eval "$(/opt/homebrew/bin/brew shellenv)"
-	which -s brew
-	if [[ $? != 0 ]]; then
-		echo "installing brew"
-		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-	eval "$(/opt/homebrew/bin/brew shellenv)"
+	eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
+	if ! command -v brew &> /dev/null; then
+		echo "Installing brew..."
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		eval "$(/opt/homebrew/bin/brew shellenv)"
 	else
+		echo "Brew already installed, updating..."
 		brew update
 	fi
 }
@@ -61,14 +62,25 @@ function _install_yarn() {
 }
 
 function _install_python_brew() {
-	brew install pyenv
+	if ! command -v pyenv &> /dev/null; then
+		echo "Installing pyenv..."
+		brew install pyenv
+	fi
 
 	eval "$(pyenv init --path)"
 	python2_version=$(pyenv install -l | grep --extended-regexp "\s2.*\.[0-9]*$" | tail -n 1 | xargs)
 	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1 | xargs)
 
-	pyenv install "$python2_version"
-	pyenv install "$python3_version"
+	if ! pyenv versions | grep -q "$python2_version"; then
+		echo "Installing Python $python2_version..."
+		pyenv install "$python2_version"
+	fi
+	
+	if ! pyenv versions | grep -q "$python3_version"; then
+		echo "Installing Python $python3_version..."
+		pyenv install "$python3_version"
+	fi
+	
 	pyenv global "$python3_version"
 
 	python2 -m pip install --upgrade pip
@@ -77,36 +89,17 @@ function _install_python_brew() {
 	python3 -m pip install --user --upgrade pynvim
 }
 
-function _install_ruby_brew() {
-	brew install frum
-	
-	local ruby_version="3.1.0"
-	eval "$(frum init)"
-
-	echo "ruby_version=${ruby_version}"
-	frum install ${ruby_version}
-	frum global ${ruby_version}
-
-	if [[ ! -f ~/.gemrc ]]; then
-		echo "gem: --no-document" >> ~/.gemrc
-	fi
-
-	gem update --system
-	gem install rails
-	gem install neovim
-
-}
 
 function _install_node_fnm() {
 	curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "./.fnm" --skip-shell
 }
 
 function _install_nvm() {
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 	export NVM_DIR="$HOME/.nvm"
 	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-	nvm install lts/gallium
+	nvm install lts/iron
 	corepack enable
 }
 
@@ -124,7 +117,7 @@ function _add_1password_apt() {
 }
 
 function _install_golang() {
-	version=1.17.8
+	version=1.21.5
 	curl -OL https://golang.org/dl/go${version}.linux-amd64.tar.gz
 	sudo tar -C /usr/local -xvf go${version}.linux-amd64.tar.gz
 	rm go${version}.linux-amd64.tar.gz
@@ -164,57 +157,62 @@ function _linux() {
 function _mac() {
   _install_brew
 
-	chsh -s /bin/zsh
+#	chsh -s /bin/zsh
 
 	brew upgrade
 
-	# Install other useful binaries.
-	brew install openssl \
-    git \
-    readline \
-    moreutils \
-    gnu-sed \
-    coreutils \
-    uv \
-		openjdk \
-		neovim \
-		docker \
-		ack \
+# Install command line tools
+	brew install --force \
+		git \
 		git-lfs \
-		p7zip \
-		tree \
-		tmux \
 		openssh \
+		openssl \
+		readline \
+		moreutils \
+		gnu-sed \
+		coreutils \
 		grep \
-		golang \
-		kitty \
-		spotify \
-		google-drive \
-		node \
-		1password \
-		brave-browser \
-		aws-vault \
-		awscli \
+		wget \
 		jq \
 		stow \
-		webex \
-		wget \
+		ack \
 		ripgrep \
 		fd \
+		fzf \
+		tree \
+		p7zip \
+		tmux \
+		neovim \
 		glow \
-		bat \
+		bat
+
+	# Install development tools
+	brew install --force \
+		golang \
+		node \
+		openjdk \
+		uv \
+		docker \
+		colima \
+		aws-vault \
+		awscli
+
+	# Install GUI applications
+	brew install --force \
+		kitty \
+		visual-studio-code \
+		cursor \
+		brave-browser \
 		raycast \
-    visual-studio-code \
-    fzf \
-    cusrosr \
-    colima \
-		cleanshot 
+		cleanshot \
+		spotify \
+		google-drive \
+		webex \
+		claude-code \
+		claude \
+		chatgpt 
 
 	
-	brew install homebrew/cask-fonts/font-dejavu-sans-mono-nerd-font \
-		homebrew/cask-fonts/font-inconsolata-nerd-font \
-    homebrew/cask-fonts/font-meslo-lg-nerd-font
-
 	# _install_yarn
 
 	# Specify the preferences directory

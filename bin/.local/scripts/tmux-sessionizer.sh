@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+set -euo pipefail
 
 if [[ $# -eq 1 ]]; then
     selected=$1

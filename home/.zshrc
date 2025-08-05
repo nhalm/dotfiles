@@ -25,20 +25,15 @@ export ZSH="$HOME/.oh-my-zsh"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+plugins=(git aws docker helm kubectl terraform tmux)
 
 source $ZSH/oh-my-zsh.sh
 
-plugins=(git aws docker helm kubectl terraform tmux  )
-
-case $- in
-    *i*) ;;
-      *) return;;
-esac
 
 function _get_platform()
 {
 	local unameOut="$(uname -s)"
-	local maching="UNKNOWN"
+	local machine="UNKNOWN"
 
 	case "${unameOut}" in
 	    Linux*)     machine=Linux;;
@@ -56,8 +51,7 @@ PLATFORM=$(_get_platform)
 # handle setting up Golang
 GOPATH=$HOME/go
 export GOPATH=$GOPATH
-export PATH=$PATH:/usr/local/go/bin
-export PATH=$PATH:$GOPATH/bin
+export PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
 
 if [ ! -d $GOPATH ]; then
 	mkdir -p $GOPATH/src
@@ -81,23 +75,26 @@ if [[ ${PLATFORM} == "Mac" ]]; then
 	alias loaddb="gupdatedb --localpaths=$HOME --prunepaths=/Volumes --output=$HOME/locatedb"
 
 	eval "$(pyenv init --path)"
-	eval "$(frum init)"
 fi
 
+# History configuration
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_VERIFY
+setopt SHARE_HISTORY
+
+# Essential aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
 autoload -Uz compinit && compinit
-MY_SSH_AUTH_SOCK=${HOME}/.ssh/ssh_auth_sock
-
-__start_ssh_agent() {
-	eval $(ssh-agent) > /dev/null
-	ln -sf ${SSH_AUTH_SOCK} ${MY_SSH_AUTH_SOCK}
-	export SSH_AUTH_SOCK=${MY_SSH_AUTH_SOCK}
-	ssh-add > /dev/null || ssh-add20
-}
-
-#if [  ! -S ${MY_SSH_AUTH_SOCK} ]; then
-#	__start_ssh_agent
-#fi
-#export SSH_AUTH_SOCK=${MY_SSH_AUTH_SOCK}
 
 if type nvim > /dev/null 2>&1; then
 	alias vi='nvim'
@@ -116,10 +113,9 @@ export NVM_DIR="$HOME/.nvm"
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Docker CLI completions
+fpath=(~/.docker/completions $fpath)
+
+# Terraform completion
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
-# The following lines have been added by Docker Desktop to enable Docker CLI completions.
-fpath=(/Users/nhalm/.docker/completions $fpath)
-autoload -Uz compinit
-compinit
-# End of Docker CLI completions
