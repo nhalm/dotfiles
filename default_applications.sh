@@ -50,15 +50,30 @@ function _install_brew() {
 
 function _install_yarn() {
 	if [[ $PLATFORM == "Mac" ]]; then
-		npm install --global yarn
-		yarn_path="$(yarn global bin)"
-		export PATH=$yarn_path:$PATH
+		# Skip npm yarn install since we install via Homebrew
+		if command -v yarn &> /dev/null; then
+			yarn_path="$(yarn global bin)"
+			export PATH=$yarn_path:$PATH
+		fi
 	fi
 
 	yarn global add @fsouza/prettierd \
 		eslint \
 		shellcheck \
 		neovim
+}
+
+function _setup_fish() {
+	if command -v fish &> /dev/null; then
+		echo "Setting up fish shell plugins..."
+		# Install fisher plugin manager
+		fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
+		# Install plugins from fish_plugins file
+		fish -c "fisher update"
+		echo "Fish shell setup complete"
+	else
+		echo "Fish shell not found, skipping fish setup"
+	fi
 }
 
 function _install_python_brew() {
@@ -100,7 +115,6 @@ function _install_nvm() {
 	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 	nvm install lts/iron
-	corepack enable
 }
 
 function _add_1password_apt() {
@@ -184,12 +198,14 @@ function _mac() {
 		tmux \
 		neovim \
 		glow \
-		bat
+		bat \
+		fish
 
 	# Install development tools
 	brew install --force \
 		golang \
 		node \
+		yarn \
 		openjdk \
 		uv \
 		docker \
@@ -197,23 +213,11 @@ function _mac() {
 		aws-vault \
 		awscli
 
-	# Install GUI applications
-	brew install --force \
-		kitty \
-		visual-studio-code \
-		cursor \
-		brave-browser \
-		raycast \
-		cleanshot \
-		spotify \
-		google-drive \
-		webex \
-		claude-code \
-		claude \
-		chatgpt 
+	# GUI applications moved to gui_applications.sh to avoid password prompts 
 
 	
-	# _install_yarn
+	_install_yarn
+	_setup_fish
 
 	# Specify the preferences directory
 
