@@ -63,24 +63,24 @@ function _setup_fish() {
 }
 
 function _install_python_brew() {
+	# Install Python with uv (fast, pre-built binaries)
+	if command -v uv &> /dev/null; then
+		uv python install 3.13
+	fi
+
+	# Install pyenv for legacy projects
 	if ! command -v pyenv &> /dev/null; then
-		echo "Installing pyenv..."
 		brew install pyenv
 	fi
 
 	eval "$(pyenv init --path)"
 	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1 | xargs)
 
-	if ! pyenv versions | grep -q "$python3_version"; then
-		echo "Installing Python $python3_version..."
-		pyenv install "$python3_version"
+	if ! pyenv versions --bare | grep -q "^${python3_version}$"; then
+		pyenv install -s "$python3_version"
 	fi
 	
 	pyenv global "$python3_version"
-
-	if command -v uv &> /dev/null; then
-		uv pip install --upgrade pynvim
-	fi
 }
 
 
@@ -99,7 +99,6 @@ function _mac() {
 		git-lfs \
 		openssh \
 		openssl \
-		readline \
 		moreutils \
 		gnu-sed \
 		coreutils \

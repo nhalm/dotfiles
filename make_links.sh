@@ -37,7 +37,6 @@ case "$(uname -s)" in
 	;;
     Darwin*)
 	eval "$(/opt/homebrew/bin/brew shellenv)"
-	stow iterm2
 	;;
     CYGWIN*) echo "cygwin not supported";;
     MINGW*) echo "MinGw not supported";;
@@ -45,7 +44,5 @@ case "$(uname -s)" in
 esac
 
 
-safe_stow nvim
 safe_stow home
 safe_stow bin
-safe_stow claude
