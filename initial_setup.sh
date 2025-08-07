@@ -33,6 +33,15 @@ $cdir/make_links.sh
 echo "finished setting symlinks"
 echo
 
+echo "installing tmux plugin manager..."
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+    echo "TPM installed successfully"
+else
+    echo "TPM already installed"
+fi
+echo
+
 # if [[ ${platform} == "Mac" ]]; then
 # 	echo "setting up nfs..."
 # 	$cdir/darwin_nfs.sh

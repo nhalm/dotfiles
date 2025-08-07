@@ -115,3 +115,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 alias claude="/Users/nhalm/.claude/local/claude"
+
+# Tmux sessionizer alias
+alias tmf="~/.local/scripts/tmux-sessionizer.sh"
