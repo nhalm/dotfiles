@@ -15,14 +15,13 @@ Personal dotfiles configuration managed with GNU Stow, featuring both **Zsh** an
 git clone git@github.com:nhalm/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
-# Install command-line tools (no password prompts)
-./default_applications.sh
+# Option 1: Install everything at once (tools + symlinks)
+./initial_setup.sh
 
-# Optional: Install GUI applications (may prompt for password)
-./gui_applications.sh
-
-# Create symlinks for all configurations
-./make_links.sh
+# Option 2: Install components separately
+./default_applications.sh  # Command-line tools (no password prompts)
+./gui_applications.sh      # Optional: GUI applications (may prompt for password)
+./make_links.sh            # Create symlinks for all configurations
 ```
 
 ## What Gets Installed
@@ -30,10 +29,13 @@ cd ~/dotfiles
 ### Command Line Tools
 - **Shells**: Zsh (simplified), Fish with Tide prompt
 - **Core utilities**: Git, SSH, ripgrep, fd, fzf, jq, tree, bat, glow
-- **Development**: Go, Node.js, Python (pyenv), yarn
+- **Development**: Go, Node.js (fnm), Python (pyenv/uv), yarn, autoconf, dos2unix
 - **Editors**: Neovim with full configuration
 - **Terminal**: tmux with custom sessionizer
 - **Containers**: Docker, Colima
+- **Cloud/DevOps**: AWS CLI, AWS Vault, Terraform, Kubernetes CLI, Helm
+- **GitHub**: gh CLI for GitHub operations
+- **System**: htop for process monitoring, yq for YAML processing
 
 ### Fish Shell Features
 - **Tide prompt**: Beautiful, informative two-line prompt
@@ -76,9 +78,11 @@ exit
 
 ## Installation Scripts
 
+- **`initial_setup.sh`**: Complete setup (runs default_applications.sh + make_links.sh)
 - **`default_applications.sh`**: Core tools, no password required
 - **`gui_applications.sh`**: GUI apps, may need admin password
 - **`make_links.sh`**: Creates symlinks, handles conflicts gracefully
+- **`darwin_nfs.sh`**: NFS setup for macOS (currently disabled)
 
 ## Conflict Handling
 
@@ -100,11 +104,15 @@ The installation automatically handles conflicts by:
 
 ## Directory Structure
 
-- **`home/`** - Files that go directly in `~/` (zsh, git, fish configs)
+- **`home/`** - Dotfiles that get symlinked to `~/`
+  - `.claude/` - Claude configuration and CLAUDE.md
+  - `.config/` - Application configurations
+  - `.tmux.conf` - Tmux configuration
+  - `.zshrc` - Zsh configuration
+  - `.psqlrc` - PostgreSQL client configuration
+  - `tmux/` - Tmux plugin manager (TPM)
 - **`bin/`** - Scripts that go in `~/.local/scripts/`
-- **`nvim/`** - Neovim configuration
-- **`claude/`** - Claude agents, tools, and workflows
-- **`iterm2/`** - iTerm2 configuration (macOS only)
+- **`.claude/`** - Local Claude settings for this repo
 
 ## Testing Fish Shell
 
