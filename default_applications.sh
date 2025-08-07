@@ -128,7 +128,15 @@ function _mac() {
 		docker \
 		colima \
 		aws-vault \
-		awscli
+		awscli \
+		autoconf \
+		dos2unix \
+		gh \
+		helm \
+		htop \
+		kubernetes-cli \
+		terraform \
+		yq
 
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 

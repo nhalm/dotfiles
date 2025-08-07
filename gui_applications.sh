@@ -13,7 +13,6 @@ brew install --cask --force \
 	cleanshot \
 	spotify \
 	google-drive \
-	webex \
 	claude-code \
 	claude \
 	chatgpt
