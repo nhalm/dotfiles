@@ -105,7 +105,8 @@ function _mac() {
 		neovim \
 		glow \
 		bat \
-		fish
+		fish \
+    1password-cli
 
 	# Install development tools
 	brew install --force \

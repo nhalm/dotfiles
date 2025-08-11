@@ -15,6 +15,7 @@ brew install --cask --force \
 	google-drive \
 	claude-code \
 	claude \
-	chatgpt
+	chatgpt \
+  1password
 
 echo "GUI applications installation complete!"
