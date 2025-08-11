@@ -1,128 +1,122 @@
 # dotfiles
 
-Personal dotfiles configuration managed with GNU Stow, featuring both **Zsh** and **Fish** shell support.
+Personal dotfiles configuration for macOS development environment.
 
-## Prerequisites
-
-- macOS (Linux support is experimental)
-- Git
-- Homebrew (will be installed automatically)
-
-## Quick Install
+## Setup
 
 ```bash
-# Clone to home directory
-git clone git@github.com:nhalm/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-
-# Option 1: Install everything at once (tools + symlinks)
 ./initial_setup.sh
-
-# Option 2: Install components separately
-./default_applications.sh  # Command-line tools (no password prompts)
-./gui_applications.sh      # Optional: GUI applications (may prompt for password)
-./make_links.sh            # Create symlinks for all configurations
 ```
 
-## What Gets Installed
+## Shell Configuration
 
-### Command Line Tools
-- **Shells**: Zsh (simplified), Fish with Tide prompt
-- **Core utilities**: Git, SSH, ripgrep, fd, fzf, jq, tree, bat, glow
-- **Development**: Go, Node.js (fnm), Python (pyenv/uv), yarn, autoconf, dos2unix
-- **Editors**: Neovim with full configuration
-- **Terminal**: tmux with custom sessionizer
-- **Containers**: Docker, Colima
-- **Cloud/DevOps**: AWS CLI, AWS Vault, Terraform, Kubernetes CLI, Helm
-- **GitHub**: gh CLI for GitHub operations
-- **System**: htop for process monitoring, yq for YAML processing
+### Fish (Default Shell)
+- **Tide prompt**: Informative two-line prompt with git status, command duration, exit codes
+- **Fisher plugins**:
+  - `PatrickF1/fzf.fish` - Fuzzy search for history (Ctrl+R), files (Ctrl+Alt+F), directories
+  - `jorgebucaran/autopair.fish` - Auto-close brackets, quotes, parentheses
+  - `jorgebucaran/nvm.fish` - Node version management integrated with fish
+- **Key bindings**: 
+  - Ctrl+R for fuzzy history search
+  - Auto-suggestions from command history
+  - Syntax highlighting as you type
 
-### Fish Shell Features
-- **Tide prompt**: Beautiful, informative two-line prompt
-- **Plugin manager**: Fisher with essential plugins
-- **Auto-completion**: Bracket/quote pairing, fuzzy history search
-- **Node management**: Native nvm.fish integration
-- **Optimized for AI tools**: Better compatibility with Cursor/Claude
+### Zsh (Secondary)
+- Simplified oh-my-zsh configuration
+- Minimal plugins for quick fallback shell
 
-### GUI Applications (Optional)
-- **Terminals**: Kitty
-- **Editors**: VS Code, Cursor  
-- **Browsers**: Brave
-- **Productivity**: Raycast, CleanShot, Spotify, Google Drive
-- **AI Tools**: Claude, Claude Code, ChatGPT
+## Development Environment
 
-### Configuration Files
-- **Zsh**: Simplified oh-my-zsh setup with essential plugins
-- **Fish**: Full configuration with Tide prompt and productivity plugins
-- **Git**: Helpful aliases and SSH URL rewriting for GitHub
-- **Tmux**: Custom keybindings and sessionizer
-- **Neovim**: Complete Lua configuration
-- **Claude**: Specialized agents, tools, and workflows
+### Neovim
+- **Package Manager**: Lazy.nvim for fast plugin loading
+- **LSP Support**: Full language server protocol with Mason for auto-installation
+- **Key Features**:
+  - Telescope for fuzzy finding files, grep, and more
+  - Treesitter for advanced syntax highlighting and text objects
+  - Gitsigns for inline git blame and changes
+  - Auto-session for workspace persistence
+  - Which-key for discoverable keybindings
+  - Conform for formatting, nvim-lint for linting
+- **Custom Keymaps**: Leader key (space) based navigation
 
-## Shell Usage
+### Tmux
+- **TPM (Tmux Plugin Manager)**: Auto-installed for plugin management
+- **Sessionizer** (`Ctrl+b f`): Quick project switching using fzf
+  - Searches ~/git for projects
+  - Creates/attaches to tmux sessions per project
+  - Accessible via `tmux-sessionizer` command
+- **Custom Keybindings**:
+  - Vim-style pane navigation
+  - Easy window/pane creation and management
 
-### Switch between shells:
-```bash
-# From zsh to fish
-fish
+### Git Configuration
+- **SSH Commit Signing**: Integrated with 1Password for secure signing
+- **SSH URL Rewriting**: Automatically uses SSH for GitHub
+- **Global Gitignore**: Excludes macOS system files, IDE configs, logs, env files
+- **Useful Aliases**:
+  - `git co` - checkout
+  - `git cob` - checkout new branch
+  - `git publish` - push current branch to origin
+  - `git amend` - amend last commit
+  - `git ll` - pretty log with file changes
+  - `git bclean` - clean merged branches
+- **Auto-rebase on pull**: Keeps history linear
 
-# From fish back to zsh  
-exit
-```
+## Package Management
 
-### Fish shell features:
-- **Ctrl+R**: Fuzzy history search
-- **Ctrl+Alt+F**: Fuzzy file finder
-- **Auto-suggestions**: Type and see suggestions from history
-- **Syntax highlighting**: Commands colored as you type
+### Homebrew
+Primary package manager for macOS with all tools installed via brew/cask
 
-## Installation Scripts
+### Language-Specific
+- **Node.js**: fnm (Fast Node Manager) with nvm.fish integration
+- **Python**: pyenv for version management, uv for fast package management
+- **Go**: Latest version via Homebrew
 
-- **`initial_setup.sh`**: Complete setup (runs default_applications.sh + make_links.sh)
-- **`default_applications.sh`**: Core tools, no password required
-- **`gui_applications.sh`**: GUI apps, may need admin password
-- **`make_links.sh`**: Creates symlinks, handles conflicts gracefully
-- **`darwin_nfs.sh`**: NFS setup for macOS (currently disabled)
+## Command Line Tools
+- **Search**: ripgrep (rg), fd, fzf for fast file/text searching
+- **File Management**: bat (better cat), glow (markdown viewer), tree
+- **System Monitoring**: htop, bottom
+- **JSON/YAML**: jq, yq for processing
+- **HTTP**: httpie for API testing
+- **Git Enhancement**: gh for GitHub CLI operations
 
-## Conflict Handling
+## Cloud & DevOps
+- **AWS**: AWS CLI v2, aws-vault for credential management
+- **Kubernetes**: kubectl, helm, k9s for cluster management
+- **Infrastructure**: Terraform
+- **Containers**: Docker via Colima (lightweight VM)
 
-The installation automatically handles conflicts by:
-- Backing up existing configs with `.dotfiles-backup` suffix
-- Creating proper symlinks to your dotfiles
-- Ignoring backup files in git (`.gitignore` configured)
+## Claude AI Integration
+- **Custom Agents** (`~/.claude/agents/`):
+  - backend-architect, python-dev, golang-dev, sql-pro
+  - deployment-engineer, performance-engineer
+  - code-reviewer, error-detective
+- **Workflows** (`~/.claude/workflows/`):
+  - git-workflow, smart-fix, workflow-automate
+- **Personal Configuration**: CLAUDE.md with role context and preferences
 
-## Manual Steps After Install
-
-1. **Configure Fish prompt** (optional):
-   ```bash
-   fish -c "tide configure"
-   ```
-
-2. **Configure Claude Code** with your API key
-
-3. **Install additional fonts** if needed for terminal themes
+## GUI Applications
+- **Terminals**: Kitty (GPU-accelerated)
+- **Editors**: VS Code, Cursor (AI-enhanced)
+- **Browser**: Brave
+- **Productivity**: Raycast (launcher), CleanShot (screenshots)
+- **AI Tools**: Claude desktop, Claude Code CLI
 
 ## Directory Structure
 
-- **`home/`** - Dotfiles that get symlinked to `~/`
-  - `.claude/` - Claude configuration and CLAUDE.md
-  - `.config/` - Application configurations
-  - `.tmux.conf` - Tmux configuration
-  - `.zshrc` - Zsh configuration
-  - `.psqlrc` - PostgreSQL client configuration
-  - `tmux/` - Tmux plugin manager (TPM)
-- **`bin/`** - Scripts that go in `~/.local/scripts/`
-- **`.claude/`** - Local Claude settings for this repo
+```
+~/dotfiles/
+├── home/              # Symlinked to ~/
+│   ├── .config/       # App configs (fish, nvim, etc)
+│   ├── .claude/       # Claude AI configuration
+│   ├── .gitconfig     # Git configuration
+│   ├── .tmux.conf     # Tmux configuration
+│   └── tmux/          # TPM plugins
+├── bin/               # Scripts in ~/.local/scripts/
+└── *.sh              # Setup scripts
+```
 
-## Testing Fish Shell
-
-Fish shell is optimized for better AI tool compatibility. Test it with:
-- Cursor AI features
-- Claude Code interactions
-- Command-line AI workflows
-
-The improved shell parsing and cleaner output should resolve interaction issues you may have experienced with zsh.
-
-## Customization
-
-All configurations can be customized by editing files in their respective directories. The setup is idempotent and can be run multiple times safely.
+## SSH Configuration
+- ED25519 keys for authentication
+- 1Password SSH agent integration
+- GitHub SSH URL auto-rewriting
