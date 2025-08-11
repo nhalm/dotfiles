@@ -3,4 +3,7 @@ if status is-interactive
     
     # Tmux sessionizer alias
     alias tmf="~/.local/scripts/tmux-sessionizer.sh"
+    
+    # Use neovim for vim
+    alias vim="nvim"
 end

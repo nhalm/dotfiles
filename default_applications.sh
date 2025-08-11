@@ -49,18 +49,7 @@ function _install_brew() {
 }
 
 
-function _setup_fish() {
-	if command -v fish &> /dev/null; then
-		echo "Setting up fish shell plugins..."
-		# Install fisher plugin manager
-		fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
-		# Install plugins from fish_plugins file
-		fish -c "fisher update"
-		echo "Fish shell setup complete"
-	else
-		echo "Fish shell not found, skipping fish setup"
-	fi
-}
+# Fish setup moved to initial_setup.sh to run after stow creates symlinks
 
 function _install_python_brew() {
 	# Install Python with uv (fast, pre-built binaries)
@@ -141,7 +130,6 @@ function _mac() {
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 
 	_install_python_brew
-	_setup_fish
 
 	# Specify the preferences directory
 

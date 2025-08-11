@@ -42,6 +42,34 @@ else
 fi
 echo
 
+# Setup fish after stow has created symlinks
+if command -v fish &> /dev/null; then
+    echo "setting up fish shell plugins..."
+    # Install fisher plugin manager if not already installed
+    if ! fish -c "type -q fisher" 2>/dev/null; then
+        echo "installing Fisher plugin manager..."
+        fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
+    fi
+    # Install plugins from fish_plugins file if it exists
+    if [ -f "$HOME/.config/fish/fish_plugins" ]; then
+        echo "installing/updating fish plugins..."
+        fish -c "fisher update"
+    fi
+    echo "fish shell setup complete"
+    
+    # Set fish as default shell
+    echo "setting fish as default shell..."
+    fish_path=$(which fish)
+    if ! grep -q "$fish_path" /etc/shells; then
+        echo "adding fish to /etc/shells (may require password)..."
+        echo "$fish_path" | sudo tee -a /etc/shells
+    fi
+    chsh -s "$fish_path"
+    echo "fish is now the default shell"
+else
+    echo "fish not installed, skipping fish setup"
+fi
+
 # if [[ ${platform} == "Mac" ]]; then
 # 	echo "setting up nfs..."
 # 	$cdir/darwin_nfs.sh

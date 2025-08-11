@@ -27,3 +27,4 @@ I'm the CTO of JustiFi, a fintech company focused on payment solutions for busin
 - Pause for confirmation before proceeding with code or detailed solutions
 - Don't keep legacy code or write comments about code changes
 - Comments should be minimal - only where logic might be confusing
+- Never add Claude attribution or co-author lines to git commits
