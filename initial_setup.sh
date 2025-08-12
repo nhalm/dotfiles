@@ -42,6 +42,37 @@ else
 fi
 echo
 
+# Setup Python environment for Neovim
+echo "setting up Python environment for Neovim..."
+if command -v pyenv &> /dev/null && pyenv commands | grep -q virtualenv; then
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+    
+    # Create dedicated virtualenv for Neovim if it doesn't exist
+    if ! pyenv versions --bare | grep -q "^neovim$"; then
+        python3_version=$(pyenv install -l | grep --extended-regexp "^\s+3\.[0-9]+\.[0-9]+$" | tail -n 1 | xargs)
+        echo "Creating Neovim Python environment with Python ${python3_version}..."
+        
+        # Install Python version if not already installed
+        if ! pyenv versions --bare | grep -q "^${python3_version}$"; then
+            pyenv install -s "$python3_version"
+        fi
+        
+        # Create virtualenv and install pynvim
+        pyenv virtualenv "$python3_version" neovim
+        pyenv shell neovim
+        pip install --upgrade pip pynvim
+        pyenv shell --unset
+        echo "Neovim Python environment created"
+    else
+        echo "Neovim Python environment already exists"
+    fi
+else
+    echo "pyenv-virtualenv not found, skipping Neovim Python setup"
+fi
+echo
+
 # Setup fish after stow has created symlinks
 if command -v fish &> /dev/null; then
     echo "setting up fish shell plugins..."
@@ -70,14 +101,24 @@ else
     echo "fish not installed, skipping fish setup"
 fi
 
-# if [[ ${platform} == "Mac" ]]; then
-# 	echo "setting up nfs..."
-# 	$cdir/darwin_nfs.sh
-# 	echo "finished setting up nfs"
-# 	echo ""
-# fi
+# Setup Neovim post-install configuration
+if command -v nvim &> /dev/null; then
+    echo "setting up Neovim plugins and tools..."
+    
+    # Update Neovim plugins
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
+    
+    # Install TreeSitter parsers
+    nvim --headless "+TSUpdateSync" +qa 2>/dev/null || true
+    
+    # Update Mason packages
+    nvim --headless "+MasonUpdate" +qa 2>/dev/null || true
+    
+    echo "Neovim setup complete"
+else
+    echo "Neovim not installed, skipping plugin setup"
+fi
+echo
 
-# echo "configuring fonts..."
-# $cdir/fonts/install.sh
-# echo "finished configuring fonts"
-# echo
+echo "Setup complete! 🎉"
+echo "Please restart your terminal and run 'nvim' then ':checkhealth' to verify everything is working correctly."

@@ -44,6 +44,20 @@ opt.swapfile = false
 -- turn on backup copy for inotify
 -- opt.backupcopy = "yes"
 
+-- session options for auto-session
+opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
+-- Disable providers we don't use
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
+-- Set Python host program (will be configured by setup script)
+local pyenv_root = vim.fn.expand("~/.pyenv")
+local neovim_python = pyenv_root .. "/versions/neovim/bin/python"
+if vim.fn.filereadable(neovim_python) == 1 then
+  vim.g.python3_host_prog = neovim_python
+end
+
 vim.filetype.add({
   extension = {
     mdx = "markdown"

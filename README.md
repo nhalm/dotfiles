@@ -8,6 +8,15 @@ Personal dotfiles configuration for macOS development environment.
 ./initial_setup.sh
 ```
 
+This will:
+1. Install all required applications via Homebrew
+2. Create symbolic links for all configurations
+3. Install Tmux Plugin Manager (TPM)
+4. Setup a dedicated Python environment for Neovim
+5. Configure Fish shell with plugins
+6. Setup Neovim plugins and LSP servers
+7. Ensure all health checks pass
+
 ## Shell Configuration
 
 ### Fish (Default Shell)
@@ -41,6 +50,8 @@ Personal dotfiles configuration for macOS development environment.
 
 ### Tmux
 - **TPM (Tmux Plugin Manager)**: Auto-installed for plugin management
+- **Focus Events**: Enabled for proper Neovim file change detection
+- **Optimized Escape Time**: Set to 10ms for better Neovim responsiveness
 - **Sessionizer** (`Ctrl+b f`): Quick project switching using fzf
   - Searches ~/git for projects
   - Creates/attaches to tmux sessions per project
@@ -69,7 +80,10 @@ Primary package manager for macOS with all tools installed via brew/cask
 
 ### Language-Specific
 - **Node.js**: fnm (Fast Node Manager) with nvm.fish integration
-- **Python**: pyenv for version management, uv for fast package management
+- **Python**: 
+  - pyenv for version management
+  - uv for fast package management
+  - Dedicated Neovim virtualenv with pynvim pre-installed
 - **Go**: Latest version via Homebrew
 
 ## Command Line Tools
@@ -120,3 +134,22 @@ Primary package manager for macOS with all tools installed via brew/cask
 - ED25519 keys for authentication
 - 1Password SSH agent integration
 - GitHub SSH URL auto-rewriting
+
+## Health Checks
+
+After setup, run `:checkhealth` in Neovim to verify everything is configured correctly. The setup scripts automatically fix common issues:
+
+- ✅ Tmux focus-events enabled for file change detection
+- ✅ Proper sessionoptions for auto-session plugin
+- ✅ Dedicated Python virtualenv for Neovim
+- ✅ Disabled unused providers (Perl, Ruby) to remove warnings
+- ✅ All LSP servers and formatters auto-installed via Mason
+- ✅ stylua available for Lua file formatting
+
+### Optional Language Support
+
+Uncomment lines in `default_applications.sh` to add:
+- Rust toolchain (includes cargo)
+- Tree-sitter CLI for grammar compilation
+- PHP and Composer
+- Julia language support

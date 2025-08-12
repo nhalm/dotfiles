@@ -57,9 +57,12 @@ function _install_python_brew() {
 		uv python install 3.13
 	fi
 
-	# Install pyenv for legacy projects
+	# Install pyenv and pyenv-virtualenv for Python version management
 	if ! command -v pyenv &> /dev/null; then
-		brew install pyenv
+		brew install pyenv pyenv-virtualenv
+	else
+		# Ensure pyenv-virtualenv is installed even if pyenv already exists
+		brew list pyenv-virtualenv &>/dev/null || brew install pyenv-virtualenv
 	fi
 
 	eval "$(pyenv init --path)"
@@ -127,6 +130,14 @@ function _mac() {
 		kubernetes-cli \
 		terraform \
 		yq
+
+	# Optional language tools (uncomment if needed)
+	# brew install --force \
+	#	rust \           # Rust toolchain (includes cargo)
+	#	tree-sitter \    # Tree-sitter CLI for grammar compilation
+	#	php \            # PHP language
+	#	composer \       # PHP package manager
+	#	julia            # Julia language
 
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 

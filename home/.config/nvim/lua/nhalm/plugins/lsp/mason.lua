@@ -59,6 +59,7 @@ return {
         "gotests",
         "golangci-lint",
         "luacheck"
+        -- Note: stylua is our Lua formatter (already included above)
       },
     })
   end,
