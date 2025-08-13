@@ -8,7 +8,7 @@ else
     git_repos=$(find ~/dev ~/Downloads ~/Documents -maxdepth 3 -type d -name .git 2>/dev/null | sed 's/\/.git$//' | sort -u || true)
     
     # Find regular directories (1 level deep)
-    regular_dirs=$(find ~/dev ~/Downloads ~/Documents -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
+    regular_dirs=$(find ~/dev ~/Downloads ~/Documents ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
     
     # Combine all directories and add "Create new session" option
     all_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
