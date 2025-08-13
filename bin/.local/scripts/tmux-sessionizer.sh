@@ -10,30 +10,52 @@ else
     # Find regular directories (1 level deep)
     regular_dirs=$(find ~/dev ~/Downloads ~/Documents -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
     
-    # Combine all directories
+    # Combine all directories and add "Create new session" option
     all_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
+    all_options=$(echo -e "Create new session...\n$all_options")
     
     # Use fzf with preview
-    selected=$(echo "$all_options" | fzf --preview 'ls -la {} 2>/dev/null | head -20' --preview-window=right:50%:wrap)
+    selected=$(echo "$all_options" | fzf --preview 'test "{}" = "Create new session..." && echo "Create a new tmux session without a directory" || ls -la "{}" 2>/dev/null | head -20' --preview-window=right:50%:wrap)
 fi
 
 if [[ -z $selected ]]; then
     exit 0
 fi
 
-# Create session name from directory path
-selected_name=$(basename "$selected" | tr . _)
+# Handle "Create new session" option
+if [[ $selected == "Create new session..." ]]; then
+    echo -n "Enter session name: "
+    read session_name
+    if [[ -z $session_name ]]; then
+        echo "No session name provided, exiting."
+        exit 0
+    fi
+    selected_name=$(echo "$session_name" | tr . _ | tr ' ' _)
+    selected=""  # No directory for this session
+else
+    # Create session name from directory path
+    selected_name=$(basename "$selected" | tr . _)
+fi
+
 tmux_running=$(pgrep tmux || true)
 
 # Check if we're not in tmux and tmux isn't running at all
 if [[ -z ${TMUX:-} ]] && [[ -z $tmux_running ]]; then
-    tmux new-session -s $selected_name -c $selected
+    if [[ -n $selected ]]; then
+        tmux new-session -s $selected_name -c $selected
+    else
+        tmux new-session -s $selected_name
+    fi
     exit 0
 fi
 
 # Only create new session if it doesn't exist
 if ! tmux has-session -t=$selected_name 2> /dev/null; then
-    tmux new-session -ds $selected_name -c $selected
+    if [[ -n $selected ]]; then
+        tmux new-session -ds $selected_name -c $selected
+    else
+        tmux new-session -ds $selected_name
+    fi
 fi
 
 # If we're inside tmux, switch to the session
