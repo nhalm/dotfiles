@@ -42,6 +42,17 @@ else
 fi
 echo
 
+echo "downloading kitty tokyonight-moon theme..."
+kitty_config_dir="$HOME/.config/kitty"
+if [ ! -f "$kitty_config_dir/tokyonight_moon.conf" ]; then
+    mkdir -p "$kitty_config_dir"
+    curl -fsSL "https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/kitty/tokyonight_moon.conf" -o "$kitty_config_dir/tokyonight_moon.conf"
+    echo "kitty tokyonight-moon theme downloaded successfully"
+else
+    echo "kitty tokyonight-moon theme already exists"
+fi
+echo
+
 # Setup Python environment for Neovim
 echo "setting up Python environment for Neovim..."
 if command -v pyenv &> /dev/null && pyenv commands | grep -q virtualenv; then

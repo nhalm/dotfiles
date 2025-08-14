@@ -1,10 +1,16 @@
 return {
   -- "AlexvZyl/nordic.nvim",
-  "rmehri01/onenord.nvim",
+  -- "rmehri01/onenord.nvim",
+  -- priority = 1000,
+  -- config = function()
+  --   require("onenord").load()
+  -- end,
+  "folke/tokyonight.nvim",
   priority = 1000,
   config = function()
-    require("onenord").load()
+    vim.cmd "colorscheme tokyonight-moon"
   end,
+
   -- "rose-pine/neovim",
   -- name = "rose-pine",
   -- config = function()

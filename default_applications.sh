@@ -87,6 +87,7 @@ function _mac() {
 
 # Install command line tools
 	brew install --force \
+    bash \
 		git \
 		git-lfs \
 		openssh \
@@ -130,6 +131,9 @@ function _mac() {
 		kubernetes-cli \
 		terraform \
 		yq
+
+	# Install fonts
+	brew install --cask font-monaspace
 
 	# Optional language tools (uncomment if needed)
 	# brew install --force \
