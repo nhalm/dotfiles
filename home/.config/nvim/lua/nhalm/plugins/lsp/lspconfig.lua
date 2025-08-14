@@ -142,6 +142,45 @@ return {
     lspconfig["pyright"].setup({
       capabilities = capabilities,
       on_attach = on_attach,
+      settings = {
+        python = {
+          analysis = {
+            autoSearchPaths = true,
+            useLibraryCodeForTypes = true,
+            diagnosticMode = "workspace",
+          },
+        },
+      },
+      on_new_config = function(config, root_dir)
+        -- Try to find virtual environment
+        local venv_path = nil
+        
+        -- Check common venv locations
+        local possible_venvs = {
+          root_dir .. "/venv/bin/python",
+          root_dir .. "/.venv/bin/python", 
+          root_dir .. "/env/bin/python",
+        }
+        
+        for _, path in ipairs(possible_venvs) do
+          if vim.fn.executable(path) == 1 then
+            venv_path = path
+            break
+          end
+        end
+        
+        -- Check environment variables
+        if not venv_path then
+          local venv = os.getenv("VIRTUAL_ENV")
+          if venv and vim.fn.executable(venv .. "/bin/python") == 1 then
+            venv_path = venv .. "/bin/python"
+          end
+        end
+        
+        if venv_path then
+          config.settings.python.pythonPath = venv_path
+        end
+      end,
     })
 
     -- configure marksman server

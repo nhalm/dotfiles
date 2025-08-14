@@ -10,10 +10,20 @@ return {
       javascriptreact = { "eslint_d" },
       typescriptreact = { "eslint_d" },
       svelte = { "eslint_d" },
-      python = { "pylint" },
+      python = { "ruff" },
       go = { "golangcilint" },
       lua = { "luacheck" }
     }
+
+    -- Configure ruff to use venv when available
+    lint.linters.ruff.cmd = function()
+      local venv_ruff = vim.fn.getcwd() .. "/.venv/bin/ruff"
+      if vim.fn.executable(venv_ruff) == 1 then
+        return venv_ruff
+      else
+        return "ruff"
+      end
+    end
 
     local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 
