@@ -92,43 +92,35 @@ if command -v fish &> /dev/null; then
         echo "installing Fisher plugin manager..."
         fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
     fi
-    # Install plugins from fish_plugins file if it exists
-    if [ -f "$HOME/.config/fish/fish_plugins" ]; then
-        echo "installing/updating fish plugins..."
-        fish -c "fisher update"
-    fi
+    # Install fish plugins individually
+    echo "installing fish plugins..."
+    fish -c "fisher install PatrickF1/fzf.fish" || echo "fzf.fish failed to install"
+    fish -c "fisher install jorgebucaran/autopair.fish" || echo "autopair.fish failed to install"
+    fish -c "fisher install jorgebucaran/nvm.fish" || echo "nvm.fish failed to install"
+    fish -c "fisher install ilancosman/tide@v6" || echo "tide failed to install"
+    fish -c "fisher install vitallium/tokyonight-fish" || echo "tokyonight-fish failed to install"
     echo "fish shell setup complete"
     
-    # Set fish as default shell
-    echo "setting fish as default shell..."
+    # Set fish as default shell if not already set
     fish_path=$(which fish)
-    if ! grep -q "$fish_path" /etc/shells; then
-        echo "adding fish to /etc/shells (may require password)..."
-        echo "$fish_path" | sudo tee -a /etc/shells
+    current_shell=$(dscl . -read /Users/$(whoami) UserShell | awk '{print $2}')
+    
+    if [ "$current_shell" = "$fish_path" ]; then
+        echo "fish is already the default shell"
+    else
+        echo "setting fish as default shell..."
+        if ! grep -q "$fish_path" /etc/shells; then
+            echo "adding fish to /etc/shells (may require password)..."
+            echo "$fish_path" | sudo tee -a /etc/shells
+        fi
+        chsh -s "$fish_path"
+        echo "fish is now the default shell"
     fi
-    chsh -s "$fish_path"
-    echo "fish is now the default shell"
 else
     echo "fish not installed, skipping fish setup"
 fi
 
-# Setup Neovim post-install configuration
-if command -v nvim &> /dev/null; then
-    echo "setting up Neovim plugins and tools..."
-    
-    # Update Neovim plugins
-    nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
-    
-    # Install TreeSitter parsers
-    nvim --headless "+TSUpdateSync" +qa 2>/dev/null || true
-    
-    # Update Mason packages
-    nvim --headless "+MasonUpdate" +qa 2>/dev/null || true
-    
-    echo "Neovim setup complete"
-else
-    echo "Neovim not installed, skipping plugin setup"
-fi
+echo "Neovim plugins can be installed manually by running ':Lazy sync' in nvim"
 echo
 
 echo "Setup complete! 🎉"
