@@ -130,7 +130,11 @@ function _mac() {
 		htop \
 		kubernetes-cli \
 		terraform \
-		yq
+		yq \
+    claude-code
+
+	# Disable Claude Code auto-updater (use brew for updates instead)
+	claude config set -g autoUpdates false 2>/dev/null || true
 
 	# Install fonts
 	brew install --cask font-monaspace
