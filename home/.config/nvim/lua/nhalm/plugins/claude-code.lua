@@ -10,9 +10,9 @@ return {
         auto_close = false,
         provider = "snacks",
         snacks_win_opts = {
-          position = "float",
+          position = "bottom",
           width = 0.8,
-          height = 0.8,
+          height = 0.4,
           border = "rounded",
         },
       },

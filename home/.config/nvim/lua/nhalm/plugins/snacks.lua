@@ -43,7 +43,7 @@ return {
     { "<leader>gl", function() Snacks.git.log() end, desc = "Git Log" },
     
     -- Terminal (replace our basic terminal keymaps)
-    { "<leader>tt", function() Snacks.terminal() end, desc = "Terminal" },
+    { "<leader>tt", function() Snacks.terminal() end, desc = "Terminal", mode = { "n", "t" } },
     { "<leader>th", function() Snacks.terminal.split() end, desc = "Terminal Split" },
     { "<leader>tv", function() Snacks.terminal.vsplit() end, desc = "Terminal Vsplit" },
   },
