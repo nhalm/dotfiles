@@ -10,9 +10,27 @@ else
     # Find regular directories (1 level deep)
     regular_dirs=$(find ~/dev ~/Downloads ~/Documents ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
     
-    # Combine all directories and add "Create new session" option
-    all_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
-    all_options=$(echo -e "Create new session...\n$all_options")
+    # Get existing tmux sessions
+    existing_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | sort || true)
+    current_session=$(tmux display-message -p "#{session_name}" 2>/dev/null || true)
+    
+    # Combine directories first
+    directory_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
+    
+    # Start with "Create new session" and directories
+    all_options=$(echo -e "Create new session...\n$directory_options")
+    
+    # Add all existing sessions at the bottom (current session last)
+    if [[ -n $existing_sessions ]]; then
+        other_sessions=$(echo "$existing_sessions" | grep -v "^${current_session}$" || true)
+        if [[ -n $other_sessions ]]; then
+            all_options=$(echo -e "$all_options\n$other_sessions")
+        fi
+        # Add current session at the very bottom if it exists
+        if [[ -n $current_session ]]; then
+            all_options=$(echo -e "$all_options\n$current_session")
+        fi
+    fi
     
     # Use fzf with preview
     selected=$(echo "$all_options" | fzf --preview 'test "{}" = "Create new session..." && echo "Create a new tmux session without a directory" || ls -la "{}" 2>/dev/null | head -20' --preview-window=right:50%:wrap)
@@ -32,6 +50,10 @@ if [[ $selected == "Create new session..." ]]; then
     fi
     selected_name=$(echo "$session_name" | tr . _ | tr ' ' _)
     selected=""  # No directory for this session
+elif tmux has-session -t="$selected" 2>/dev/null; then
+    # Selected is an existing session name
+    selected_name=$selected
+    selected=""  # No directory needed for existing session
 else
     # Create session name from directory path
     selected_name=$(basename "$selected" | tr . _)
