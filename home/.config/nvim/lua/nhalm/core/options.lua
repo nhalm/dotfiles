@@ -61,5 +61,8 @@ end
 vim.filetype.add({
   extension = {
     mdx = "markdown"
+  },
+  filename = {
+    [".luacheckrc"] = "conf"
   }
 })
