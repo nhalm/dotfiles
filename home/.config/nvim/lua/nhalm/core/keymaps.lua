@@ -39,7 +39,4 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 
 -- terminal keymaps now handled by snacks.nvim
 
--- claude code
-keymap.set("n", "<leader>cc", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code terminal" })
-keymap.set("n", "<C-g>", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code terminal" })
-keymap.set("t", "<C-g>", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code terminal" })
+-- claude code keymaps now handled by claudecode.nvim plugin
