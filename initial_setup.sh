@@ -28,6 +28,11 @@ echo "installing default applications..."
 $cdir/default_applications.sh
 echo "finished installs"
 
+echo "creating development directories..."
+mkdir -p "$HOME/personal"
+mkdir -p "$HOME/work"
+echo "development directories created"
+
 echo "setting symlinks..."
 $cdir/make_links.sh
 echo "finished setting symlinks"

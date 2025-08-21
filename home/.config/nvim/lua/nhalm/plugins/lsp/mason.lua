@@ -55,7 +55,7 @@ return {
         "golines",
         "goimports",
         "gotests",
-        "golangci-lint"
+        "golangci-lint",
         -- Note: stylua is our Lua formatter (already included above)
       },
     })

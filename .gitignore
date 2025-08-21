@@ -4,7 +4,7 @@
 /tmux/*
 !/tmux/plugins/tpm
 /nvim/.config/nvim/lua/packer_compiled.lua
-
+/.claude/claude.settings.local
 # Backup files created by make_links.sh
 *.dotfiles-backup
 
