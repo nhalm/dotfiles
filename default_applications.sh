@@ -75,8 +75,18 @@ function _install_python_brew() {
 	pyenv global "$python3_version"
 }
 
-
-
+function _install_ruby_brew() {
+	# Initialize frum for this session
+	export PATH="$HOME/.frum/bin:$PATH"
+	
+	# Get latest Ruby version dynamically
+	ruby_version=$(frum install --list 2>/dev/null | grep -E "^\s*[0-9]+\.[0-9]+\.[0-9]+$" | tail -n 1 | xargs || echo "3.3.6")
+	echo "Installing Ruby version: ${ruby_version}"
+	
+	# Install and set global Ruby version
+	frum install "${ruby_version}" 2>/dev/null || echo "Ruby ${ruby_version} already installed or frum needs shell restart"
+	frum global "${ruby_version}" 2>/dev/null || echo "Setting global Ruby version (may need shell restart)"
+}
 
 function _mac() {
   _install_brew
@@ -131,6 +141,7 @@ function _mac() {
 		kubernetes-cli \
 		terraform \
 		yq \
+		frum \
     claude-code
 
 	# Disable Claude Code auto-updater (use brew for updates instead)
@@ -150,6 +161,7 @@ function _mac() {
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 
 	_install_python_brew
+	_install_ruby_brew
 
 	# Specify the preferences directory
 
