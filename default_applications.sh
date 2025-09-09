@@ -81,11 +81,14 @@ function _install_ruby_brew() {
 	
 	# Get latest Ruby version dynamically
 	ruby_version=$(frum install --list 2>/dev/null | grep -E "^\s*[0-9]+\.[0-9]+\.[0-9]+$" | tail -n 1 | xargs || echo "3.3.6")
-	echo "Installing Ruby version: ${ruby_version}"
+	echo "ruby_version=${ruby_version}"
 	
-	# Install and set global Ruby version
-	frum install "${ruby_version}" 2>/dev/null || echo "Ruby ${ruby_version} already installed or frum needs shell restart"
-	frum global "${ruby_version}" 2>/dev/null || echo "Setting global Ruby version (may need shell restart)"
+	# Check if version is already installed
+	if ! frum versions 2>/dev/null | grep -q "^${ruby_version}$"; then
+		frum install "${ruby_version}"
+	fi
+	
+	frum global "${ruby_version}"
 }
 
 function _install_node_brew() {
@@ -93,12 +96,17 @@ function _install_node_brew() {
 	export PATH="$HOME/.fnm:$PATH"
 	eval "$(fnm env)"
 	
-	# Install latest LTS Node version
-	fnm install --lts
-	fnm use lts-latest
-	fnm default lts-latest
+	# Get latest LTS version
+	lts_version=$(fnm list-remote --lts | tail -n 1 | xargs)
+	echo "node_version=${lts_version}"
 	
-	echo "Node.js LTS installed and set as default"
+	# Check if LTS version is already installed
+	if ! fnm list | grep -q "${lts_version}"; then
+		fnm install "${lts_version}"
+	fi
+	
+	fnm use "${lts_version}"
+	fnm default "${lts_version}"
 }
 
 function _mac() {
