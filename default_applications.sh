@@ -88,6 +88,19 @@ function _install_ruby_brew() {
 	frum global "${ruby_version}" 2>/dev/null || echo "Setting global Ruby version (may need shell restart)"
 }
 
+function _install_node_brew() {
+	# Initialize fnm for this session
+	export PATH="$HOME/.fnm:$PATH"
+	eval "$(fnm env)"
+	
+	# Install latest LTS Node version
+	fnm install --lts
+	fnm use lts-latest
+	fnm default lts-latest
+	
+	echo "Node.js LTS installed and set as default"
+}
+
 function _mac() {
   _install_brew
 
@@ -162,6 +175,7 @@ function _mac() {
 
 	_install_python_brew
 	_install_ruby_brew
+	_install_node_brew
 
 	# Specify the preferences directory
 

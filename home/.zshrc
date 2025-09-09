@@ -109,10 +109,8 @@ if which pyenv-virtualenv-init > /dev/null; then
 	eval "$(pyenv virtualenv-init -)"
 fi
 
-# Node.js setup
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# Node.js setup (fnm)
+eval "$(fnm env --use-on-cd)"
 
 alias claude="/opt/homebrew/bin/claude"
 

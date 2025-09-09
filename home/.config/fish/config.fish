@@ -9,6 +9,9 @@ if status is-interactive
     # Ruby setup (frum)
     frum init | source
     
+    # Node.js setup (fnm)
+    fnm env --use-on-cd | source
+    
     # Tmux sessionizer alias
     alias tmf="~/.local/scripts/tmux-sessionizer.sh"
     
