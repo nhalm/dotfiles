@@ -171,12 +171,15 @@ function _mac() {
 	# Install fonts
 	brew install --cask font-monaspace
 
+	# Install PHP and Composer
+	brew install --force \
+		php \            # PHP language
+		composer         # PHP package manager
+
 	# Optional language tools (uncomment if needed)
 	# brew install --force \
 	#	rust \           # Rust toolchain (includes cargo)
 	#	tree-sitter \    # Tree-sitter CLI for grammar compilation
-	#	php \            # PHP language
-	#	composer \       # PHP package manager
 	#	julia            # Julia language
 
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
