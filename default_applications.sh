@@ -117,7 +117,7 @@ function _mac() {
 	brew upgrade
 
 # Install command line tools
-	brew install --force \
+	brew install \
     bash \
 		git \
 		git-lfs \
@@ -144,7 +144,7 @@ function _mac() {
     1password-cli
 
 	# Install development tools
-	brew install --force \
+	brew install \
 		golang \
 		fnm \
 		yarn \
@@ -163,6 +163,10 @@ function _mac() {
 		terraform \
 		yq \
 		frum \
+		php \
+		composer \
+		libyaml \
+		readline \
     claude-code
 
 	# Disable Claude Code auto-updater (use brew for updates instead)
@@ -171,10 +175,6 @@ function _mac() {
 	# Install fonts
 	brew install --cask font-monaspace
 
-	# Install PHP and Composer
-	brew install --force \
-		php \            # PHP language
-		composer         # PHP package manager
 
 	# Optional language tools (uncomment if needed)
 	# brew install --force \
