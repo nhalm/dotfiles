@@ -1,3 +1,6 @@
+# Initialize Homebrew environment
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 # Pyenv setup
 set -gx PYENV_ROOT $HOME/.pyenv
 set -gx PATH $PYENV_ROOT/bin $PATH
