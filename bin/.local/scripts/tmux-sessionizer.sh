@@ -5,10 +5,10 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 else
     # Find all git repositories in common directories (up to 2 levels deep)
-    git_repos=$(find ~/dev ~/Downloads ~/Documents -maxdepth 3 -type d -name .git 2>/dev/null | sed 's/\/.git$//' | sort -u || true)
+    git_repos=$(find ~/dev ~/Downloads ~/Documents ~/personal ~/work -maxdepth 3 -type d -name .git 2>/dev/null | sed 's/\/.git$//' | sort -u || true)
     
     # Find regular directories (1 level deep)
-    regular_dirs=$(find ~/dev ~/Downloads ~/Documents ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
+    regular_dirs=$(find ~/dev ~/Downloads ~/Documents ~/personal ~/work ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
     
     # Get existing tmux sessions
     existing_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | sort || true)
