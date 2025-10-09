@@ -14,26 +14,28 @@ else
     existing_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | sort || true)
     current_session=$(tmux display-message -p "#{session_name}" 2>/dev/null || true)
     
-    # Combine directories first
+    # Combine directories
     directory_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
-    
-    # Start with "Create new session" and directories
-    all_options=$(echo -e "Create new session...\n$directory_options")
-    
-    # Add all existing sessions at the bottom (current session last)
+
+    # Start with "Create new session"
+    all_options="Create new session..."
+
+    # Add existing sessions after
     if [[ -n $existing_sessions ]]; then
         other_sessions=$(echo "$existing_sessions" | grep -v "^${current_session}$" || true)
         if [[ -n $other_sessions ]]; then
-            all_options=$(echo -e "$all_options\n$other_sessions")
+            all_options="${all_options}"$'\n'"${other_sessions}"
         fi
-        # Add current session at the very bottom if it exists
         if [[ -n $current_session ]]; then
-            all_options=$(echo -e "$all_options\n$current_session")
+            all_options="${all_options}"$'\n'"${current_session}"
         fi
     fi
+
+    # Add directories at the bottom
+    all_options="${all_options}"$'\n'"${directory_options}"
     
     # Use fzf with preview
-    selected=$(echo "$all_options" | fzf --preview 'test "{}" = "Create new session..." && echo "Create a new tmux session without a directory" || ls -la "{}" 2>/dev/null | head -20' --preview-window=right:50%:wrap)
+    selected=$(printf '%s' "$all_options" | SHELL=/bin/bash fzf --preview 'if [ -d {} ]; then ls -la {} | head -40; elif tmux has-session -t {} 2>/dev/null; then tmux capture-pane -ep -t {} | tail -40; else echo {}; fi' --preview-window=right:50%:wrap)
 fi
 
 if [[ -z $selected ]]; then
