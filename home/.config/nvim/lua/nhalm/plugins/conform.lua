@@ -22,6 +22,11 @@ return {
         python = { "ruff_fix", "ruff_format", "ruff_organize_imports" },
         go = {"gofumpt", "goimports"}
       },
+      formatters = {
+        prettier = {
+          prepend_args = { "--print-width", "100" },
+        },
+      },
       format_on_save = {
         lsp_fallback = true,
         async = false,

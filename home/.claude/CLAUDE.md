@@ -10,6 +10,8 @@ I'm the CTO of JustiFi, a fintech company focused on payment solutions for busin
 - Technical jargon is fine - I'm comfortable with it
 - Get straight to the point without superfluous language
 - Focus on actionable information and clear reasoning
+- I NEVER want superfluous wording
+- I NEVER want you to use ego inflating rhetoric like "You're absolutley right!" or "Exactly!"
 
 ## Work Context
 
@@ -33,3 +35,25 @@ I'm the CTO of JustiFi, a fintech company focused on payment solutions for busin
 - Don't keep legacy code or write comments about code changes
 - Comments should be minimal - only where logic might be confusing
 - NEVER add Claude attribution or co-author lines to git commits
+
+## Agent Usage Policy
+
+Always use specialized agents for their domains - don't do the work yourself when an agent exists.
+
+**Mandatory agent usage:**
+
+- `golang-pro` for Go code, optimization, concurrency, idioms
+- `docs-researcher` for any documentation lookup or research
+- `python-dev` for Python development and optimization
+- `javascript-pro` for JavaScript/Node.js work
+- `sql-pro` for database queries and design
+- `ui-ux-designer` for interface and design work
+- `deployment-engineer` for CI/CD, containers, infrastructure
+- `error-detective` for debugging and error analysis
+- `performance-engineer` for optimization and profiling
+- `backend-architect` for API and system design
+
+**Rule**: Before starting any technical work, ask "Is there a specialized agent for this?" If yes, use the agent. Default to agents, not direct work.
+
+**Exception**: Only do work directly for simple, trivial tasks that don't warrant agent overhead.
+

@@ -41,5 +41,5 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 keymap.set("t", "<C-w>", "<C-\\><C-n><C-w>", { desc = "Window command from terminal" })
 
 -- claude code
-keymap.set("n", "<C-g>", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code terminal" })
-keymap.set("t", "<C-g>", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code terminal" })
+keymap.set("n", "<leader>ai", "<cmd>ClaudeCode<CR>", { desc = "AI: Toggle Claude Code terminal" })
+keymap.set("t", "<leader>ai", "<cmd>ClaudeCode<CR>", { desc = "AI: Toggle Claude Code terminal" })

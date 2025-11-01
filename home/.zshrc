@@ -112,7 +112,5 @@ fi
 # Node.js setup (fnm)
 eval "$(fnm env --use-on-cd)"
 
-alias claude="/opt/homebrew/bin/claude"
-
 # Tmux sessionizer alias
 alias tmf="~/.local/scripts/tmux-sessionizer.sh"

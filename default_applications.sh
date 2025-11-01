@@ -166,11 +166,7 @@ function _mac() {
 		php \
 		composer \
 		libyaml \
-		readline \
-    claude-code
-
-	# Disable Claude Code auto-updater (use brew for updates instead)
-	claude config set -g autoUpdates false 2>/dev/null || true
+		readline
 
 	# Install fonts
 	brew install --cask font-monaspace

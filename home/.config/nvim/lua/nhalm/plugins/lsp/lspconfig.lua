@@ -11,7 +11,7 @@ return {
 
     -- import cmp-nvim-lsp plugin
     local cmp_nvim_lsp = require "cmp_nvim_lsp"
-    
+
     -- import snacks plugin
     local snacks = require "snacks"
 
@@ -212,6 +212,7 @@ return {
       -- root_dir = util.root_pattern("go.work", "go.mod", ".git"),
       settings = {
         gopls = {
+          buildFlags = { "-tags=integration unit" },
           completeUnimported = true,
           usePlaceholders = true,
           analyses = {
