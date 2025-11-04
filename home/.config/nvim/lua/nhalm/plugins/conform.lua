@@ -16,6 +16,7 @@ return {
         json = { "prettier" },
         yaml = { "prettier" },
         markdown = { "prettier" },
+        -- mdx = {}, -- disable formatting for mdx
         graphql = { "prettier" },
         liquid = { "prettier" },
         lua = { "stylua" },
