@@ -16,6 +16,7 @@ brew install --cask --force \
 	claude-code \
 	claude \
 	chatgpt \
-  1password
+	1password \
+	aerospace
 
 echo "GUI applications installation complete!"

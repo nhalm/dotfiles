@@ -6,10 +6,10 @@ return {
 
     conform.setup({
       formatters_by_ft = {
-        javascript = { "prettier" },
-        typescript = { "prettier" },
-        javascriptreact = { "prettier" },
-        typescriptreact = { "prettier" },
+        -- javascript = { "prettier" },
+        -- typescript = { "prettier" },
+        -- javascriptreact = { "prettier" },
+        -- typescriptreact = { "prettier" },
         svelte = { "prettier" },
         css = { "prettier" },
         html = { "prettier" },
@@ -23,9 +23,7 @@ return {
         go = {"gofumpt", "goimports"}
       },
       formatters = {
-        prettier = {
-          prepend_args = { "--print-width", "100" },
-        },
+        prettier = {},
       },
       format_on_save = {
         lsp_fallback = true,
