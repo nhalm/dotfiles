@@ -185,6 +185,11 @@ function _mac() {
 	_install_ruby_brew
 	_install_node_brew
 
+	# Install claude-code via npm
+	if ! command -v claude &> /dev/null; then
+		npm install -g @anthropic-ai/claude-code
+	fi
+
 	# Specify the preferences directory
 
 	# Remove outdated versions from the cellar.
