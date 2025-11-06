@@ -83,8 +83,8 @@ function _install_ruby_brew() {
 	ruby_version=$(frum install --list 2>/dev/null | grep -E "^\s*[0-9]+\.[0-9]+\.[0-9]+$" | tail -n 1 | xargs || echo "3.3.6")
 	echo "ruby_version=${ruby_version}"
 	
-	# Check if version is already installed
-	if ! frum versions 2>/dev/null | grep -q "^${ruby_version}$"; then
+	# Check if version is already installed (output has leading whitespace and * for active version)
+	if ! frum versions 2>/dev/null | sed 's/^[* ]*//' | grep -qx "${ruby_version}"; then
 		frum install "${ruby_version}"
 	fi
 	
@@ -170,6 +170,7 @@ function _mac() {
 
 	# Install fonts
 	brew install --cask font-monaspace
+  brew install --cask font-hack-nerd-font
 
 
 	# Optional language tools (uncomment if needed)
