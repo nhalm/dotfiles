@@ -48,6 +48,16 @@ else
 fi
 echo
 
+echo "configuring docker compose plugin..."
+if command -v docker-compose &> /dev/null; then
+    mkdir -p "$HOME/.docker/cli-plugins"
+    ln -sfn "$(brew --prefix)/bin/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
+    echo "Docker compose plugin configured successfully"
+else
+    echo "docker-compose not found, skipping plugin setup"
+fi
+echo
+
 echo "downloading kitty tokyonight-moon theme..."
 kitty_config_dir="$HOME/.config/kitty"
 if [ ! -f "$kitty_config_dir/tokyonight_moon.conf" ]; then

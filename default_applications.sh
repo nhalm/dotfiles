@@ -152,6 +152,7 @@ function _mac() {
 		uv \
 		docker \
 		colima \
+		docker-compose \
 		aws-vault \
 		awscli \
 		autoconf \
