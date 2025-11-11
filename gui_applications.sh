@@ -19,4 +19,7 @@ brew install --cask --force \
 	1password \
 	aerospace
 
+brew tap FelixKratz/formulae
+brew install sketchybar
+
 echo "GUI applications installation complete!"
