@@ -56,4 +56,4 @@ Always use specialized agents for their domains - don't do the work yourself whe
 **Rule**: Before starting any technical work, ask "Is there a specialized agent for this?" If yes, use the agent. Default to agents, not direct work.
 
 **Exception**: Only do work directly for simple, trivial tasks that don't warrant agent overhead.
-
+- never put your name in commits.  Make commit concise.
