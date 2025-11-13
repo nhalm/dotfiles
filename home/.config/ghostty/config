@@ -1,0 +1,4 @@
+theme = TokyoNight
+term = xterm-256color
+font-family = Monaspace Neon Var
+font-size = 12
