@@ -1,6 +1,9 @@
 # Initialize Homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+# Projects directories for git scanning
+set -gx PROJECTS_DIR "$HOME/work:$HOME/personal:$HOME/dev"
+
 # Pyenv setup
 set -gx PYENV_ROOT $HOME/.pyenv
 set -gx PATH $PYENV_ROOT/bin $PATH

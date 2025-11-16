@@ -141,7 +141,8 @@ function _mac() {
 		glow \
 		bat \
 		fish \
-    1password-cli
+    1password-cli \
+    karabiner-elements
 
 	# Install development tools
 	brew install \
@@ -169,10 +170,18 @@ function _mac() {
 		libyaml \
 		readline
 
-	# Install fonts
-	brew install --cask font-monaspace
-  brew install --cask font-hack-nerd-font
+  brew install --cask corelocationcli
 
+	# Install fonts
+	brew install --cask font-monaspace \
+    font-hack-nerd-font
+
+  # for sketchybar
+  brew install --cask sf-symbols \
+    font-sf-mono \
+    font-sf-pro \
+    font-victor-mono-nerd-font \
+    font-sketchybar-app-font
 
 	# Optional language tools (uncomment if needed)
 	# brew install --force \

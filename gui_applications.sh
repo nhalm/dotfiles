@@ -21,6 +21,7 @@ brew install --cask --force \
 	aerospace
 
 brew tap FelixKratz/formulae
-brew install sketchybar
+brew install sketchybar \
+  boarders
 
 echo "GUI applications installation complete!"
