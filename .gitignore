@@ -11,3 +11,4 @@
 # Fish shell - ignore entire directory except config.fish
 home/.config/fish/*
 !home/.config/fish/config.fish
+home/.config/sketchybar/helpers/git_toolkit/.git_cache
