@@ -42,7 +42,7 @@ case "${1:-backup}" in
         echo "Cleaning up old snapshots..."
         run_restic forget \
             --host "${RESTIC_HOST_NAME:-$(hostname -s)}" \
-            --keep-daily 7 \
+            --keep-within 7d \
             --prune
 
         echo "Backup complete."
