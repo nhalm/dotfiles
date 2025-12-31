@@ -28,6 +28,10 @@ get_backup_paths() {
 
 case "${1:-backup}" in
     backup)
+        if ! nc -z -w 5 "$RESTIC_TARGET_HOST" 22 2>/dev/null; then
+            echo "Backup target $RESTIC_TARGET_HOST not reachable, skipping backup."
+            exit 0
+        fi
         echo "Starting backup for host: ${RESTIC_HOST_NAME:-$(hostname -s)}..."
         run_restic backup \
             --host "${RESTIC_HOST_NAME:-$(hostname -s)}" \
