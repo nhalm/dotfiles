@@ -1,0 +1,14 @@
+# Still exclude these within included paths
+.DS_Store
+**/node_modules
+**/.venv
+**/venv
+**/__pycache__
+**/.git/objects
+**/target/debug
+**/target/release
+*.tmp
+*.temp
+*.log
+*.swp
+*~

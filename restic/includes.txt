@@ -1,0 +1,18 @@
+# User data
+~/Documents
+~/Desktop
+~/Downloads
+~/dev
+~/work
+~/personal
+
+# Credentials & config
+~/.config
+~/.ssh
+~/.aws
+~/.cloudflared
+~/.kube
+~/.claude
+~/.gnupg
+~/.gitconfig
+~/.zshrc
