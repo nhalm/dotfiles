@@ -4,3 +4,11 @@ font-family = Monaspace Neon Var
 font-size = 12
 background-opacity = 0.93
 keybind = shift+enter=text:\x1b\r
+
+# gtk-tabs-location = hidden
+macos-titlebar-style = hidden
+clipboard-read = allow
+shell-integration = fish
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true

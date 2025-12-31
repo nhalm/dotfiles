@@ -6,9 +6,20 @@ return {
     -- Enable the modules we want to use
     dashboard = { enabled = true },
     zen = { enabled = true },
-    picker = { 
+    picker = {
       enabled = true,
       hidden = true,
+      sources = {
+        explorer = {
+          win = {
+            list = {
+              keys = {
+                ["t"] = "tab",
+              },
+            },
+          },
+        },
+      },
     },
     explorer = { enabled = true },
     terminal = { enabled = true },

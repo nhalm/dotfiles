@@ -15,14 +15,17 @@ sbar.add("event", "aerospace_workspace_change")
 -- CONFIGURATION
 -- ============================================================================
 
--- Workspace layout configuration
--- Display mapping: 3 = left monitor, 1 = middle monitor, 2 = right monitor
--- Each workspace will only appear on its designated monitor's bar
-local WORKSPACE_LAYOUT = {
-	-- { display = 3, workspaces = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }, -- left monitor
-	{ display = 2, workspaces = { "P", "A", "E", "R", "T", "Y", "U", "I", "O", "P" } }, -- left monitor
-	{ display = 1, workspaces = { "C", "2", "D", "F", "G", "Z", "X", "C", "V", "B" } }, -- right monitor
+-- Workspace definitions by group
+local WORKSPACE_GROUPS = {
+	left = { "P", "A", "E", "R", "T", "Y", "U", "I", "O", "P" },
+	right = { "C", "2", "D", "F", "G", "Z", "X", "C", "V", "B" },
 }
+
+-- Current workspace layout (will be dynamically set based on display count)
+local WORKSPACE_LAYOUT = {}
+
+-- Current display count (will be detected at runtime)
+local current_display_count = 0
 
 -- Visual styling constants
 local STYLE = {
@@ -37,6 +40,83 @@ local STYLE = {
 }
 
 -- ============================================================================
+-- DISPLAY DETECTION AND LAYOUT MANAGEMENT
+-- ============================================================================
+
+-- Detects the number of connected displays
+local function get_display_count()
+	local handle = io.popen("system_profiler SPDisplaysDataType 2>/dev/null | grep -c 'Resolution:'")
+	local result = handle:read("*a")
+	handle:close()
+	return tonumber(result:match("%d+")) or 1
+end
+
+-- Builds workspace layout based on number of displays
+local function build_workspace_layout(display_count)
+	if display_count == 1 then
+		-- Single display: show all workspaces on display 1
+		local all_workspaces = {}
+		for _, ws in ipairs(WORKSPACE_GROUPS.left) do
+			table.insert(all_workspaces, ws)
+		end
+		for _, ws in ipairs(WORKSPACE_GROUPS.right) do
+			table.insert(all_workspaces, ws)
+		end
+		return {
+			{ display = 1, workspaces = all_workspaces }
+		}
+	else
+		-- Multiple displays: split workspaces across displays
+		-- Display 2 = left monitor, Display 1 = right monitor
+		return {
+			{ display = 2, workspaces = WORKSPACE_GROUPS.left },
+			{ display = 1, workspaces = WORKSPACE_GROUPS.right },
+		}
+	end
+end
+
+-- Reinitializes the entire workspace system with new layout
+local function reinitialize_workspaces(new_layout)
+	WORKSPACE_LAYOUT = new_layout
+
+	-- Clear existing items
+	workspace_items = {}
+	padding_items = {}
+	separator_items = {}
+
+	-- Rebuild workspace_to_display mapping
+	workspace_to_display = {}
+	for _, group in ipairs(WORKSPACE_LAYOUT) do
+		for _, ws in ipairs(group.workspaces) do
+			workspace_to_display[ws] = group.display
+		end
+	end
+
+	-- Create all workspace items
+	for _, group in ipairs(WORKSPACE_LAYOUT) do
+		for _, ws in ipairs(group.workspaces) do
+			ensure_workspace_exists(ws)
+		end
+	end
+
+	-- Recreate separators
+	create_separators()
+
+	-- Update all workspaces
+	update_all_workspaces()
+end
+
+-- Checks for display count changes and reconfigures if needed
+local function check_display_changes()
+	local new_count = get_display_count()
+	if new_count ~= current_display_count then
+		current_display_count = new_count
+		local new_layout = build_workspace_layout(new_count)
+		reinitialize_workspaces(new_layout)
+	end
+end
+
+-- ============================================================================
 -- STATE MANAGEMENT
 -- ============================================================================
 
@@ -45,14 +125,8 @@ local workspace_items = {} -- workspace -> { item, bracket, display }
 local padding_items = {} -- workspace -> padding item name
 local separator_items = {} -- display -> separator item name
 
--- Build workspace -> display mapping for fast lookups
--- This allows us to quickly determine which monitor a workspace belongs to
+-- Workspace -> display mapping (built dynamically during initialization)
 local workspace_to_display = {}
-for _, group in ipairs(WORKSPACE_LAYOUT) do
-	for _, ws in ipairs(group.workspaces) do
-		workspace_to_display[ws] = group.display
-	end
-end
 
 -- ============================================================================
 -- ITEM CREATION FUNCTIONS
@@ -327,6 +401,18 @@ end
 -- INITIALIZATION
 -- ============================================================================
 
+-- Initialize with display detection
+current_display_count = get_display_count()
+WORKSPACE_LAYOUT = build_workspace_layout(current_display_count)
+
+-- Build workspace -> display mapping for fast lookups
+workspace_to_display = {}
+for _, group in ipairs(WORKSPACE_LAYOUT) do
+	for _, ws in ipairs(group.workspaces) do
+		workspace_to_display[ws] = group.display
+	end
+end
+
 -- Create all workspace items upfront
 for _, group in ipairs(WORKSPACE_LAYOUT) do
 	for _, ws in ipairs(group.workspaces) do
@@ -344,8 +430,9 @@ sbar.add("item", "aws.observer", { drawing = "off", updates = true })
 	end)
 
 -- Set up periodic refresh to catch window open/close events
--- that don't trigger workspace changes
+-- and display changes
 local function periodic_refresh()
+	check_display_changes() -- Check for display count changes
 	update_all_workspaces()
 	sbar.delay(5, periodic_refresh) -- Refresh every 5 seconds
 end

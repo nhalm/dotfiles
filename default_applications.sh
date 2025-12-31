@@ -168,7 +168,8 @@ function _mac() {
 		php \
 		composer \
 		libyaml \
-		readline
+		readline \
+    restic
 
   brew install --cask corelocationcli
 
@@ -196,9 +197,10 @@ function _mac() {
 	_install_node_brew
 
 	# Install claude-code via npm
-	if ! command -v claude &> /dev/null; then
-		npm install -g @anthropic-ai/claude-code
-	fi
+	# if ! command -v claude &> /dev/null; then
+	# 	npm install -g @anthropic-ai/claude-code
+	# fi
+  curl -fsSL https://claude.ai/install.sh | bash
 
 	# Specify the preferences directory
 
