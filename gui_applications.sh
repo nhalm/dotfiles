@@ -18,10 +18,9 @@ brew install --cask --force \
 	claude \
 	chatgpt \
 	1password \
-	aerospace
+	nikitabobko/tap/aerospace
 
-brew tap FelixKratz/formulae
-brew install sketchybar \
-  boarders
+brew install FelixKratz/formulae/sketchybar \
+  FelixKratz/formulae/borders
 
 echo "GUI applications installation complete!"
