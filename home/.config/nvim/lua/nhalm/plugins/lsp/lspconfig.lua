@@ -6,79 +6,67 @@ return {
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
   config = function()
-    -- import lspconfig plugin
-    local lspconfig = require "lspconfig"
-
-    -- import cmp-nvim-lsp plugin
     local cmp_nvim_lsp = require "cmp_nvim_lsp"
-
-    -- import snacks plugin
     local snacks = require "snacks"
-
-    local keymap = vim.keymap -- for conciseness
+    local keymap = vim.keymap
 
     local opts = { noremap = true, silent = true }
     local on_attach = function(client, bufnr)
       opts.buffer = bufnr
 
-      -- set keybinds
       opts.desc = "Show LSP references"
       keymap.set("n", "gR", function()
         snacks.picker.lsp_references()
-      end, opts) -- show definition, references
+      end, opts)
 
       opts.desc = "Go to declaration"
-      keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
+      keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 
       opts.desc = "Show LSP definitions"
       keymap.set("n", "gd", function()
         snacks.picker.lsp_definitions()
-      end, opts) -- show lsp definitions
+      end, opts)
 
       opts.desc = "Show LSP implementations"
       keymap.set("n", "gi", function()
         snacks.picker.lsp_implementations()
-      end, opts) -- show lsp implementations
+      end, opts)
 
       opts.desc = "Show LSP type definitions"
       keymap.set("n", "gt", function()
         snacks.picker.lsp_type_definitions()
-      end, opts) -- show lsp type definitions
+      end, opts)
 
       opts.desc = "See available code actions"
-      keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
+      keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 
       opts.desc = "Smart rename"
-      keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
+      keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 
       opts.desc = "Show buffer diagnostics"
       keymap.set("n", "<leader>D", function()
         snacks.picker.diagnostics()
-      end, opts) -- show  diagnostics for file
+      end, opts)
 
       opts.desc = "Show line diagnostics"
-      keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
+      keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
 
       opts.desc = "Go to previous diagnostic"
-      keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
+      keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
 
       opts.desc = "Go to next diagnostic"
-      keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
+      keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 
       opts.desc = "Show documentation for what is under cursor"
-      keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
+      keymap.set("n", "K", vim.lsp.buf.hover, opts)
 
       opts.desc = "Restart LSP"
-      keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+      keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
     end
 
-    -- used to enable autocompletion (assign to every lsp server config)
     local capabilities = cmp_nvim_lsp.default_capabilities()
 
-    -- Change the Diagnostic symbols in the sign column (gutter)
-    -- (not in youtube nvim video)
-    local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
-    -- Using modern vim.diagnostic.config instead of deprecated sign_define
+    local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
     vim.diagnostic.config {
       signs = {
         text = {
@@ -90,40 +78,28 @@ return {
       },
     }
 
-    -- configure html server
-    lspconfig["html"].setup {
+    vim.lsp.config("*", {
       capabilities = capabilities,
       on_attach = on_attach,
-    }
+    })
 
-    -- configure typescript server with plugin
-    lspconfig["ts_ls"].setup {
-      capabilities = capabilities,
+    vim.lsp.config("html", {})
+
+    vim.lsp.config("ts_ls", {
       on_attach = function(client, bufnr)
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
         on_attach(client, bufnr)
       end,
-    }
+    })
 
-    -- configure css server
-    lspconfig["cssls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+    vim.lsp.config("cssls", {})
 
-    -- configure tailwindcss server
-    lspconfig["tailwindcss"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+    vim.lsp.config("tailwindcss", {})
 
-    -- configure svelte server
-    lspconfig["svelte"].setup {
-      capabilities = capabilities,
+    vim.lsp.config("svelte", {
       on_attach = function(client, bufnr)
         on_attach(client, bufnr)
-
         vim.api.nvim_create_autocmd("BufWritePost", {
           pattern = { "*.js", "*.ts" },
           callback = function(ctx)
@@ -133,32 +109,19 @@ return {
           end,
         })
       end,
-    }
+    })
 
-    -- configure prisma orm server
-    lspconfig["prismals"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+    vim.lsp.config("prismals", {})
 
-    -- configure graphql language server
-    lspconfig["graphql"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("graphql", {
       filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-    }
+    })
 
-    -- configure emmet language server
-    lspconfig["emmet_ls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("emmet_ls", {
       filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
-    }
+    })
 
-    -- configure python server
-    lspconfig["pyright"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("pyright", {
       settings = {
         python = {
           analysis = {
@@ -166,54 +129,19 @@ return {
             useLibraryCodeForTypes = true,
             diagnosticMode = "workspace",
           },
+          venvPath = ".",
+          venv = ".venv",
         },
       },
-      on_new_config = function(config, root_dir)
-        -- Try to find virtual environment
-        local venv_path = nil
+    })
 
-        -- Check common venv locations
-        local possible_venvs = {
-          root_dir .. "/venv/bin/python",
-          root_dir .. "/.venv/bin/python",
-          root_dir .. "/env/bin/python",
-        }
-
-        for _, path in ipairs(possible_venvs) do
-          if vim.fn.executable(path) == 1 then
-            venv_path = path
-            break
-          end
-        end
-
-        -- Check environment variables
-        if not venv_path then
-          local venv = os.getenv "VIRTUAL_ENV"
-          if venv and vim.fn.executable(venv .. "/bin/python") == 1 then
-            venv_path = venv .. "/bin/python"
-          end
-        end
-
-        if venv_path then
-          config.settings.python.pythonPath = venv_path
-        end
-      end,
-    }
-
-    -- configure marksman server
-    lspconfig["marksman"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("marksman", {
       filetypes = { "markdown", "markdown.mdx" },
-    }
+    })
 
-    -- configure go server
-    lspconfig["gopls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("gopls", {
       cmd = { "gopls" },
       filetypes = { "go", "gomod", "gowork", "gotmpl" },
-      -- root_dir = util.root_pattern("go.work", "go.mod", ".git"),
       settings = {
         gopls = {
           buildFlags = { "-tags=integration unit" },
@@ -226,24 +154,34 @@ return {
           gofumpt = true,
         },
       },
-    }
+    })
 
-    -- configure lua server (with special settings)
-    lspconfig["lua_ls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = { -- custom settings for lua
+    vim.lsp.config("lua_ls", {
+      settings = {
         Lua = {
-          -- make the language server recognize "vim" global
           diagnostics = {
             globals = { "vim" },
           },
           workspace = {
-            -- make language server aware of runtime files
             library = vim.api.nvim_get_runtime_file("", true),
           },
         },
       },
-    }
+    })
+
+    vim.lsp.enable({
+      "html",
+      "ts_ls",
+      "cssls",
+      "tailwindcss",
+      "svelte",
+      "prismals",
+      "graphql",
+      "emmet_ls",
+      "pyright",
+      "marksman",
+      "gopls",
+      "lua_ls",
+    })
   end,
 }
