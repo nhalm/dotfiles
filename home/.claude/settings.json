@@ -16,6 +16,7 @@
       "Bash(python -m pytest:*)",
       "Bash(pip install:*)",
       "WebSearch",
+      "WebFetch",
       "Bash(grep:*)",
       "Bash(find:*)"
     ]
