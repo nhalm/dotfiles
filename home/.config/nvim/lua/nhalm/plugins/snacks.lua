@@ -11,6 +11,10 @@ return {
       hidden = true,
       sources = {
         explorer = {
+          hidden = true,
+          ignored = true,
+          tree = true,
+          follow_file = true,
           win = {
             list = {
               keys = {
@@ -21,7 +25,10 @@ return {
         },
       },
     },
-    explorer = { enabled = true },
+    explorer = {
+      enabled = true,
+      replace_netrw = true,
+    },
     terminal = { enabled = true },
     notifier = { enabled = true },
     git = { enabled = true },
