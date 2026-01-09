@@ -18,7 +18,9 @@
       "WebSearch",
       "WebFetch",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Read(/Users/nhalm/.claude/**)",
+      "Write(/Users/nhalm/.claude/**)"
     ]
   },
   "statusLine": {
