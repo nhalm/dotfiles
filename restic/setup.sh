@@ -10,10 +10,11 @@ echo
 
 mkdir -p "$CONFIG_DIR"
 cp "$SCRIPT_DIR/backup.sh" "$CONFIG_DIR/backup.sh"
+cp "$SCRIPT_DIR/restore.sh" "$CONFIG_DIR/restore.sh"
 cp "$SCRIPT_DIR/excludes.txt" "$CONFIG_DIR/excludes.txt"
 cp "$SCRIPT_DIR/includes.txt" "$CONFIG_DIR/includes.txt"
-chmod +x "$CONFIG_DIR/backup.sh"
-echo "Copied backup.sh, excludes.txt, and includes.txt to $CONFIG_DIR"
+chmod +x "$CONFIG_DIR/backup.sh" "$CONFIG_DIR/restore.sh"
+echo "Copied backup.sh, restore.sh, excludes.txt, and includes.txt to $CONFIG_DIR"
 
 echo
 echo "Enter backup target configuration:"
@@ -117,4 +118,5 @@ echo
 echo "Commands:"
 echo "  $CONFIG_DIR/backup.sh backup      # Run backup now"
 echo "  $CONFIG_DIR/backup.sh snapshots   # List this host's snapshots"
-echo "  $CONFIG_DIR/backup.sh mount       # Browse backups"
+echo "  $CONFIG_DIR/restore.sh            # Interactive restore"
+echo "  $CONFIG_DIR/backup.sh mount       # Browse backups via FUSE"
