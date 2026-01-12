@@ -95,14 +95,18 @@ You are an autonomous agent implementing features from a PRD. Follow this workfl
 2. Read `TASKS.md` to see remaining work
 3. Read `PROGRESS.md` to see what previous agents completed
 
-## Phase 2: Planning
-1. Select the NEXT incomplete task from TASKS.md
-2. Create a brief implementation plan for that task
-3. Proceed to implementation
+## Phase 2: Task Selection (CRITICAL)
+1. Find the FIRST incomplete task (marked `- [ ]`) in TASKS.md
+2. Note its EXACT description - this is YOUR ONLY task for this iteration
+3. **DO NOT** look ahead at other tasks
+4. **DO NOT** group related tasks together
+5. **DO NOT** be "efficient" by combining tasks
+6. Create a brief implementation plan for THIS ONE TASK ONLY
 
 ## Phase 3: Implementation
-1. Implement your plan
-2. Keep changes focused on the single task
+1. Implement ONLY the single task you selected
+2. If you find yourself wanting to do "one more thing" - STOP
+3. Even if another task would take 30 seconds - STOP, that's for the next iteration
 
 ## Phase 4: Testing (MANDATORY)
 1. If `Makefile` exists, run `make test` or equivalent target
@@ -150,7 +154,10 @@ Status values:
 - `BLOCKED`: Cannot proceed without human help
 
 ## Rules
-- ONE task per iteration
+- **EXACTLY ONE TASK PER ITERATION** - This is non-negotiable
+  - Not "related tasks", not "quick additions", not "while I'm here"
+  - ONE. TASK. The one at the top of the incomplete list.
+  - Violating this rule breaks the entire autonomous workflow
 - Always commit your work
 - Never skip testing
 - **NEVER LIE IN STATUS REPORT** - if tests failed, report tests_passed: false
