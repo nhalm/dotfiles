@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-set -euo pipefail
+set -uo pipefail
 
 STATUS_FILE="RALPH_STATUS.json"
 PROMPT_FILE="PROMPT.md"
@@ -232,7 +232,7 @@ echo ""
 echo "=== Starting Ralph (max $MAX_ITERATIONS iterations) ==="
 
 while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
-  ((ITERATION++))
+  ITERATION=$((ITERATION + 1))
   echo ""
   echo "=== Iteration $ITERATION/$MAX_ITERATIONS ==="
   echo "Started: $(date)" >> ralph.log
