@@ -162,6 +162,7 @@ PROMPT_EOF
   # Update .gitignore if it exists
   if [[ -f ".gitignore" ]]; then
     GITIGNORE_ENTRIES=(
+      "PRD.json"
       "RALPH_STATUS.json"
       "ralph.log"
       "archive/"
