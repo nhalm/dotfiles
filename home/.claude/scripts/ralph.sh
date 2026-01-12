@@ -233,6 +233,7 @@ echo "=== Starting Ralph (max $MAX_ITERATIONS iterations) ==="
 
 while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
   ITERATION=$((ITERATION + 1))
+  START_TIME=$(date +%s)
   echo ""
   echo "=== Iteration $ITERATION/$MAX_ITERATIONS ==="
   echo "Started: $(date)" >> ralph.log
@@ -240,9 +241,24 @@ while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
   # Clear previous status
   rm -f "$STATUS_FILE"
 
-  # Run Claude with the prompt
-  claude -p "$(cat "$PROMPT_FILE")" --dangerously-skip-permissions
+  # Run Claude in background
+  claude -p "$(cat "$PROMPT_FILE")" --dangerously-skip-permissions &
+  CLAUDE_PID=$!
 
+  # Show elapsed time while Claude runs
+  while kill -0 $CLAUDE_PID 2>/dev/null; do
+    ELAPSED=$(($(date +%s) - START_TIME))
+    MINUTES=$((ELAPSED / 60))
+    SECS=$((ELAPSED % 60))
+    printf "\r⏳ Running agent... %02d:%02d" $MINUTES $SECS
+    sleep 1
+  done
+  wait $CLAUDE_PID
+
+  ELAPSED=$(($(date +%s) - START_TIME))
+  MINUTES=$((ELAPSED / 60))
+  SECS=$((ELAPSED % 60))
+  printf "\r✓ Completed in %02d:%02d          \n" $MINUTES $SECS
   echo "Completed: $(date)" >> ralph.log
 
   # Validate status file
