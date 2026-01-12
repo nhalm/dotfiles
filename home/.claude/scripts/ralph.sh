@@ -158,6 +158,29 @@ Status values:
 PROMPT_EOF
 
   echo "Created $PROMPT_FILE"
+
+  # Update .gitignore if it exists
+  if [[ -f ".gitignore" ]]; then
+    GITIGNORE_ENTRIES=(
+      "RALPH_STATUS.json"
+      "ralph.log"
+      "archive/"
+      "PROMPT.md"
+      "TASKS.md"
+      "PROGRESS.md"
+    )
+    ADDED=()
+    for entry in "${GITIGNORE_ENTRIES[@]}"; do
+      if ! grep -qxF "$entry" .gitignore; then
+        echo "$entry" >> .gitignore
+        ADDED+=("$entry")
+      fi
+    done
+    if [[ ${#ADDED[@]} -gt 0 ]]; then
+      echo "Added to .gitignore: ${ADDED[*]}"
+    fi
+  fi
+
   echo ""
   echo "=== Setup complete ==="
 }
