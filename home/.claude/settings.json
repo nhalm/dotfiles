@@ -19,6 +19,7 @@
       "WebFetch",
       "Bash(grep:*)",
       "Bash(find:*)",
+      "Bash(cat:*)",
       "Read(/Users/nhalm/.claude/**)",
       "Write(/Users/nhalm/.claude/**)"
     ]
