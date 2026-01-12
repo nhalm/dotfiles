@@ -15,7 +15,7 @@ usage() {
   echo "  --help          Show this help message"
   echo ""
   echo "Arguments:"
-  echo "  MAX_ITERATIONS  Maximum loop iterations (default: 20)"
+  echo "  MAX_ITERATIONS  Maximum loop iterations (default: 30)"
 }
 
 setup() {
@@ -188,7 +188,7 @@ PROMPT_EOF
 
 # Parse arguments
 SETUP_ONLY=false
-MAX_ITERATIONS=20
+MAX_ITERATIONS=30
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -241,7 +241,7 @@ while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
   rm -f "$STATUS_FILE"
 
   # Run Claude with the prompt
-  cat "$PROMPT_FILE" | claude --dangerously-skip-permissions
+  claude -p "$(cat "$PROMPT_FILE")" --dangerously-skip-permissions
 
   echo "Completed: $(date)" >> ralph.log
 
