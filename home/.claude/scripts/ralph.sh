@@ -105,7 +105,8 @@ First `- [ ] [ID] description` in TASKS.md. None → status=ALL_COMPLETE, exit.
 - Minimal changes. No refactoring. If commit needs "and" → too much.
 
 ## TESTING
-Full test suite. 3 fix attempts max → BLOCKED. Only fix tests you broke.
+Run formatting/linting if available (make fmt, go fmt, npm run lint, etc), then full test suite.
+3 fix attempts max → BLOCKED. Only fix tests you broke.
 
 ## FINALIZE
 1. Mark `- [x]` in TASKS.md
