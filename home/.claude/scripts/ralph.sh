@@ -58,7 +58,7 @@ setup() {
     done
   fi
 
-  # Create TASKS.md from PRD.json
+  # Create TASKS.md from PRD.json (with task IDs)
   PRD_TITLE=$(jq -r '.title' "$PRD_FILE")
   {
     echo "# Implementation Tasks"
@@ -66,11 +66,15 @@ setup() {
     echo "Generated from $PRD_FILE"
     echo ""
     echo "## Tasks"
-    jq -r '.tasks[] | "- [ ] \(.description)"' "$PRD_FILE"
+    jq -r '.tasks[] | "- [ ] [\(.id)] \(.description)"' "$PRD_FILE"
   } > "$TASKS_FILE"
 
   TASK_COUNT=$(jq '.tasks | length' "$PRD_FILE")
   echo "Created $TASKS_FILE ($TASK_COUNT tasks)"
+
+  # Create RALPH_STATUS.json with initial structure
+  jq -n --arg title "$PRD_TITLE" '{prd_title: $title, iterations: []}' > "$STATUS_FILE"
+  echo "Created $STATUS_FILE"
 
   # Create PROGRESS.md
   {
@@ -100,11 +104,10 @@ You execute ONE task, verify it works, commit it, and exit. No conversation.
 
 ## TASK DEFINITION (READ THIS CAREFULLY)
 
-A "task" is ONE LINE in TASKS.md with a `- [ ]` checkbox.
-- NOT multiple lines
-- NOT "related tasks"
-- NOT "subtasks of a feature"
+A "task" is ONE LINE in TASKS.md formatted as: `- [ ] [ID] description`
+- The `[ID]` is the task number from PRD.json
 - ONE LINE = ONE TASK
+- NOT multiple lines, NOT "related tasks", NOT "subtasks"
 
 ---
 
@@ -123,8 +126,8 @@ Read silently (no commentary):
 Execute this algorithm exactly:
 1. Open TASKS.md
 2. Scan from top to bottom
-3. Find the FIRST line containing `- [ ]`
-4. That line is your task
+3. Find the FIRST line matching `- [ ] [ID] description`
+4. Extract the ID number and description - this is your task
 5. STOP READING - do not look at other tasks
 
 **FORBIDDEN RATIONALIZATIONS** - If you think any of these, you are WRONG:
@@ -216,11 +219,11 @@ If any check fails → revert extra changes before committing.
 
 ## PHASE 7: Status Report
 
-Append your iteration to `RALPH_STATUS.json`. If the file exists, read it first and add to the `iterations` array. If not, create it.
+Read `RALPH_STATUS.json`, append your iteration to the `iterations` array, and write it back.
 
 ```json
 {
-  "prd_title": "Feature name from PRD.json",
+  "prd_title": "Feature name",
   "iterations": [
     {
       "iteration": 1,
@@ -231,16 +234,22 @@ Append your iteration to `RALPH_STATUS.json`. If the file exists, read it first 
       "tests_output": "X passed, Y failed",
       "commit_hash": "abc123",
       "files_modified": ["path/to/file.go"],
-      "notes": "Context for next iteration - patterns used, decisions made, gotchas"
+      "notes": "Context for next iteration",
+      "blocked_reason": null
     }
   ]
 }
 ```
 
+**FIELDS:**
+- `iteration` - Use the ITERATION NUMBER from the prompt header
+- `task_id` - The `[ID]` from the task line in TASKS.md
+- `blocked_reason` - Only set if status is BLOCKED, otherwise null
+
 **STATUS VALUES:**
 - `TASK_COMPLETE` - Task done, tests pass, committed, more tasks remain
 - `ALL_COMPLETE` - All tasks done, zero `- [ ]` lines remain in TASKS.md
-- `BLOCKED` - Truly stuck: can't fix failing tests after multiple attempts, missing dependencies, need human decision
+- `BLOCKED` - Truly stuck: can't fix tests, missing deps, need human decision
 
 ---
 
@@ -350,18 +359,24 @@ fi
 
 # Main loop
 ITERATION=0
+TOTAL_TASKS=$(jq '.tasks | length' "$PRD_FILE")
 echo ""
-echo "=== Starting Ralph (max $MAX_ITERATIONS iterations) ==="
+echo "=== Starting Ralph ($TOTAL_TASKS tasks, max $MAX_ITERATIONS iterations) ==="
 
 while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
   ITERATION=$((ITERATION + 1))
   START_TIME=$(date +%s)
+  COMPLETED_TASKS=$(grep -c "^\- \[x\]" "$TASKS_FILE" 2>/dev/null || echo "0")
+  REMAINING_TASKS=$((TOTAL_TASKS - COMPLETED_TASKS))
   echo ""
-  echo "=== Iteration $ITERATION/$MAX_ITERATIONS ==="
+  echo "=== Task $((COMPLETED_TASKS + 1))/$TOTAL_TASKS (iteration $ITERATION) ==="
   echo "Started: $(date)" >> ralph.log
 
-  # Run Claude in background
-  claude -p "$(cat "$PROMPT_FILE")" --dangerously-skip-permissions &
+  # Run Claude in background with iteration number prepended
+  PROMPT_WITH_ITERATION="# ITERATION NUMBER: $ITERATION
+
+$(cat "$PROMPT_FILE")"
+  claude -p "$PROMPT_WITH_ITERATION" --dangerously-skip-permissions &
   CLAUDE_PID=$!
 
   # Show elapsed time while Claude runs
