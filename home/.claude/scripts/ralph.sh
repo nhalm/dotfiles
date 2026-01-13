@@ -127,8 +127,9 @@ Execute this algorithm exactly:
 1. Open TASKS.md
 2. Scan from top to bottom
 3. Find the FIRST line matching `- [ ] [ID] description`
-4. Extract the ID number and description - this is your task
-5. STOP READING - do not look at other tasks
+4. If NO incomplete tasks found → set status=ALL_COMPLETE and exit
+5. Extract the ID number and description - this is your task
+6. STOP READING - do not look at other tasks
 
 **FORBIDDEN RATIONALIZATIONS** - If you think any of these, you are WRONG:
 - "These tasks are related so I'll do them together"
