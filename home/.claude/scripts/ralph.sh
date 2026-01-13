@@ -48,23 +48,10 @@ setup() {
 
   # Archive existing files
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-  ARCHIVED=()
-
+  mkdir -p archive
   for file in "$TASKS_FILE" "$PROGRESS_FILE" "$STATUS_FILE" "ralph.log"; do
-    if [[ -f "$file" ]]; then
-      mkdir -p archive
-      ARCHIVE_NAME="archive/${file%.*}_${TIMESTAMP}.${file##*.}"
-      mv "$file" "$ARCHIVE_NAME"
-      ARCHIVED+=("$file -> $ARCHIVE_NAME")
-    fi
+    [[ -f "$file" ]] && mv "$file" "archive/${file%.*}_${TIMESTAMP}.${file##*.}"
   done
-
-  if [[ ${#ARCHIVED[@]} -gt 0 ]]; then
-    echo "Archived:"
-    for item in "${ARCHIVED[@]}"; do
-      echo "  $item"
-    done
-  fi
 
   # Create TASKS.md from PRD.json (with task IDs)
   PRD_TITLE=$(jq -r '.title' "$PRD_FILE")
@@ -100,93 +87,47 @@ setup() {
   cat > "$PROMPT_FILE" << 'PROMPT_EOF'
 # Autonomous Task Executor
 
-Execute ONE task, verify, commit, exit. No conversation.
+Execute ONE task, verify, commit, exit. No conversation, explanations, or reflections.
 
 ## RULES
-- NO explanations, status updates, or reflections
 - ONLY tool calls and final RALPH_STATUS.json
-- ONE task = ONE line in TASKS.md: `- [ ] [ID] description`
+- ONE task = ONE `- [ ] [ID] description` line in TASKS.md
 - There is NO valid reason to do more than one task
 
-## PHASE 1: Context
-Read silently:
-1. `PRD.json` - ALL fields, especially `out_of_scope` (things you must NOT do)
-2. `TASKS.md` - task list with completion status
-3. `PROGRESS.md` - log of previous work
-4. `RALPH_STATUS.json` - previous iterations
+## CONTEXT (read first)
+PRD.json (esp. `out_of_scope`), TASKS.md, PROGRESS.md, RALPH_STATUS.json
 
-## PHASE 2: Task Selection
-1. Find FIRST `- [ ] [ID] description` line in TASKS.md
-2. If none → status=ALL_COMPLETE, exit
-3. That ONE line is your task. Do not batch or combine.
+## TASK SELECTION
+First `- [ ] [ID] description` in TASKS.md. None → status=ALL_COMPLETE, exit.
 
-## PHASE 3: Implementation
-- Check `out_of_scope` first → BLOCKED if task touches anything listed
-- Do MINIMAL changes. No refactoring. No future prep.
-- If commit message needs "and" → you're doing too much
+## IMPLEMENTATION
+- `out_of_scope` items → BLOCKED
+- Minimal changes. No refactoring. If commit needs "and" → too much.
 
-## PHASE 4: Testing
-Run full test suite (make test, go test, npm test, pytest, etc).
-- 3 fix attempts max, then BLOCKED
-- Only fix tests YOUR changes broke
-- Unrelated test failures → BLOCKED
+## TESTING
+Full test suite. 3 fix attempts max → BLOCKED. Only fix tests you broke.
 
-## PHASE 5: Finalize
-1. Mark task `- [x]` in TASKS.md
+## FINALIZE
+1. Mark `- [x]` in TASKS.md
 2. Append to PROGRESS.md
 3. `git add -A && git commit -m "feat: <task>"`
 
-## PHASE 6: Status Report
-Append to RALPH_STATUS.json `iterations` array:
-```json
-{
-  "iteration": 1,
-  "status": "TASK_COMPLETE",
-  "task_id": 1,
-  "task_completed": "exact task description",
-  "tests_passed": true,
-  "tests_output": "X passed, Y failed",
-  "commit_hash": "abc123",
-  "files_modified": ["path/to/file.go"],
-  "notes": "Context for next iteration",
-  "blocked_reason": null
-}
-```
+## STATUS REPORT
+Append to RALPH_STATUS.json `iterations`:
+`{"iteration":N,"status":"TASK_COMPLETE|ALL_COMPLETE|BLOCKED","task_id":N,"task_completed":"desc","tests_passed":bool,"tests_output":"summary","commit_hash":"abc","files_modified":[],"notes":"","blocked_reason":null}`
 
-STATUS: `TASK_COMPLETE` | `ALL_COMPLETE` | `BLOCKED`
-- `iteration` - from prompt header
-- `blocked_reason` - only if BLOCKED, else null
-
-## WRONG (violations)
-```
-Task: "Add User struct" → ALSO adds validation → ❌ multiple tasks
-Tests fail → reports tests_passed: true → ❌ lying
-```
+## VIOLATIONS
+- Task "Add struct" → ALSO adds validation → ❌ multiple tasks
+- Tests fail → tests_passed: true → ❌ lying
 PROMPT_EOF
 
   echo "Created $PROMPT_FILE"
 
   # Update .gitignore if it exists
   if [[ -f ".gitignore" ]]; then
-    GITIGNORE_ENTRIES=(
-      "PRD.json"
-      "RALPH_STATUS.json"
-      "ralph.log"
-      "archive/"
-      "PROMPT.md"
-      "TASKS.md"
-      "PROGRESS.md"
-    )
-    ADDED=()
-    for entry in "${GITIGNORE_ENTRIES[@]}"; do
-      if ! grep -qxF "$entry" .gitignore; then
-        echo "$entry" >> .gitignore
-        ADDED+=("$entry")
-      fi
+    for entry in PRD.json RALPH_STATUS.json ralph.log archive/ PROMPT.md TASKS.md PROGRESS.md; do
+      grep -qxF "$entry" .gitignore || echo "$entry" >> .gitignore
     done
-    if [[ ${#ADDED[@]} -gt 0 ]]; then
-      echo "Added to .gitignore: ${ADDED[*]}"
-    fi
   fi
 
   echo ""
@@ -220,18 +161,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Always run setup if files don't exist
-if [[ ! -f "$PROMPT_FILE" ]] || [[ ! -f "$TASKS_FILE" ]] || [[ ! -f "$PROGRESS_FILE" ]]; then
-  setup
-elif [[ "$SETUP_ONLY" == true ]]; then
-  setup
-fi
-
-if [[ "$SETUP_ONLY" == true ]]; then
-  echo ""
-  echo "To start the loop: ralph.sh"
-  exit 0
-fi
+# Run setup if files missing or --setup-only
+[[ ! -f "$PROMPT_FILE" || ! -f "$TASKS_FILE" || ! -f "$PROGRESS_FILE" || "$SETUP_ONLY" == true ]] && setup
+[[ "$SETUP_ONLY" == true ]] && { echo -e "\nTo start the loop: ralph.sh"; exit 0; }
 
 # Main loop
 ITERATION=0
@@ -270,7 +202,8 @@ $(cat "$PROMPT_FILE")"
   fi
 
   # Parse status (from last iteration in array)
-  eval $(jq -r '.iterations[-1] | "STATUS=\(.status // "INVALID") TASK=\(.task_completed // "unknown" | @sh)"' "$STATUS_FILE" 2>/dev/null) || STATUS="INVALID"
+  STATUS=$(jq -r '.iterations[-1].status // "INVALID"' "$STATUS_FILE" 2>/dev/null)
+  TASK=$(jq -r '.iterations[-1].task_completed // "unknown"' "$STATUS_FILE" 2>/dev/null)
 
   echo "Task: $TASK"
 
