@@ -114,7 +114,12 @@ A "task" is ONE LINE in TASKS.md formatted as: `- [ ] [ID] description`
 ## PHASE 1: Context Loading
 
 Read silently (no commentary):
-1. `PRD.json` - feature overview, goals, requirements
+1. `PRD.json` - READ ALL FIELDS:
+   - `overview` and `problem` - understand what you're building and why
+   - `goals` - what success looks like
+   - `requirements` - functional and non-functional constraints
+   - `out_of_scope` - **CRITICAL**: things you must NOT do
+   - `success_criteria` - how to validate your work
 2. `TASKS.md` - task list with completion status
 3. `PROGRESS.md` - detailed log of previous work
 4. `RALPH_STATUS.json` (if exists) - previous iterations with notes and context
@@ -146,6 +151,8 @@ There is NO valid reason to do more than one task.
 ## PHASE 3: Implementation
 
 Implement ONLY the single task from Phase 2.
+
+**BEFORE WRITING CODE**: Check PRD.json `out_of_scope` - if your task touches anything listed there, set status=BLOCKED.
 
 **CORE PRINCIPLE: Do LESS, not MORE.**
 - If a task is vague, make the MINIMAL change that satisfies it
