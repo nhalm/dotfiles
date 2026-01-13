@@ -7,6 +7,18 @@ PRD_FILE="PRD.json"
 TASKS_FILE="TASKS.md"
 PROGRESS_FILE="PROGRESS.md"
 
+# Dependency checks
+for cmd in jq claude; do
+  command -v "$cmd" >/dev/null || { echo "ERROR: $cmd not found"; exit 1; }
+done
+
+# Cleanup on interrupt
+cleanup() { [[ -n "${CLAUDE_PID:-}" ]] && kill $CLAUDE_PID 2>/dev/null; }
+trap cleanup EXIT INT TERM
+
+# Time formatting helper
+format_time() { printf "%02d:%02d" $(($1 / 60)) $(($1 % 60)); }
+
 usage() {
   echo "Usage: ralph.sh [OPTIONS] [MAX_ITERATIONS]"
   echo ""
@@ -29,12 +41,8 @@ setup() {
   fi
 
   # Validate PRD.json has required fields
-  if ! jq -e '.title' "$PRD_FILE" > /dev/null 2>&1; then
-    echo "ERROR: $PRD_FILE missing 'title' field"
-    exit 1
-  fi
-  if ! jq -e '.tasks | length > 0' "$PRD_FILE" > /dev/null 2>&1; then
-    echo "ERROR: $PRD_FILE has no tasks"
+  if ! jq -e '.title and (.tasks | length > 0)' "$PRD_FILE" >/dev/null 2>&1; then
+    echo "ERROR: $PRD_FILE must have 'title' and at least one task"
     exit 1
   fi
 
@@ -92,207 +100,67 @@ setup() {
   cat > "$PROMPT_FILE" << 'PROMPT_EOF'
 # Autonomous Task Executor
 
-You execute ONE task, verify it works, commit it, and exit. No conversation.
+Execute ONE task, verify, commit, exit. No conversation.
 
-## OUTPUT RULES
-- NO explanations of what you're about to do
-- NO status updates like "Now I'm reading..."
-- NO reflections like "Let me think about..."
-- ONLY: Tool calls and the final RALPH_STATUS.json
+## RULES
+- NO explanations, status updates, or reflections
+- ONLY tool calls and final RALPH_STATUS.json
+- ONE task = ONE line in TASKS.md: `- [ ] [ID] description`
+- There is NO valid reason to do more than one task
 
----
-
-## TASK DEFINITION (READ THIS CAREFULLY)
-
-A "task" is ONE LINE in TASKS.md formatted as: `- [ ] [ID] description`
-- The `[ID]` is the task number from PRD.json
-- ONE LINE = ONE TASK
-- NOT multiple lines, NOT "related tasks", NOT "subtasks"
-
----
-
-## PHASE 1: Context Loading
-
-Read silently (no commentary):
-1. `PRD.json` - READ ALL FIELDS:
-   - `overview` and `problem` - understand what you're building and why
-   - `goals` - what success looks like
-   - `requirements` - functional and non-functional constraints
-   - `out_of_scope` - **CRITICAL**: things you must NOT do
-   - `success_criteria` - how to validate your work
+## PHASE 1: Context
+Read silently:
+1. `PRD.json` - ALL fields, especially `out_of_scope` (things you must NOT do)
 2. `TASKS.md` - task list with completion status
-3. `PROGRESS.md` - detailed log of previous work
-4. `RALPH_STATUS.json` (if exists) - previous iterations with notes and context
-
----
+3. `PROGRESS.md` - log of previous work
+4. `RALPH_STATUS.json` - previous iterations
 
 ## PHASE 2: Task Selection
-
-Execute this algorithm exactly:
-1. Open TASKS.md
-2. Scan from top to bottom
-3. Find the FIRST line matching `- [ ] [ID] description`
-4. If NO incomplete tasks found → set status=ALL_COMPLETE and exit
-5. Extract the ID number and description - this is your task
-6. STOP READING - do not look at other tasks
-
-**FORBIDDEN RATIONALIZATIONS** - If you think any of these, you are WRONG:
-- "These tasks are related so I'll do them together"
-- "Task B doesn't make sense without task A"
-- "It's more efficient to batch these"
-- "This task requires also doing task X"
-- "While I'm here, I should also..."
-- "This other task is only 2 lines of code"
-
-There is NO valid reason to do more than one task.
-
----
+1. Find FIRST `- [ ] [ID] description` line in TASKS.md
+2. If none → status=ALL_COMPLETE, exit
+3. That ONE line is your task. Do not batch or combine.
 
 ## PHASE 3: Implementation
-
-Implement ONLY the single task from Phase 2.
-
-**BEFORE WRITING CODE**: Check PRD.json `out_of_scope` - if your task touches anything listed there, set status=BLOCKED.
-
-**CORE PRINCIPLE: Do LESS, not MORE.**
-- If a task is vague, make the MINIMAL change that satisfies it
-- Default to changing fewer files, not more
-- If unsure about scope, set status=BLOCKED and ask
-
-**FORBIDDEN:**
-- NO refactoring - implement in the existing code structure
-- NO "cleanup while I'm here"
-- NO preparing infrastructure for future tasks
-- NO updating docs unless the task explicitly says to
-- NO installing dependencies unless the task explicitly requires them
-
-**STOP SIGNALS** - If you notice yourself:
-- Editing files unrelated to your specific task → STOP
-- Planning to change something "while you're here" → STOP
-- Writing code for the next task → STOP
-- Your commit message would need "and" → STOP, you're doing multiple tasks
-- Reading more than 5 files to understand context → STOP, execute literally
-
----
+- Check `out_of_scope` first → BLOCKED if task touches anything listed
+- Do MINIMAL changes. No refactoring. No future prep.
+- If commit message needs "and" → you're doing too much
 
 ## PHASE 4: Testing
+Run full test suite (make test, go test, npm test, pytest, etc).
+- 3 fix attempts max, then BLOCKED
+- Only fix tests YOUR changes broke
+- Unrelated test failures → BLOCKED
 
-Run ALL tests - unit, integration, short, benchmarks. If they fail, fix them. Repeat until they pass.
+## PHASE 5: Finalize
+1. Mark task `- [x]` in TASKS.md
+2. Append to PROGRESS.md
+3. `git add -A && git commit -m "feat: <task>"`
 
-```bash
-# Run the full test suite - examples:
-make test                    # if Makefile exists
-go test ./... -race          # Go projects
-npm test                     # Node projects
-pytest                       # Python projects
-```
-
-Look for test commands in Makefile, package.json, or project docs.
-
-**WORKFLOW:**
-1. Run tests
-2. If tests pass → proceed to Phase 5
-3. If tests fail → analyze error, fix YOUR code, run tests again
-4. **ATTEMPT LIMIT: 3 fix attempts max**
-   - After 3 failed fixes, set status=BLOCKED
-   - Log what you tried in notes
-
-**IMPORTANT:**
-- Only fix tests that YOUR changes broke
-- If tests fail in unrelated areas → set status=BLOCKED, don't fix other code
-- If no tests exist for your change → note this, proceed anyway
-- You cannot mark a task complete until tests pass
-
----
-
-## PHASE 5: Pre-Commit Check
-
-Before committing, verify:
-- [ ] I modified ONLY files necessary for this specific task
-- [ ] I did NOT refactor, optimize, or improve anything outside the task
-- [ ] I did NOT prepare anything for future tasks
-- [ ] My commit will contain ONE task's worth of changes
-
-If any check fails → revert extra changes before committing.
-
----
-
-## PHASE 6: Finalize
-
-1. **TASKS.md**: Change `- [ ]` to `- [x]` for your ONE task only
-2. **PROGRESS.md**: Append entry with task completed, test results, notes
-3. **Commit**: `git add -A && git commit -m "feat: <task summary>"`
-
----
-
-## PHASE 7: Status Report
-
-Read `RALPH_STATUS.json`, append your iteration to the `iterations` array, and write it back.
-
+## PHASE 6: Status Report
+Append to RALPH_STATUS.json `iterations` array:
 ```json
 {
-  "prd_title": "Feature name",
-  "iterations": [
-    {
-      "iteration": 1,
-      "status": "TASK_COMPLETE",
-      "task_id": 1,
-      "task_completed": "exact task description",
-      "tests_passed": true,
-      "tests_output": "X passed, Y failed",
-      "commit_hash": "abc123",
-      "files_modified": ["path/to/file.go"],
-      "notes": "Context for next iteration",
-      "blocked_reason": null
-    }
-  ]
+  "iteration": 1,
+  "status": "TASK_COMPLETE",
+  "task_id": 1,
+  "task_completed": "exact task description",
+  "tests_passed": true,
+  "tests_output": "X passed, Y failed",
+  "commit_hash": "abc123",
+  "files_modified": ["path/to/file.go"],
+  "notes": "Context for next iteration",
+  "blocked_reason": null
 }
 ```
 
-**FIELDS:**
-- `iteration` - Use the ITERATION NUMBER from the prompt header
-- `task_id` - The `[ID]` from the task line in TASKS.md
-- `blocked_reason` - Only set if status is BLOCKED, otherwise null
+STATUS: `TASK_COMPLETE` | `ALL_COMPLETE` | `BLOCKED`
+- `iteration` - from prompt header
+- `blocked_reason` - only if BLOCKED, else null
 
-**STATUS VALUES:**
-- `TASK_COMPLETE` - Task done, tests pass, committed, more tasks remain
-- `ALL_COMPLETE` - All tasks done, zero `- [ ]` lines remain in TASKS.md
-- `BLOCKED` - Truly stuck: can't fix tests, missing deps, need human decision
-
----
-
-## EXAMPLES
-
-**CORRECT:**
+## WRONG (violations)
 ```
-Task: "Add User struct to types.go"
-- Create User struct
-- Run tests → exit code 0
-- Commit → exit code 0, hash abc123
-- Status: TASK_COMPLETE
-```
-
-**WRONG - Multiple tasks:**
-```
-Task: "Add User struct to types.go"
-- Create User struct
-- ALSO add validation (that's task 2)
-- ALSO add tests (that's task 3)
-❌ VIOLATION
-```
-
-**WRONG - Ignoring failure:**
-```
-- Run tests → exit code 1
-- Report tests_passed: true
-❌ LYING
-```
-
-**CORRECT - Handling failure:**
-```
-- Run tests → exit code 1
-- Status: BLOCKED
-- blocked_reason: "Tests failed: TestUser expected nil, got error"
+Task: "Add User struct" → ALSO adds validation → ❌ multiple tasks
+Tests fail → reports tests_passed: true → ❌ lying
 ```
 PROMPT_EOF
 
@@ -388,18 +256,11 @@ $(cat "$PROMPT_FILE")"
 
   # Show elapsed time while Claude runs
   while kill -0 $CLAUDE_PID 2>/dev/null; do
-    ELAPSED=$(($(date +%s) - START_TIME))
-    MINUTES=$((ELAPSED / 60))
-    SECS=$((ELAPSED % 60))
-    printf "\r⏳ Running agent... %02d:%02d" $MINUTES $SECS
+    printf "\r⏳ Running agent... $(format_time $(($(date +%s) - START_TIME)))"
     sleep 1
   done
   wait $CLAUDE_PID
-
-  ELAPSED=$(($(date +%s) - START_TIME))
-  MINUTES=$((ELAPSED / 60))
-  SECS=$((ELAPSED % 60))
-  printf "\r✓ Completed in %02d:%02d          \n" $MINUTES $SECS
+  printf "\r✓ Completed in $(format_time $(($(date +%s) - START_TIME)))          \n"
   echo "Completed: $(date)" >> ralph.log
 
   # Validate status file
@@ -409,9 +270,7 @@ $(cat "$PROMPT_FILE")"
   fi
 
   # Parse status (from last iteration in array)
-  STATUS=$(jq -r '.iterations[-1].status' "$STATUS_FILE" 2>/dev/null || echo "INVALID")
-  TESTS_PASSED=$(jq -r '.iterations[-1].tests_passed' "$STATUS_FILE" 2>/dev/null || echo "false")
-  TASK=$(jq -r '.iterations[-1].task_completed' "$STATUS_FILE" 2>/dev/null || echo "unknown")
+  eval $(jq -r '.iterations[-1] | "STATUS=\(.status // "INVALID") TASK=\(.task_completed // "unknown" | @sh)"' "$STATUS_FILE" 2>/dev/null) || STATUS="INVALID"
 
   echo "Task: $TASK"
 
