@@ -367,8 +367,7 @@ echo "=== Starting Ralph ($TOTAL_TASKS tasks, max $MAX_ITERATIONS iterations) ==
 while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
   ITERATION=$((ITERATION + 1))
   START_TIME=$(date +%s)
-  COMPLETED_TASKS=$(grep -c "^\- \[x\]" "$TASKS_FILE" 2>/dev/null || echo "0")
-  REMAINING_TASKS=$((TOTAL_TASKS - COMPLETED_TASKS))
+  COMPLETED_TASKS=$(grep -c "^\- \[x\]" "$TASKS_FILE" 2>/dev/null) || COMPLETED_TASKS=0
   echo ""
   echo "=== Task $((COMPLETED_TASKS + 1))/$TOTAL_TASKS (iteration $ITERATION) ==="
   echo "Started: $(date)" >> ralph.log
