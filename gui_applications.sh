@@ -6,15 +6,12 @@ echo "Installing GUI applications (may require password for some apps)..."
 # Install GUI applications
 brew install --cask --force \
 	kitty \
-  ghostty \
-	visual-studio-code \
+	ghostty \
 	cursor \
 	brave-browser \
 	raycast \
 	cleanshot \
 	spotify \
-	google-drive \
-	claude-code \
 	claude \
 	chatgpt \
 	1password \
@@ -22,5 +19,8 @@ brew install --cask --force \
 
 brew install FelixKratz/formulae/sketchybar \
   FelixKratz/formulae/borders
+
+brew services start felixkratz/formulae/borders
+brew services start sketchybar
 
 echo "GUI applications installation complete!"

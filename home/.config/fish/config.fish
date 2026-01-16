@@ -1,6 +1,9 @@
 # Initialize Homebrew environment
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+# Add local bin to PATH (for Claude Code, etc.)
+fish_add_path $HOME/.local/bin
+
 # Projects directories for git scanning
 set -gx PROJECTS_DIR "$HOME/work:$HOME/personal:$HOME/dev"
 
