@@ -104,6 +104,10 @@ First `- [ ] [ID] description` in TASKS.md. None → status=ALL_COMPLETE, exit.
 - `out_of_scope` items → BLOCKED
 - Minimal changes. No refactoring. If commit needs "and" → too much.
 
+## DOCUMENTATION
+- If there is a README.md and this is a utility package and not an application update it.
+- If there is a docs/ directory for a wiki update it.
+
 ## TESTING
 Run formatting/linting if available (make fmt, go fmt, npm run lint, etc), then full test suite.
 3 fix attempts max → BLOCKED. Only fix tests you broke.
