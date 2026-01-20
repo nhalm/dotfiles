@@ -13,7 +13,6 @@ local apple = sbar.add("item", {
     padding_left = 8,
   },
   label = { drawing = false },
-  click_script = "$CONFIG_DIR/helpers/menus/bin/menus -s 0"
 })
 
 sbar.add("bracket", { apple.name }, {
