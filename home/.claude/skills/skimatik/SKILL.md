@@ -36,11 +36,14 @@ internal/
 ## What skimatik Generates
 
 1. **Table Repositories** - CRUD operations for each table
-   - `NewUsersRepository(db, idGen)` → Create, Get, Update, Delete, List, ListPaginated
+   - `NewUsersRepository(idGen)` → Create, Get, Update, Delete, List, ListPaginated
+   - Constructor takes only idGen (pass `nil` for default UUID v7)
+   - All methods require `db pgxkit.Executor` as second parameter
    - Also generates retry variants: CreateWithRetry, GetWithRetry, etc.
 
 2. **Query Handlers** - Custom queries from `.sql` files
-   - `NewUsersQueries(db)` → Your custom query methods
+   - `NewUsersQueries()` → Your custom query methods (no parameters)
+   - All query methods require `db pgxkit.Executor` as second parameter
 
 ## Quick Reference
 
@@ -122,10 +125,25 @@ Load [patterns/anti-patterns.md](patterns/anti-patterns.md) - Comprehensive chec
 ## Correct Usage Pattern
 
 ```go
-// 1. Custom repository embeds both generated types
+// 1. Custom repository embeds both generated types and stores db
 type ProductRepository struct {
+    db *pgxkit.DB                  // Store db to pass to generated methods
     *generated.ProductsRepository  // CRUD operations
     *generated.ProductsQueries     // Custom queries
+}
+
+func NewProductRepository(db *pgxkit.DB) *ProductRepository {
+    return &ProductRepository{
+        db:                 db,
+        ProductsRepository: generated.NewProductsRepository(nil),  // nil = default UUID v7
+        ProductsQueries:    generated.NewProductsQueries(),
+    }
+}
+
+// Methods pass db to generated methods
+func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error) {
+    row, err := r.ProductsRepository.Create(ctx, r.db, toParams(req))
+    // ...
 }
 
 // 2. Service defines interface it needs (not full repo)

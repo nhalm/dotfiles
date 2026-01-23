@@ -16,12 +16,14 @@ Every table repository generates these retry methods:
 
 ## Usage
 
+All methods (standard and retry) require `db pgxkit.Executor` as second parameter:
+
 ```go
 // Standard - fails immediately on transient error
-user, err := repo.Get(ctx, userID)
+user, err := repo.Get(ctx, db, userID)
 
 // With retry - automatically retries transient failures
-user, err := repo.GetWithRetry(ctx, userID)
+user, err := repo.GetWithRetry(ctx, db, userID)
 ```
 
 ## Default Configuration
@@ -81,8 +83,8 @@ These errors fail immediately (no retry):
 ```go
 // WRONG - retry inside transaction won't help
 tx, _ := db.Begin(ctx)
-repo := generated.NewUsersRepository(tx, nil)
-user, err := repo.GetWithRetry(ctx, userID)  // If first attempt fails, retries will also fail
+repo := generated.NewUsersRepository(nil)
+user, err := repo.GetWithRetry(ctx, tx, userID)  // If first attempt fails, retries will also fail
 
 // CORRECT - retry the entire transaction
 func createUserWithRetry(ctx context.Context, db *pgxkit.DB, params CreateParams) (*User, error) {
@@ -94,8 +96,8 @@ func createUserWithRetry(ctx context.Context, db *pgxkit.DB, params CreateParams
             }
             defer tx.Rollback(ctx)
 
-            repo := generated.NewUsersRepository(tx, nil)
-            user, err := repo.Create(ctx, params)  // Standard method, not retry
+            repo := generated.NewUsersRepository(nil)
+            user, err := repo.Create(ctx, tx, params)  // Pass tx to method, not constructor
             if err != nil {
                 return nil, err
             }
@@ -130,8 +132,8 @@ result, err := generated.RetryOperation(ctx, config, "custom-op", func(ctx conte
 
 ```go
 func (w *Worker) ProcessUser(ctx context.Context, userID uuid.UUID) error {
-    // Use retry for background processing
-    user, err := w.repo.GetWithRetry(ctx, userID)
+    // Use retry for background processing - pass w.db to method
+    user, err := w.repo.GetWithRetry(ctx, w.db, userID)
     if err != nil {
         if generated.IsNotFound(err) {
             // Not found - don't retry, it won't appear
@@ -150,8 +152,8 @@ func (w *Worker) ProcessUser(ctx context.Context, userID uuid.UUID) error {
 
 ```go
 func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
-    // Use standard method for fast user feedback
-    user, err := h.repo.Get(r.Context(), userID)
+    // Use standard method for fast user feedback - pass h.db to method
+    user, err := h.repo.Get(r.Context(), h.db, userID)
     if err != nil {
         // Fail fast - don't make user wait for retries
         handleError(w, err)

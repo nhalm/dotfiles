@@ -81,19 +81,21 @@ type ListProductsFilter struct {
 
 ### Repository Layer
 
-Custom repositories embed generated code and handle type conversions:
+Custom repositories embed generated code, store db, and handle type conversions:
 
 ```go
 // internal/repository/product_repository.go
 type ProductRepository struct {
+    db *pgxkit.DB                  // Store db to pass to generated methods
     *generated.ProductsRepository  // Embed CRUD
     *generated.ProductsQueries     // Embed custom queries
 }
 
 func NewProductRepository(db *pgxkit.DB) *ProductRepository {
     return &ProductRepository{
-        ProductsRepository: generated.NewProductsRepository(db, prefixedIDGenerator("prod_")),
-        ProductsQueries:    generated.NewProductsQueries(db),
+        db:                 db,
+        ProductsRepository: generated.NewProductsRepository(prefixedIDGenerator("prod_")),
+        ProductsQueries:    generated.NewProductsQueries(),
     }
 }
 
@@ -106,8 +108,8 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
         Metadata:    marshalMetadata(req.Metadata),
     }
 
-    // Call embedded generated method
-    row, err := r.ProductsRepository.Create(ctx, params)
+    // Call embedded generated method - pass r.db
+    row, err := r.ProductsRepository.Create(ctx, r.db, params)
     if err != nil {
         return nil, translateError(err)
     }
@@ -118,7 +120,7 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
 
 // Use embedded queries for complex reads
 func (r *ProductRepository) ListWithFilters(ctx context.Context, filter models.ListProductsFilter) (*models.ListProductsResult, error) {
-    rows, err := r.ListProducts(ctx,  // Embedded method from ProductsQueries
+    rows, err := r.ListProducts(ctx, r.db,  // Embedded method - pass r.db
         filter.Active,
         filter.Limit,
         filter.AfterCursor,

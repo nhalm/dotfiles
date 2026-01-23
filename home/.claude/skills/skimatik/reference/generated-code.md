@@ -50,20 +50,25 @@ if err != nil {
 defer db.Shutdown(ctx)
 
 // Create repository (nil = use default UUID v7 generator)
-repo := generated.NewUsersRepository(db, nil)
+repo := generated.NewUsersRepository(nil)
 
 // Or with custom ID generator
 customIDGen := func() uuid.UUID {
     return uuid.New()  // UUID v4 instead
 }
-repo := generated.NewUsersRepository(db, customIDGen)
+repo := generated.NewUsersRepository(customIDGen)
+
+// All methods require db parameter - pass db to each call
+user, err := repo.Create(ctx, db, params)
 ```
 
 ### CRUD Operations
 
+All methods require `db pgxkit.Executor` as the second parameter after context.
+
 **Create:**
 ```go
-user, err := repo.Create(ctx, generated.CreateUsersParams{
+user, err := repo.Create(ctx, db, generated.CreateUsersParams{
     Name:  "John Doe",
     Email: "john@example.com",
     Bio:   nil,  // Nullable field
@@ -79,7 +84,7 @@ fmt.Printf("Created user: %s\n", user.Id)
 
 **Get by ID:**
 ```go
-user, err := repo.Get(ctx, userID)
+user, err := repo.Get(ctx, db, userID)
 if err != nil {
     if generated.IsNotFound(err) {
         // Handle not found
@@ -90,7 +95,7 @@ if err != nil {
 
 **Update:**
 ```go
-user, err := repo.Update(ctx, userID, generated.UpdateUsersParams{
+user, err := repo.Update(ctx, db, userID, generated.UpdateUsersParams{
     Name: "Jane Doe",
     Bio:  &newBio,  // Set nullable field
 })
@@ -98,17 +103,17 @@ user, err := repo.Update(ctx, userID, generated.UpdateUsersParams{
 
 **Delete:**
 ```go
-err := repo.Delete(ctx, userID)
+err := repo.Delete(ctx, db, userID)
 ```
 
 **List all:**
 ```go
-users, err := repo.List(ctx)
+users, err := repo.List(ctx, db)
 ```
 
 **Paginated list:**
 ```go
-result, err := repo.ListPaginated(ctx, generated.PaginationParams{
+result, err := repo.ListPaginated(ctx, db, generated.PaginationParams{
     Limit:   20,
     OrderBy: "created_at",
 })
@@ -119,7 +124,7 @@ fmt.Printf("Has previous: %v\n", result.HasPrevious)
 
 // Next page
 if result.HasMore {
-    next, err := repo.ListPaginated(ctx, generated.PaginationParams{
+    next, err := repo.ListPaginated(ctx, db, generated.PaginationParams{
         Limit:      20,
         OrderBy:    "created_at",
         NextCursor: result.NextCursor,
@@ -128,7 +133,7 @@ if result.HasMore {
 
 // Previous page
 if result.HasPrevious {
-    prev, err := repo.ListPaginated(ctx, generated.PaginationParams{
+    prev, err := repo.ListPaginated(ctx, db, generated.PaginationParams{
         Limit:        20,
         OrderBy:      "created_at",
         BeforeCursor: result.BeforeCursor,
@@ -141,7 +146,7 @@ if result.HasPrevious {
 ### Initialization
 
 ```go
-queries := generated.NewUsersQueries(db)
+queries := generated.NewUsersQueries()  // No parameters
 ```
 
 ### Using Generated Query Functions
@@ -158,20 +163,20 @@ SELECT id, name, email FROM users WHERE is_active = true LIMIT $1;
 UPDATE users SET is_active = false WHERE id = $1;
 ```
 
-Generated usage:
+Generated usage (all methods require `db` parameter):
 ```go
 // :one query - returns pointer and error
-user, err := queries.GetUserByEmail(ctx, "john@example.com")
+user, err := queries.GetUserByEmail(ctx, db, "john@example.com")
 if generated.IsNotFound(err) {
     // Handle not found
 }
 
 // :many query - returns slice and error
-users, err := queries.GetActiveUsers(ctx, 10)
+users, err := queries.GetActiveUsers(ctx, db, 10)
 // Empty slice if no results, not error
 
 // :exec query - returns error only
-err := queries.DeactivateUser(ctx, userID)
+err := queries.DeactivateUser(ctx, db, userID)
 ```
 
 ### Paginated Queries
@@ -184,19 +189,19 @@ WHERE is_published = true
 ORDER BY created_at DESC
 ```
 
-Usage:
+Usage (all methods require `db` parameter):
 ```go
 // Regular version - all results
-posts, err := queries.GetRecentPosts(ctx)
+posts, err := queries.GetRecentPosts(ctx, db)
 
 // Paginated version - bidirectional cursor pagination
-result, err := queries.GetRecentPostsPaginated(ctx, generated.PaginationParams{
+result, err := queries.GetRecentPostsPaginated(ctx, db, generated.PaginationParams{
     Limit: 20,
 })
 
 // Next page (forward)
 if result.HasMore {
-    next, err := queries.GetRecentPostsPaginated(ctx, generated.PaginationParams{
+    next, err := queries.GetRecentPostsPaginated(ctx, db, generated.PaginationParams{
         Limit:      20,
         NextCursor: result.NextCursor,
     })
@@ -204,7 +209,7 @@ if result.HasMore {
 
 // Previous page (backward)
 if result.HasPrevious {
-    prev, err := queries.GetRecentPostsPaginated(ctx, generated.PaginationParams{
+    prev, err := queries.GetRecentPostsPaginated(ctx, db, generated.PaginationParams{
         Limit:        20,
         BeforeCursor: result.BeforeCursor,
     })
@@ -213,7 +218,7 @@ if result.HasPrevious {
 
 ## Transactions
 
-Generated repositories work with transactions via pgxkit's DBConn interface:
+Generated repositories work with transactions by passing `tx` to methods:
 
 ```go
 // Start transaction
@@ -223,17 +228,17 @@ if err != nil {
 }
 defer tx.Rollback(ctx)  // Rollback if not committed
 
-// Create repositories with transaction
-userRepo := generated.NewUsersRepository(tx, nil)
-postRepo := generated.NewPostsRepository(tx, nil)
+// Create repositories (constructor doesn't take db/tx)
+userRepo := generated.NewUsersRepository(nil)
+postRepo := generated.NewPostsRepository(nil)
 
-// Perform operations
-user, err := userRepo.Create(ctx, userParams)
+// Perform operations - pass tx to each method
+user, err := userRepo.Create(ctx, tx, userParams)
 if err != nil {
     return err  // Rollback happens via defer
 }
 
-post, err := postRepo.Create(ctx, generated.CreatePostsParams{
+post, err := postRepo.Create(ctx, tx, generated.CreatePostsParams{
     AuthorID: user.Id,
     Title:    "My Post",
 })
@@ -252,14 +257,16 @@ return tx.Commit(ctx)
 ```go
 // internal/repository/product_repository.go
 type ProductRepository struct {
+    db *pgxkit.DB                  // Store db to pass to generated methods
     *generated.ProductsRepository  // Embed for CRUD
     *generated.ProductsQueries     // Embed for custom queries
 }
 
 func NewProductRepository(db *pgxkit.DB) *ProductRepository {
     return &ProductRepository{
-        ProductsRepository: generated.NewProductsRepository(db, nil),
-        ProductsQueries:    generated.NewProductsQueries(db),
+        db:                 db,
+        ProductsRepository: generated.NewProductsRepository(nil),  // nil = default UUID v7
+        ProductsQueries:    generated.NewProductsQueries(),
     }
 }
 
@@ -272,8 +279,8 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
         Metadata:    marshalMetadata(req.Metadata),
     }
 
-    // Call embedded method
-    row, err := r.ProductsRepository.Create(ctx, params)
+    // Call embedded method - pass r.db as second parameter
+    row, err := r.ProductsRepository.Create(ctx, r.db, params)
     if err != nil {
         return nil, translateError(err)
     }
@@ -284,7 +291,7 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
 
 // Use queries for complex reads
 func (r *ProductRepository) GetByEmail(ctx context.Context, email string) (*models.Product, error) {
-    row, err := r.GetProductByEmail(ctx, email)  // Embedded method
+    row, err := r.GetProductByEmail(ctx, r.db, email)  // Embedded method - pass r.db
     if err != nil {
         return nil, translateError(err)
     }

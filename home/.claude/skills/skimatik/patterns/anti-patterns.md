@@ -16,8 +16,8 @@ rows, err := db.Query(ctx, "SELECT id, name FROM users WHERE email = $1", email)
 db.Exec(ctx, "UPDATE users SET last_login = NOW() WHERE id = $1", id)
 
 // CORRECT - add query to .sql file and regenerate
-user, err := queries.GetUserByEmail(ctx, email)
-err := queries.UpdateLastLogin(ctx, id)
+user, err := queries.GetUserByEmail(ctx, db, email)
+err := queries.UpdateLastLogin(ctx, db, id)
 ```
 
 ### Using Generated Repos Directly
@@ -31,13 +31,22 @@ type UserService struct {
 }
 
 func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (*User, error) {
-    return s.repo.Get(ctx, id)  // No place for business logic
+    return s.repo.Get(ctx, s.db, id)  // No place for business logic
 }
 
-// CORRECT - embed in wrapper
+// CORRECT - embed in wrapper with db field
 type UserRepository struct {
+    db *pgxkit.DB                  // Store db to pass to generated methods
     *generated.UsersRepository
     *generated.UsersQueries
+}
+
+func NewUserRepository(db *pgxkit.DB) *UserRepository {
+    return &UserRepository{
+        db:              db,
+        UsersRepository: generated.NewUsersRepository(nil),
+        UsersQueries:    generated.NewUsersQueries(),
+    }
 }
 
 type UserService struct {
@@ -45,7 +54,7 @@ type UserService struct {
 }
 
 func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (*User, error) {
-    user, err := s.repo.Get(ctx, id)
+    user, err := s.repo.Get(ctx, s.repo.db, id)  // Pass db to generated method
     if err != nil {
         return nil, err
     }
@@ -56,7 +65,7 @@ func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (*User, error) 
 
 **Why this works:**
 - Embedding preserves all generated methods (Get, Create, Update, etc.)
-- Your wrapper can add business logic alongside generated methods
+- Your wrapper stores db and passes it to generated methods
 - Type conversion happens in YOUR code, keeping generated code stable
 - Services depend on your wrapper, enabling mocking and testing
 
@@ -165,7 +174,7 @@ type CreateProductRequest struct {
 ```go
 // WRONG - passing through without conversion
 func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProductRequest) (*generated.Products, error) {
-    return r.ProductsRepository.Create(ctx, generated.CreateProductsParams{
+    return r.ProductsRepository.Create(ctx, r.db, generated.CreateProductsParams{
         Name: req.Name,
     })
     // Returns generated type directly!
@@ -179,7 +188,8 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
         Description: req.Description,
     }
 
-    row, err := r.ProductsRepository.Create(ctx, params)
+    // Pass r.db to generated method
+    row, err := r.ProductsRepository.Create(ctx, r.db, params)
     if err != nil {
         return nil, translateError(err)
     }
