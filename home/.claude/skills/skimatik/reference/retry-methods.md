@@ -28,16 +28,13 @@ user, err := repo.GetWithRetry(ctx, db, userID)
 
 ## Default Configuration
 
-```go
-var DefaultRetryConfig = RetryConfig{
-    MaxRetries: 3,
-    BaseDelay:  100 * time.Millisecond,
-}
-```
+Retry methods use `pgxkit.Retry()` with default settings:
 
 - **Max retries**: 3 attempts before failing
 - **Base delay**: 100ms initial delay
-- **Backoff**: Exponential (100ms → 200ms → 400ms)
+- **Backoff**: Exponential with jitter (100ms → 200ms → 400ms)
+
+The retry configuration is handled by pgxkit and cannot be customized per-method. All retry methods share the same retry behavior.
 
 ## Retryable Errors
 
@@ -78,55 +75,69 @@ These errors fail immediately (no retry):
 
 ## Transactions and Retry
 
-**Do NOT use retry methods inside transactions.** Once a PostgreSQL transaction encounters an error, it enters an aborted state and all subsequent commands will fail until ROLLBACK.
+In skimatik v2, retry methods automatically detect transaction context and handle it correctly:
 
 ```go
-// WRONG - retry inside transaction won't help
+// Transaction context - retry methods automatically disable retry behavior
 tx, _ := db.Begin(ctx)
 repo := generated.NewUsersRepository(nil)
-user, err := repo.GetWithRetry(ctx, tx, userID)  // If first attempt fails, retries will also fail
 
-// CORRECT - retry the entire transaction
+// Retry method detects pgx.Tx and silently falls back to standard method
+// No retry happens inside transaction (which would fail anyway)
+user, err := repo.GetWithRetry(ctx, tx, userID)
+```
+
+**Why this behavior?** Once a PostgreSQL transaction encounters an error, it enters an aborted state. All subsequent commands will fail until ROLLBACK. Retrying inside the transaction is pointless.
+
+**Best practice:** Retry the entire transaction, not operations inside it:
+
+```go
+// CORRECT - retry the entire transaction using pgxkit.Retry
 func createUserWithRetry(ctx context.Context, db *pgxkit.DB, params CreateParams) (*User, error) {
-    return generated.RetryOperation(ctx, generated.DefaultRetryConfig, "create-user-tx",
-        func(ctx context.Context) (*User, error) {
-            tx, err := db.Begin(ctx)
-            if err != nil {
-                return nil, err
-            }
-            defer tx.Rollback(ctx)
+    return pgxkit.Retry(ctx, db, func(ctx context.Context, exec pgxkit.Executor) (*User, error) {
+        tx, err := exec.(interface{ Begin(context.Context) (pgx.Tx, error) }).Begin(ctx)
+        if err != nil {
+            return nil, err
+        }
+        defer tx.Rollback(ctx)
 
-            repo := generated.NewUsersRepository(nil)
-            user, err := repo.Create(ctx, tx, params)  // Pass tx to method, not constructor
-            if err != nil {
-                return nil, err
-            }
+        repo := generated.NewUsersRepository(nil)
+        user, err := repo.Create(ctx, tx, params)
+        if err != nil {
+            return nil, err
+        }
 
-            if err := tx.Commit(ctx); err != nil {
-                return nil, err
-            }
-            return user, nil
-        })
+        if err := tx.Commit(ctx); err != nil {
+            return nil, err
+        }
+        return user, nil
+    })
 }
 ```
 
-**Rule:** Retry at the transaction boundary, not inside it.
+**Rule:** Transaction retry methods won't retry inside transactions. For transaction-level retry, use `pgxkit.Retry()` to wrap the entire transaction block.
 
 ## Custom Retry Logic
 
-The generated `RetryOperation` and `RetryOperationSlice` functions are exported for custom use:
+For custom retry logic, use `pgxkit.Retry()` directly:
 
 ```go
-// Custom retry with different config
-config := generated.RetryConfig{
-    MaxRetries: 5,
-    BaseDelay:  50 * time.Millisecond,
-}
-
-result, err := generated.RetryOperation(ctx, config, "custom-op", func(ctx context.Context) (*MyType, error) {
-    return doSomething(ctx)
+// Custom retry with pgxkit
+result, err := pgxkit.Retry(ctx, db, func(ctx context.Context, exec pgxkit.Executor) (*MyType, error) {
+    // Your custom operation here
+    return doSomething(ctx, exec)
 })
+
+// The default retry behavior:
+// - Max retries: 3
+// - Base delay: 100ms with exponential backoff
+// - Automatically retries transient errors (serialization failures, deadlocks, etc.)
 ```
+
+All generated retry methods use `pgxkit.Retry()` internally, which provides:
+- Exponential backoff with jitter
+- Automatic detection of retryable vs non-retryable errors
+- Transaction context awareness (no retry inside transactions)
 
 ## Example: Background Worker
 

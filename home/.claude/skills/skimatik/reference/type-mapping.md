@@ -9,6 +9,9 @@ PostgreSQL to Go type mappings used by skimatik.
 | `SMALLINT`, `INT2` | `int` | `*int` |
 | `INTEGER`, `INT`, `INT4` | `int` | `*int` |
 | `BIGINT`, `INT8` | `int` | `*int` |
+| `SERIAL` | `int` | `*int` |
+| `SMALLSERIAL` | `int` | `*int` |
+| `BIGSERIAL` | `int` | `*int` |
 | `TEXT` | `string` | `*string` |
 | `VARCHAR`, `CHARACTER VARYING` | `string` | `*string` |
 | `CHAR`, `CHARACTER` | `string` | `*string` |
@@ -29,10 +32,46 @@ PostgreSQL to Go type mappings used by skimatik.
 
 skimatik uses idiomatic Go types:
 
-- **All integers → `int`**: Whether SMALLINT, INTEGER, or BIGINT, maps to Go's native `int`
+- **All integers → `int`**: Whether SMALLINT, INTEGER, BIGINT, or SERIAL variants, maps to Go's native `int`
 - **NOT NULL → value types**: Direct types like `int`, `string`, `bool`
 - **NULLABLE → pointer types**: NULL support via `*int`, `*string`, `*bool`
 - **No pgtype dependency**: Pure Go types only
+
+## Custom Query Annotations
+
+In `.sql` query files, you can override type mappings using `-- param:` and `-- result:` annotations.
+
+### Supported Types in Annotations
+
+**Primitive types:**
+- `int`, `*int`
+- `string`, `*string`
+- `bool`, `*bool`
+- `float32`, `*float32`
+- `float64`, `*float64`
+
+**Standard library types:**
+- `time.Time`, `*time.Time`
+- `json.RawMessage`, `*json.RawMessage`
+- `[]byte`, `*[]byte`
+
+**Third-party types:**
+- `uuid.UUID`, `*uuid.UUID` (requires `github.com/google/uuid`)
+
+**Array types:**
+- `[]int`, `[]string`, `[]uuid.UUID`, `[]bool`
+
+### Example: Override Default Mappings
+
+```sql
+-- name: GetUserData :one
+-- param: user_id uuid.UUID
+-- result: avatar_data []byte
+-- result: settings json.RawMessage
+SELECT avatar_data, settings
+FROM users
+WHERE id = $1;
+```
 
 ## Warnings and Caveats
 

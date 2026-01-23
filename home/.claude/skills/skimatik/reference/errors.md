@@ -93,6 +93,91 @@ if generated.IsDatabaseError(err) {
 }
 ```
 
+### IsNotFound
+
+Detects when a `:one` query returns no rows:
+
+```go
+user, err := repo.Get(ctx, db, userID)
+if generated.IsNotFound(err) {
+    // User with this ID doesn't exist
+    return nil, ErrUserNotFound
+}
+```
+
+### IsAlreadyExists
+
+Detects unique constraint violations (duplicate keys):
+
+```go
+user, err := repo.Create(ctx, db, params)
+if generated.IsAlreadyExists(err) {
+    // Email or other unique field already exists
+    return nil, ErrEmailTaken
+}
+```
+
+### IsInvalidReference
+
+Detects foreign key constraint violations (referencing non-existent records):
+
+```go
+user, err := repo.Create(ctx, db, params)
+if generated.IsInvalidReference(err) {
+    // Referenced record doesn't exist (e.g., invalid team_id)
+    return fmt.Errorf("referenced record not found: %w", err)
+}
+```
+
+### IsValidationError
+
+Detects check constraint violations and NOT NULL violations:
+
+```go
+user, err := repo.Create(ctx, db, params)
+if generated.IsValidationError(err) {
+    // Check constraint failed or required field missing
+    return nil, ErrInvalidData
+}
+```
+
+### IsConnectionError
+
+Detects database connection issues:
+
+```go
+user, err := repo.Get(ctx, db, userID)
+if generated.IsConnectionError(err) {
+    // Database unavailable, connection lost, etc.
+    return nil, ErrServiceUnavailable
+}
+```
+
+### IsTimeout
+
+Detects context deadline exceeded errors:
+
+```go
+users, err := repo.List(ctx, db)
+if generated.IsTimeout(err) {
+    // Query took too long
+    return nil, ErrRequestTimeout
+}
+```
+
+### IsDatabaseError
+
+Catch-all for any database error (use after checking specific types):
+
+```go
+user, err := repo.Create(ctx, db, params)
+if generated.IsDatabaseError(err) {
+    // Some unexpected database error
+    log.Printf("Unexpected DB error: %v", err)
+    return nil, ErrInternalServer
+}
+```
+
 ### Error Type Reference
 
 | Error | Cause | Check Function |
@@ -161,7 +246,7 @@ if errors.As(err, &dbErr) {
 ### Basic Error Handling
 
 ```go
-user, err := repo.Get(ctx, userID)
+user, err := repo.Get(ctx, db, userID)
 if err != nil {
     if generated.IsNotFound(err) {
         return nil, ErrUserNotFound
@@ -173,7 +258,7 @@ if err != nil {
 ### Create with Duplicate Check
 
 ```go
-user, err := repo.Create(ctx, params)
+user, err := repo.Create(ctx, db, params)
 if err != nil {
     if generated.IsAlreadyExists(err) {
         return nil, ErrEmailTaken
@@ -185,7 +270,7 @@ if err != nil {
 ### Foreign Key Validation
 
 ```go
-post, err := repo.Create(ctx, generated.CreatePostsParams{
+post, err := repo.Create(ctx, db, generated.CreatePostsParams{
     AuthorID: authorID,
     Title:    title,
 })
@@ -203,7 +288,7 @@ Use a switch statement checking specific errors first, with `IsDatabaseError` as
 
 ```go
 func (s *Service) CreateUser(ctx context.Context, req CreateUserRequest) (*User, error) {
-    user, err := s.repo.Create(ctx, generated.CreateUsersParams{
+    user, err := s.repo.Create(ctx, s.db, generated.CreateUsersParams{
         Name:  req.Name,
         Email: req.Email,
     })

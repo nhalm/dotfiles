@@ -41,6 +41,33 @@ internal/
 
 ## Layer Responsibilities
 
+### Generated Layer (DO NOT EDIT)
+
+Skimatik generates type-safe repository code with a consistent v2 API pattern.
+
+**Method Signature Pattern**: All generated methods require `db pgxkit.Executor` as the second parameter:
+
+```go
+// Generated CRUD methods
+func (r *ProductsRepository) Create(ctx context.Context, db pgxkit.Executor, params CreateProductsParams) (*Products, error)
+func (r *ProductsRepository) GetByID(ctx context.Context, db pgxkit.Executor, id string) (*Products, error)
+func (r *ProductsRepository) Update(ctx context.Context, db pgxkit.Executor, params UpdateProductsParams) (*Products, error)
+func (r *ProductsRepository) Delete(ctx context.Context, db pgxkit.Executor, id string) error
+func (r *ProductsRepository) ListPaginated(ctx context.Context, db pgxkit.Executor, limit int, afterCursor, beforeCursor *string) (*ListProductsResult, error)
+
+// Generated custom query methods
+func (q *ProductsQueries) ListProducts(ctx context.Context, db pgxkit.Executor, active *bool, limit int, afterCursor, beforeCursor *string) ([]*Products, error)
+```
+
+The `pgxkit.Executor` interface enables both regular database operations and transaction support:
+- Pass `*pgxkit.DB` for normal operations
+- Pass `*pgxkit.Tx` for transactional operations
+
+**Why this pattern?**
+- Enables transaction support without changing generated method signatures
+- Provides flexibility to use connection pools, direct connections, or transactions
+- Allows operations to be composed within transaction boundaries
+
 ### Models Layer
 
 Domain entities with no internal dependencies:
@@ -81,13 +108,15 @@ type ListProductsFilter struct {
 
 ### Repository Layer
 
-Custom repositories embed generated code, store db, and handle type conversions:
+Custom repositories embed generated code, store db, and handle type conversions.
+
+**Key v2 Change**: All generated methods require `db pgxkit.Executor` as the second parameter. Your wrapper repository stores the database connection and passes it to every generated method call.
 
 ```go
 // internal/repository/product_repository.go
 type ProductRepository struct {
     db *pgxkit.DB                  // Store db to pass to generated methods
-    *generated.ProductsRepository  // Embed CRUD
+    *generated.ProductsRepository  // Embed CRUD operations
     *generated.ProductsQueries     // Embed custom queries
 }
 
@@ -108,7 +137,7 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
         Metadata:    marshalMetadata(req.Metadata),
     }
 
-    // Call embedded generated method - pass r.db
+    // Call embedded generated method - pass r.db as second parameter
     row, err := r.ProductsRepository.Create(ctx, r.db, params)
     if err != nil {
         return nil, translateError(err)
@@ -118,9 +147,40 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
     return toProduct(row), nil
 }
 
+// Update wraps generated Update method
+func (r *ProductRepository) Update(ctx context.Context, req *models.UpdateProductRequest) (*models.Product, error) {
+    params := generated.UpdateProductsParams{
+        Id:          req.ID,
+        Name:        req.Name,
+        Description: req.Description,
+        Active:      req.Active,
+        Metadata:    marshalMetadata(req.Metadata),
+    }
+
+    // Pass r.db as second parameter
+    row, err := r.ProductsRepository.Update(ctx, r.db, params)
+    if err != nil {
+        return nil, translateError(err)
+    }
+
+    return toProduct(row), nil
+}
+
+// GetByID wraps generated GetByID method
+func (r *ProductRepository) GetByID(ctx context.Context, id string) (*models.Product, error) {
+    // Pass r.db as second parameter
+    row, err := r.ProductsRepository.GetByID(ctx, r.db, id)
+    if err != nil {
+        return nil, translateError(err)
+    }
+
+    return toProduct(row), nil
+}
+
 // Use embedded queries for complex reads
 func (r *ProductRepository) ListWithFilters(ctx context.Context, filter models.ListProductsFilter) (*models.ListProductsResult, error) {
-    rows, err := r.ListProducts(ctx, r.db,  // Embedded method - pass r.db
+    // Pass r.db as second parameter to embedded query method
+    rows, err := r.ListProducts(ctx, r.db,
         filter.Active,
         filter.Limit,
         filter.AfterCursor,
@@ -405,6 +465,53 @@ func (r *ProductRepository) Create(ctx context.Context, req *models.CreateProduc
 }
 ```
 
+## Transaction Support
+
+All generated methods accept `pgxkit.Executor`, which can be either `*pgxkit.DB` or `*pgxkit.Tx`. This enables transaction support without code changes.
+
+```go
+// Wrap multiple operations in a transaction
+func (r *ProductRepository) CreateWithRelated(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error) {
+    var product *models.Product
+
+    // Begin transaction
+    err := r.db.InTx(ctx, func(tx pgxkit.Executor) error {
+        // Create product - pass tx instead of r.db
+        params := generated.CreateProductsParams{
+            Name:        req.Name,
+            Description: req.Description,
+            Metadata:    marshalMetadata(req.Metadata),
+        }
+
+        row, err := r.ProductsRepository.Create(ctx, tx, params)
+        if err != nil {
+            return err
+        }
+        product = toProduct(row)
+
+        // Create related records - pass same tx
+        if err := r.createRelatedRecords(ctx, tx, product.ID); err != nil {
+            return err // Transaction rolls back
+        }
+
+        return nil // Transaction commits
+    })
+
+    if err != nil {
+        return nil, translateError(err)
+    }
+
+    return product, nil
+}
+
+func (r *ProductRepository) createRelatedRecords(ctx context.Context, tx pgxkit.Executor, productID string) error {
+    // All method calls use the same tx
+    params := generated.CreateRelatedParams{ProductID: productID}
+    _, err := r.RelatedRepository.Create(ctx, tx, params)
+    return err
+}
+```
+
 ## Soft Deletes
 
 Handle soft deletes in queries, not application code:
@@ -427,6 +534,14 @@ LIMIT $2;
 
 -- name: SoftDeleteProduct :exec
 UPDATE products SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL;
+```
+
+```go
+// Wrapper method that uses soft delete query
+func (r *ProductRepository) Delete(ctx context.Context, id string) error {
+    // Pass r.db as second parameter to generated query method
+    return r.SoftDeleteProduct(ctx, r.db, id)
+}
 ```
 
 ## Metadata/JSON Handling

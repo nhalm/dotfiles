@@ -45,6 +45,26 @@ internal/
    - `NewUsersQueries()` → Your custom query methods (no parameters)
    - All query methods require `db pgxkit.Executor` as second parameter
 
+## v2 Per-Method Executor Pattern
+
+Repository structs only store the ID generator, NOT the database connection:
+
+```go
+// Generated repository struct
+type UsersRepository struct {
+    generateIdFunc func() uuid.UUID
+}
+
+// All methods receive db as parameter
+func (r *UsersRepository) Create(ctx context.Context, db pgxkit.Executor, params CreateUsersParams) (*Users, error)
+func (r *UsersRepository) Get(ctx context.Context, db pgxkit.Executor, id uuid.UUID) (*Users, error)
+```
+
+This enables:
+- Flexible use with both `*pgxkit.DB` and `pgx.Tx`
+- Easy transaction support by passing tx instead of db
+- Read replica routing for read operations
+
 ## Quick Reference
 
 ```sql

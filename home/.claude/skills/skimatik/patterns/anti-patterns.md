@@ -4,6 +4,20 @@ Common mistakes to avoid when using skimatik.
 
 ## Architecture Anti-Patterns
 
+### Expecting db to be stored in generated repository
+
+```go
+// WRONG - v1 pattern, no longer used
+repo := generated.NewUsersRepository(db)  // db is NOT passed to constructor
+user, err := repo.Create(ctx, params)     // db is NOT stored
+
+// CORRECT - v2 pattern
+repo := generated.NewUsersRepository(nil) // only ID generator (nil = default UUID v7)
+user, err := repo.Create(ctx, db, params) // db passed to each method
+```
+
+In v2, generated repositories only store the ID generator function. The database connection is passed to each method call, enabling flexible transaction support.
+
 ### Writing Raw SQL in Go Code
 
 **NEVER write SQL strings in Go code.** All queries go in `.sql` files:
@@ -101,7 +115,7 @@ type ProductService struct {
 import "yourproject/repository/generated"
 
 func (s *ProductService) Create(ctx context.Context, name string) (*generated.Products, error) {
-    return s.repo.Create(ctx, generated.CreateProductsParams{Name: name})
+    return s.repo.Create(ctx, s.db, generated.CreateProductsParams{Name: name})
 }
 
 // CORRECT - service defines its own interface

@@ -75,15 +75,15 @@ Override auto-detected parameter types:
 ### Supported Go Types
 
 ```
-int, *int                    - All integer types
-string, *string              - TEXT, VARCHAR
-bool, *bool                  - BOOLEAN
-uuid.UUID, *uuid.UUID        - UUID
-time.Time, *time.Time        - TIMESTAMP, DATE
-float32, *float32            - REAL
-float64, *float64            - DOUBLE PRECISION, NUMERIC
-json.RawMessage, *json.RawMessage - JSON, JSONB
-[]byte, *[]byte              - BYTEA
+int, *int                          - All integer types
+string, *string                    - TEXT, VARCHAR
+bool, *bool                        - BOOLEAN
+uuid.UUID, *uuid.UUID              - UUID
+time.Time, *time.Time              - TIMESTAMP, DATE
+float32, *float32                  - REAL
+float64, *float64                  - DOUBLE PRECISION, NUMERIC
+json.RawMessage, *json.RawMessage  - JSON, JSONB
+[]byte, *[]byte                    - BYTEA
 ```
 
 ### Example
@@ -154,8 +154,9 @@ ORDER BY created_at DESC
 ### How It Works
 
 - Direction is fixed by your SQL (no runtime `orderBy` parameter)
-- DESC ordering: uses `<` for forward, `>` for backward pagination
-- ASC ordering: uses `>` for forward, `<` for backward pagination
+- skimatik automatically infers direction from the ORDER BY clause
+- DESC ordering: uses `<` for forward pagination, `>` for backward
+- ASC ordering: uses `>` for forward pagination, `<` for backward
 - Supports bidirectional navigation via `NextCursor` and `BeforeCursor`
 
 **Generates TWO functions:**
@@ -175,11 +176,12 @@ ORDER BY created_at DESC
 Generated functions:
 ```go
 // All results (with ORDER BY applied)
-func (r *PostsQueries) GetRecentPosts(ctx context.Context) ([]GetRecentPostsResult, error)
+func (r *PostsQueries) GetRecentPosts(ctx context.Context, db pgxkit.DBConn) ([]GetRecentPostsResult, error)
 
 // Paginated - no orderBy param needed, uses DESC from SQL
 func (r *PostsQueries) GetRecentPostsPaginated(
     ctx context.Context,
+    db pgxkit.DBConn,
     params PaginationParams,
 ) (*PaginationResult[GetRecentPostsResult], error)
 ```
@@ -187,11 +189,11 @@ func (r *PostsQueries) GetRecentPostsPaginated(
 Usage:
 ```go
 // First page
-result, err := queries.GetRecentPostsPaginated(ctx, PaginationParams{Limit: 20})
+result, err := queries.GetRecentPostsPaginated(ctx, db, PaginationParams{Limit: 20})
 
 // Next page (forward)
 if result.HasMore {
-    next, err := queries.GetRecentPostsPaginated(ctx, PaginationParams{
+    next, err := queries.GetRecentPostsPaginated(ctx, db, PaginationParams{
         Limit:      20,
         NextCursor: result.NextCursor,
     })
@@ -199,7 +201,7 @@ if result.HasMore {
 
 // Previous page (backward)
 if result.HasPrevious {
-    prev, err := queries.GetRecentPostsPaginated(ctx, PaginationParams{
+    prev, err := queries.GetRecentPostsPaginated(ctx, db, PaginationParams{
         Limit:        20,
         BeforeCursor: result.BeforeCursor,
     })
@@ -222,10 +224,28 @@ Generated:
 // Filter params come BEFORE PaginationParams
 func (r *PostsQueries) GetPostsByAuthorPaginated(
     ctx context.Context,
+    db pgxkit.DBConn,
     authorId uuid.UUID,
     params PaginationParams,
 ) (*PaginationResult[GetPostsByAuthorResult], error)
 ```
+
+## CTE Parameter Extraction
+
+skimatik automatically extracts parameters from CTEs (Common Table Expressions) containing DELETE, UPDATE, or INSERT statements:
+
+```sql
+-- name: ArchiveOldPosts :one
+-- param: $1 days_old int
+WITH archived AS (
+    DELETE FROM posts
+    WHERE created_at < NOW() - INTERVAL '$1 days'
+    RETURNING id
+)
+SELECT COUNT(*) as archived_count FROM archived;
+```
+
+Parameters are detected in CTEs just as they are in the main query body. This enables complex data modification queries with RETURNING clauses.
 
 ## Annotation Format
 

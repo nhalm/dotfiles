@@ -33,6 +33,20 @@ import (
 
 ## Table Repositories
 
+### Repository Structure
+
+In v2, repositories only store the ID generator function, not the database connection:
+
+```go
+type UsersRepository struct {
+    generateIdFunc func() uuid.UUID
+}
+```
+
+All methods require `db pgxkit.Executor` as the second parameter after context. This enables:
+- **Transaction support**: Pass `tx` instead of `db` to any method
+- **Read replica routing**: Read operations automatically use `ExecuteReadQuery`/`ExecuteReadQueryRow` for read replica support
+
 ### Initialization
 
 ```go
@@ -143,6 +157,16 @@ if result.HasPrevious {
 
 ## Custom Queries
 
+### Query Structure
+
+Like repositories, query structs have no stored state:
+
+```go
+type UsersQueries struct{}
+```
+
+All query methods require `db pgxkit.Executor` as the second parameter. Read operations (`:one`, `:many`, `:paginated`) automatically use `ExecuteReadQuery`/`ExecuteReadQueryRow` for read replica routing when configured.
+
 ### Initialization
 
 ```go
@@ -218,7 +242,7 @@ if result.HasPrevious {
 
 ## Transactions
 
-Generated repositories work with transactions by passing `tx` to methods:
+Generated repositories work with transactions by passing `tx` to methods instead of `db`:
 
 ```go
 // Start transaction
@@ -232,7 +256,7 @@ defer tx.Rollback(ctx)  // Rollback if not committed
 userRepo := generated.NewUsersRepository(nil)
 postRepo := generated.NewPostsRepository(nil)
 
-// Perform operations - pass tx to each method
+// Perform operations - pass tx instead of db to each method
 user, err := userRepo.Create(ctx, tx, userParams)
 if err != nil {
     return err  // Rollback happens via defer
