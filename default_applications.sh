@@ -36,6 +36,15 @@ function _install_oh_my_zsh() {
   sh -c "$(curl -fsSL https://install.ohmyz.sh)"
 }
 
+function _install_nix() {
+	if command -v nix &> /dev/null; then
+		echo "Nix already installed"
+		return
+	fi
+	echo "Installing Nix..."
+	curl -L https://nixos.org/nix/install | sh
+}
+
 function _install_brew() {
 	eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
 	if ! command -v brew &> /dev/null; then
@@ -104,6 +113,7 @@ function _install_node_brew() {
 }
 
 function _mac() {
+  _install_nix
   _install_brew
 
 #	chsh -s /bin/zsh
@@ -189,6 +199,13 @@ function _mac() {
 	_install_python_brew
 	_install_ruby_brew
 	_install_node_brew
+
+	# Install/update carbonyl (terminal browser) via npm
+	if command -v carbonyl &> /dev/null; then
+		npm update -g carbonyl
+	else
+		npm install -g carbonyl
+	fi
 
 	# Install claude-code via npm
 	# if ! command -v claude &> /dev/null; then
