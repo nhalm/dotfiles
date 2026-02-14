@@ -417,30 +417,119 @@ func runServer(cfg *config.Config) error {
 
 ## Testing Strategy
 
-Each layer is independently testable via interfaces:
+Each layer is independently testable via interfaces.
+
+### Unit Tests (no database)
+
+Service and handler tests use gomock-generated mocks:
 
 ```go
-// Service test - mock repository
-type mockProductRepo struct {
-    createFn func(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error)
-}
-
-func (m *mockProductRepo) Create(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error) {
-    return m.createFn(ctx, req)
-}
+//go:generate mockgen -source=interfaces.go -destination=mock_interfaces_test.go -package=service
 
 func TestProductService_Create(t *testing.T) {
-    repo := &mockProductRepo{
-        createFn: func(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error) {
-            return &models.Product{ID: "prod_123", Name: req.Name}, nil
-        },
-    }
+    ctrl := gomock.NewController(t)
+    mockRepo := NewMockProductRepository(ctrl)
 
-    svc := service.NewProductService(repo)
+    mockRepo.EXPECT().
+        Create(gomock.Any(), gomock.Any()).
+        Return(&models.Product{ID: "prod_123", Name: "Test"}, nil)
+
+    svc := service.NewProductService(mockRepo)
     product, err := svc.CreateProduct(ctx, &models.CreateProductRequest{Name: "Test"})
 
     require.NoError(t, err)
     assert.Equal(t, "Test", product.Name)
+}
+```
+
+Generated mock files (`mock_*_test.go`) are gitignored and regenerated via `go generate`.
+
+### Integration Tests (real database)
+
+The Makefile manages the test database lifecycle — Go test code never starts containers or runs migrations:
+
+```makefile
+TEST_DATABASE_URL = postgres://postgres:password@localhost:15987/myapp_test?sslmode=disable
+
+test-db-up:
+	@docker run --name myapp-test-db \
+		-e POSTGRES_DB=myapp_test \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=password \
+		-p 15987:5432 \
+		-d postgres:16-alpine 2>/dev/null || true
+	@bash -c 'for i in {1..30}; do \
+		if pg_isready -h localhost -p 15987 -U postgres >/dev/null 2>&1; then break; fi; \
+		sleep 1; done'
+
+test-db-migrate:
+	@DATABASE_URL="$(TEST_DATABASE_URL)" go run ./cmd/myapp migrate up
+
+test-integration: test-db-up test-db-migrate
+	@DATABASE_URL="$(TEST_DATABASE_URL)" go test -v ./...
+
+test-db-down:
+	@docker rm -f myapp-test-db 2>/dev/null || true
+```
+
+Go tests connect to the already-running, already-migrated database:
+
+```go
+func getTestDB(t *testing.T) *pgxkit.DB {
+    t.Helper()
+
+    dsn := os.Getenv("TEST_DATABASE_URL")
+    if dsn == "" {
+        dsn = os.Getenv("DATABASE_URL")
+    }
+    if dsn == "" {
+        dsn = "postgres://postgres:password@localhost:15987/myapp_test?sslmode=disable"
+    }
+
+    db := pgxkit.NewDB()
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    if err := db.Connect(ctx, dsn); err != nil {
+        t.Skipf("skipping: could not connect to database: %v", err)
+        return nil
+    }
+
+    t.Cleanup(func() {
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        db.Shutdown(ctx)
+    })
+
+    return db
+}
+```
+
+Integration tests use repository functions to seed and clean up data — never raw SQL:
+
+```go
+func TestProductRepository_Create(t *testing.T) {
+    if testing.Short() {
+        t.Skip("skipping integration test")
+    }
+
+    db := getTestDB(t)
+    if db == nil {
+        return
+    }
+
+    repo := repository.NewProductRepository(db)
+
+    product, err := repo.Create(ctx, &models.CreateProductRequest{Name: "Test"})
+    require.NoError(t, err)
+    assert.Equal(t, "Test", product.Name)
+
+    t.Cleanup(func() { repo.Delete(ctx, product.ID) })
+
+    // Verify retrieval
+    got, err := repo.GetByID(ctx, product.ID)
+    require.NoError(t, err)
+    assert.Equal(t, product.ID, got.ID)
 }
 ```
 

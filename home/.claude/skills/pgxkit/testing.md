@@ -35,8 +35,10 @@ func TestWithCleanup(t *testing.T) {
     }
     defer testDB.Shutdown(ctx)
 
-    testDB.Setup()       // Verifies connection is working
-    defer testDB.Clean() // Runs registered cleanup (typically TRUNCATE)
+    if err := testDB.Setup(); err != nil {
+        t.Fatalf("Setup failed: %v", err)
+    }
+    defer testDB.Clean() // Verifies connection still active
 
     // Your test code
 }
@@ -80,7 +82,7 @@ pgxkit.CleanupGolden("TestQueryPerformance")  // Remove golden files
 ```
 
 **Limitations:**
-- Only captures SELECT queries (INSERT/UPDATE/DELETE silently skipped)
+- DML queries (INSERT/UPDATE/DELETE) are captured in a rolled-back transaction for EXPLAIN
 - EXPLAIN queries automatically skipped to avoid recursion
 
 ## Parallel Test Safety
@@ -145,7 +147,7 @@ func TestWithTransaction(t *testing.T) {
 
 **Tests interfering with each other**
 - Use transaction-based isolation (see above)
-- Or use `defer testDB.Clean()` with TRUNCATE
+- Or use `CleanupTestData()` with TRUNCATE statements
 
 **Golden test failures after schema change**
 - Update baseline: `cp testdata/golden/TestName.json testdata/golden/TestName.json.baseline`
@@ -165,10 +167,12 @@ pgxkit.CleanupTestData(
 
 ## Test Pool Sizing
 
-Test pools use smaller limits than production:
+TestDB uses the same pool defaults as production. For tests, consider using smaller pools:
 
 ```go
-// Defaults for test pools:
-config.MaxConns = 5   // vs production: 4 × numCPU
-config.MinConns = 1   // vs production: varies
+testDB := pgxkit.NewTestDB()
+err := testDB.Connect(ctx, os.Getenv("TEST_DATABASE_URL"),
+    pgxkit.WithMaxConns(5),
+    pgxkit.WithMinConns(1),
+)
 ```

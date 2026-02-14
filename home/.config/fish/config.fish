@@ -15,8 +15,8 @@ status is-command-substitution; or pyenv init --path | source
 if status is-interactive
     # Commands to run in interactive sessions can go here
     
-    # Ruby setup (frum)
-    frum init | source
+    # Ruby setup (rv)
+    rv shell init fish | source
     
     # Node.js setup (fnm)
     fnm env --use-on-cd | source

@@ -4,7 +4,7 @@ Hooks for logging, metrics, tracing, and health checks.
 
 **See also:** core.md (connection setup), testing.md (test cleanup hooks)
 
-**Critical:** Add hooks BEFORE calling `Connect()`.
+**Critical:** Hooks are configured via `ConnectOption` functions passed to `Connect()`.
 
 ## Hook Signature
 
@@ -16,49 +16,63 @@ type HookFunc func(ctx context.Context, sql string, args []interface{}, operatio
 
 ```go
 db := pgxkit.NewDB()
-
-// Add hooks BEFORE Connect
-db.AddHook(pgxkit.BeforeOperation, loggingHook)
-db.AddHook(pgxkit.AfterOperation, metricsHook)
-
-// Then connect
-if err := db.Connect(ctx, ""); err != nil {
+err := db.Connect(ctx, "",
+    pgxkit.WithBeforeOperation(loggingHook),
+    pgxkit.WithAfterOperation(metricsHook),
+)
+if err != nil {
     log.Fatal(err)
 }
 ```
 
+**Available hook options:**
+- `WithBeforeOperation(fn HookFunc)`
+- `WithAfterOperation(fn HookFunc)`
+- `WithBeforeTransaction(fn HookFunc)`
+- `WithAfterTransaction(fn HookFunc)`
+- `WithOnShutdown(fn HookFunc)`
+
 ## Hook Types
 
-| Type | When | operationErr | If hook returns error |
-|------|------|--------------|----------------------|
-| `BeforeOperation` | Before query/exec | always nil | Query aborted, hook error returned |
-| `AfterOperation` | After query/exec | query error or nil | If query succeeded: hook error returned. If query failed: query error returned |
-| `BeforeTransaction` | Before BeginTx | always nil | Transaction aborted |
-| `AfterTransaction` | After commit/rollback | tx error or nil | Logged |
-| `OnShutdown` | During Shutdown | always nil | Logged |
+| Type | When | sql param | operationErr | If hook returns error |
+|------|------|-----------|--------------|----------------------|
+| `BeforeOperation` | Before query/exec | SQL statement | always nil | Query aborted, hook error returned |
+| `AfterOperation` | After query/exec | SQL statement | query error or nil | If query succeeded: hook error returned. If query failed: query error returned |
+| `BeforeTransaction` | Before BeginTx | empty | always nil | Transaction aborted |
+| `AfterTransaction` | After commit/rollback | `TxCommit` or `TxRollback` | tx error or nil | Error propagated via `errors.Join` |
+| `OnShutdown` | During Shutdown | empty | always nil | Logged |
 
 **Execution order:** Sequential in registration order. Keep hooks fast.
+
+**AfterTransaction notes:**
+- Receives `pgxkit.TxCommit` ("TX:COMMIT") or `pgxkit.TxRollback` ("TX:ROLLBACK") as the `sql` parameter
+- Also fires when `BeginTx` fails (with empty `sql` and the begin error)
+- Hook errors are combined with operation errors using `errors.Join`
 
 ## Logging Hook
 
 ```go
-db.AddHook(pgxkit.BeforeOperation, func(ctx context.Context, sql string, args []interface{}, _ error) error {
-    log.Printf("Executing: %s", sql)
-    return nil
-})
+err := db.Connect(ctx, "",
+    pgxkit.WithBeforeOperation(func(ctx context.Context, sql string, args []interface{}, _ error) error {
+        log.Printf("Executing: %s", sql)
+        return nil
+    }),
+)
 ```
 
 ## Metrics Hook
 
 ```go
-db.AddHook(pgxkit.AfterOperation, func(ctx context.Context, sql string, args []interface{}, err error) error {
-    if err != nil {
-        metrics.IncrementCounter("db.errors")
-    } else {
-        metrics.IncrementCounter("db.queries")
-    }
-    return nil
-})
+err := db.Connect(ctx, "",
+    pgxkit.WithAfterOperation(func(ctx context.Context, sql string, args []interface{}, err error) error {
+        if err != nil {
+            metrics.IncrementCounter("db.errors")
+        } else {
+            metrics.IncrementCounter("db.queries")
+        }
+        return nil
+    }),
+)
 ```
 
 ## OpenTelemetry Tracing Hook
@@ -67,51 +81,39 @@ db.AddHook(pgxkit.AfterOperation, func(ctx context.Context, sql string, args []i
 import "go.opentelemetry.io/otel/trace"
 import "go.opentelemetry.io/otel/attribute"
 
-db.AddHook(pgxkit.BeforeOperation, func(ctx context.Context, sql string, args []interface{}, _ error) error {
-    span := trace.SpanFromContext(ctx)
-    if span.IsRecording() {
-        span.SetAttributes(
-            attribute.String("db.system", "postgresql"),
-            attribute.String("db.statement", sql),
-        )
-    }
-    return nil
-})
-```
-
-## Slow Query Detection
-
-```go
-type queryStartKey struct{}
-
-db.AddHook(pgxkit.BeforeOperation, func(ctx context.Context, sql string, args []interface{}, _ error) error {
-    return context.WithValue(ctx, queryStartKey{}, time.Now())
-})
-
-db.AddHook(pgxkit.AfterOperation, func(ctx context.Context, sql string, args []interface{}, err error) error {
-    if start, ok := ctx.Value(queryStartKey{}).(time.Time); ok {
-        duration := time.Since(start)
-        if duration > 100*time.Millisecond {
-            log.Printf("SLOW QUERY [%v]: %s", duration, sql)
+err := db.Connect(ctx, "",
+    pgxkit.WithBeforeOperation(func(ctx context.Context, sql string, args []interface{}, _ error) error {
+        span := trace.SpanFromContext(ctx)
+        if span.IsRecording() {
+            span.SetAttributes(
+                attribute.String("db.system", "postgresql"),
+                attribute.String("db.statement", sql),
+            )
         }
-    }
-    return nil
-})
+        return nil
+    }),
+)
 ```
 
 ## Connection-Level Hooks
 
 ```go
-db.AddConnectionHook("OnConnect", func(conn *pgx.Conn) error {
-    _, err := conn.Exec(context.Background(), "SET application_name = 'myapp'")
-    return err
-})
-
-// Helper functions
-pgxkit.ValidationHook()  // Validates connection on acquire
-pgxkit.SetupHook()       // Custom setup on new connections
-pgxkit.CombineHooks()    // Combine multiple hooks
+err := db.Connect(ctx, "",
+    pgxkit.WithOnConnect(func(conn *pgx.Conn) error {
+        _, err := conn.Exec(context.Background(), "SET application_name = 'myapp'")
+        return err
+    }),
+    pgxkit.WithOnAcquire(func(ctx context.Context, conn *pgx.Conn) error {
+        return conn.Ping(ctx)
+    }),
+)
 ```
+
+**Available connection hook options:**
+- `WithOnConnect(fn func(*pgx.Conn) error)` - called when new connection established
+- `WithOnDisconnect(fn func(*pgx.Conn))` - called when connection closed
+- `WithOnAcquire(fn func(context.Context, *pgx.Conn) error)` - called when connection acquired from pool
+- `WithOnRelease(fn func(*pgx.Conn))` - called when connection released back to pool
 
 ## Health Checks
 
@@ -121,7 +123,6 @@ db.IsReady(ctx) bool              // Returns true if healthy
 
 db.Stats() *pgxpool.Stat          // Write pool statistics
 db.ReadStats() *pgxpool.Stat      // Read pool statistics
-db.WriteStats() *pgxpool.Stat     // Alias for Stats()
 ```
 
 ### HTTP Health Endpoint
@@ -165,16 +166,14 @@ defer cancel()
 err := db.Shutdown(ctx)
 ```
 
-## Common Pitfall
+## Note on Hook Timing
+
+Hooks are configured at connection time via `ConnectOption` functions. They cannot be added after `Connect()` is called.
 
 ```go
-// BAD: Adding hooks after Connect
 db := pgxkit.NewDB()
-db.Connect(ctx, "")
-db.AddHook(pgxkit.BeforeOperation, myHook) // Too late! Hooks ignored.
-
-// GOOD: Add hooks before Connect
-db := pgxkit.NewDB()
-db.AddHook(pgxkit.BeforeOperation, myHook)
-db.Connect(ctx, "")
+err := db.Connect(ctx, "",
+    pgxkit.WithBeforeOperation(myHook),  // Configure hooks here
+    pgxkit.WithAfterOperation(metricsHook),
+)
 ```

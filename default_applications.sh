@@ -76,19 +76,13 @@ function _install_python_brew() {
 }
 
 function _install_ruby_brew() {
-	# Initialize frum for this session
-	export PATH="$HOME/.frum/bin:$PATH"
-	
-	# Get latest Ruby version dynamically
-	ruby_version=$(frum install --list 2>/dev/null | grep -E "^\s*[0-9]+\.[0-9]+\.[0-9]+$" | tail -n 1 | xargs || echo "3.3.6")
+	eval "$(rv shell init bash)"
+
+	ruby_version="3.4.1"
 	echo "ruby_version=${ruby_version}"
-	
-	# Check if version is already installed (output has leading whitespace and * for active version)
-	if ! frum versions 2>/dev/null | sed 's/^[* ]*//' | grep -qx "${ruby_version}"; then
-		frum install "${ruby_version}"
-	fi
-	
-	frum global "${ruby_version}"
+
+	rv ruby install "${ruby_version}"
+	rv ruby pin "${ruby_version}"
 }
 
 function _install_node_brew() {
@@ -164,7 +158,7 @@ function _mac() {
 		kubernetes-cli \
 		terraform \
 		yq \
-		frum \
+		rv \
 		php \
 		composer \
 		libyaml \

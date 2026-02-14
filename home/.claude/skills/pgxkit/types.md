@@ -6,7 +6,7 @@ Convert between Go types and pgtype for NULL handling.
 
 ```go
 import (
-    "github.com/nhalm/pgxkit"
+    "github.com/nhalm/pgxkit/v2"
     "github.com/jackc/pgx/v5/pgtype"
     "github.com/google/uuid"
 )

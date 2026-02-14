@@ -2,11 +2,11 @@
 
 Connections, queries, and transactions.
 
-**See also:** retry.md (WithTimeout, retry methods), hooks.md (observability)
+**See also:** retry.md (Retry, RetryOperation), hooks.md (observability)
 
 ```go
 import (
-    "github.com/nhalm/pgxkit"
+    "github.com/nhalm/pgxkit/v2"
     "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgconn"
 )
@@ -79,10 +79,10 @@ Read-only analytics or dashboards?
   → Use ReadQuery() / ReadQueryRow() (read pool, may have lag)
 
 User-facing with tight latency budget?
-  → Use WithTimeout(ctx, 5*time.Second, fn)
+  → Use context.WithTimeout(ctx, 5*time.Second)
 
 Background job that can retry on failure?
-  → Use ExecWithRetry() / QueryWithRetry()
+  → Use Retry() / RetryOperation() wrappers
 
 Financial transaction or multi-step mutation?
   → Use BeginTx() with deferred Rollback()
@@ -95,7 +95,7 @@ Financial transaction or multi-step mutation?
 | SELECT (optimized) | `db.ReadQuery()` | Read | `pgx.Rows, error` |
 | Single row (safe) | `db.QueryRow()` | Write | `pgx.Row` |
 | Single row (optimized) | `db.ReadQueryRow()` | Read | `pgx.Row` |
-| Transactions | `db.BeginTx()` | Write | `pgx.Tx, error` |
+| Transactions | `db.BeginTx()` | Write | `*Tx, error` |
 
 ## Core Types
 
@@ -108,11 +108,64 @@ func (db *DB) ConnectReadWrite(ctx context.Context, readDSN, writeDSN string) er
 func (db *DB) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 func (db *DB) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 func (db *DB) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
-func (db *DB) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+func (db *DB) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (*Tx, error)
 func (db *DB) Shutdown(ctx context.Context) error
 
 func GetDSN() string  // Build DSN from POSTGRES_* env vars
 ```
+
+## Executor Interface
+
+Both `*DB` and `*Tx` implement `Executor`, enabling functions that work with either:
+
+```go
+type Executor interface {
+    Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+    QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+    Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+```
+
+**Pattern:** Write repository functions accepting `Executor`:
+
+```go
+func CreateUser(ctx context.Context, exec pgxkit.Executor, name string) (int64, error) {
+    var id int64
+    err := exec.QueryRow(ctx,
+        "INSERT INTO users (name) VALUES ($1) RETURNING id", name,
+    ).Scan(&id)
+    return id, err
+}
+
+// Works with *DB (no transaction)
+id, err := CreateUser(ctx, db, "Alice")
+
+// Works with *Tx (in transaction)
+tx, _ := db.BeginTx(ctx, pgx.TxOptions{})
+defer tx.Rollback(ctx)
+id, err := CreateUser(ctx, tx, "Bob")
+tx.Commit(ctx)
+```
+
+## Tx Type
+
+`*Tx` wraps `pgx.Tx` with finalization tracking and hook integration.
+
+| Method | Description |
+|--------|-------------|
+| `Query(ctx, sql, args...)` | Execute query (returns `ErrTxFinalized` if finalized) |
+| `QueryRow(ctx, sql, args...)` | Execute single-row query |
+| `Exec(ctx, sql, args...)` | Execute statement |
+| `Commit(ctx)` | Commit transaction, fire `AfterTransaction` hook with `TxCommit` |
+| `Rollback(ctx)` | Rollback transaction, fire `AfterTransaction` hook with `TxRollback` |
+| `IsFinalized()` | Returns true if already committed/rolled back |
+
+**Constants:**
+- `pgxkit.TxCommit = "TX:COMMIT"` - passed to `AfterTransaction` hook on commit
+- `pgxkit.TxRollback = "TX:ROLLBACK"` - passed to `AfterTransaction` hook on rollback
+- `pgxkit.ErrTxFinalized` - returned when operating on finalized transaction
+
+**Finalization behavior:** `Commit()` and `Rollback()` are safe to call multiple times - subsequent calls are no-ops. This enables the `defer tx.Rollback(ctx)` pattern.
 
 ## Connection Patterns
 
@@ -217,4 +270,15 @@ if _, err := tx.Exec(ctx, "UPDATE ..."); err != nil {
     return err  // Rollback via defer
 }
 return tx.Commit(ctx)
+
+// BAD: Operating on finalized transaction
+tx, _ := db.BeginTx(ctx, pgx.TxOptions{})
+tx.Commit(ctx)
+_, err := tx.Exec(ctx, "INSERT ...")  // Returns ErrTxFinalized!
+
+// GOOD: Check finalization if uncertain
+if tx.IsFinalized() {
+    return errors.New("transaction already completed")
+}
+_, err := tx.Exec(ctx, "INSERT ...")
 ```

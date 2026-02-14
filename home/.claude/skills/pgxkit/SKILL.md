@@ -5,10 +5,12 @@ Production-ready PostgreSQL toolkit for Go wrapping pgx/v5. Safe-by-default conn
 ## When to Trigger
 
 Activate when you see:
-- `import "github.com/nhalm/pgxkit"` in Go files
+- `import "github.com/nhalm/pgxkit/v2"` in Go files
 - `pgxkit.NewDB()` or `pgxkit.NewTestDB()` calls
 - `db.ReadQuery()` or `db.ReadQueryRow()` calls
-- go.mod contains `github.com/nhalm/pgxkit` dependency
+- `pgxkit.Executor` interface usage
+- `db.BeginTx()` returning `*pgxkit.Tx`
+- go.mod contains `github.com/nhalm/pgxkit/v2` dependency
 - User explicitly requests pgxkit usage
 - Debugging replica lag issues with pgxkit's read/write split
 - NULL handling with pgxkit type converters (`ToPgx*`, `FromPgx*`)
@@ -25,17 +27,20 @@ Do NOT trigger for:
 1. **Never use `ReadQuery*` for data just written** - replica lag (1-5s typical) causes stale reads
 2. **Always defer `db.Shutdown(ctx)`** after successful connection
 3. **Always defer `rows.Close()` AND check `rows.Err()`** after iteration
-4. **Always defer `tx.Rollback(ctx)`** in transactions - safe even after commit
+4. **Always defer `tx.Rollback(ctx)`** in transactions - safe even after commit (no-op if already finalized)
 5. **Add hooks BEFORE `Connect()`** - hooks configure pool creation
 6. **Use `RequireDB(t)` in tests** to gracefully skip when DB unavailable
-7. **Transaction handles (`pgx.Tx`) are NOT concurrent-safe** - use one goroutine per transaction
+7. **`*Tx` is NOT concurrent-safe** - use one goroutine per transaction
+8. **Check `ErrTxFinalized`** when operations might run on already-committed/rolled-back transactions
+9. **Use `Executor` interface** for functions that should work with both `*DB` and `*Tx`
 
 ## Core Philosophy
 
 - **Safety First**: All operations default to write pool for consistency
 - **Explicit Optimization**: Use `ReadQuery()` methods only when replica lag is acceptable
 - **Tool Agnostic**: Works with raw pgx, sqlc, or Skimatik
-- **Concurrent Safe**: `*DB` is safe for concurrent use across goroutines (but `pgx.Tx` handles are NOT)
+- **Concurrent Safe**: `*DB` is safe for concurrent use across goroutines (but `*Tx` handles are NOT)
+- **Unified Interface**: `Executor` interface allows writing functions that work with both `*DB` and `*Tx`
 
 ## Skill Files
 
@@ -52,9 +57,11 @@ Do NOT trigger for:
 | "connection refused" | core.md | Environment Variables |
 | Stale data after write | core.md | Common Pitfalls (replica lag) |
 | rows iteration failed silently | core.md | Common Pitfalls (rows.Err) |
+| `ErrTxFinalized` | core.md | Tx Type |
 | "test database not available" | testing.md | Troubleshooting |
 | nil pointer with NULL column | types.md | Nullable (Pointer) Variants |
 | Hook not executing | hooks.md | Common Pitfall |
+| AfterTransaction not receiving outcome | hooks.md | Transaction Hooks |
 | Timeout exceeded | retry.md | Timeout Wrappers |
 | Duplicate key violation | retry.md | Handling Duplicate Key Violations |
 
@@ -64,39 +71,40 @@ Do NOT trigger for:
 
 ```go
 func GetUsers(ctx context.Context, db *pgxkit.DB, cursor *int64, limit int) ([]User, *int64, error) {
-    return pgxkit.WithTimeout(ctx, 5*time.Second, func(ctx context.Context) ([]User, *int64, error) {
-        cursorVal := int64(0)
-        if cursor != nil {
-            cursorVal = *cursor
-        }
+    ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+    defer cancel()
 
-        rows, err := db.ReadQuery(ctx,
-            "SELECT id, name FROM users WHERE id > $1 ORDER BY id LIMIT $2",
-            cursorVal, limit+1) // Fetch one extra to detect more pages
-        if err != nil {
+    cursorVal := int64(0)
+    if cursor != nil {
+        cursorVal = *cursor
+    }
+
+    rows, err := db.ReadQuery(ctx,
+        "SELECT id, name FROM users WHERE id > $1 ORDER BY id LIMIT $2",
+        cursorVal, limit+1) // Fetch one extra to detect more pages
+    if err != nil {
+        return nil, nil, err
+    }
+    defer rows.Close()
+
+    var users []User
+    for rows.Next() {
+        var u User
+        if err := rows.Scan(&u.ID, &u.Name); err != nil {
             return nil, nil, err
         }
-        defer rows.Close()
+        users = append(users, u)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, nil, err
+    }
 
-        var users []User
-        for rows.Next() {
-            var u User
-            if err := rows.Scan(&u.ID, &u.Name); err != nil {
-                return nil, nil, err
-            }
-            users = append(users, u)
-        }
-        if err := rows.Err(); err != nil {
-            return nil, nil, err
-        }
-
-        var nextCursor *int64
-        if len(users) > limit {
-            nextCursor = &users[limit].ID
-            users = users[:limit]
-        }
-        return users, nextCursor, nil
-    })
+    var nextCursor *int64
+    if len(users) > limit {
+        nextCursor = &users[limit].ID
+        users = users[:limit]
+    }
+    return users, nextCursor, nil
 }
 ```
 

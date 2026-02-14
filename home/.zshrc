@@ -84,8 +84,8 @@ export VISUAL='nvim'
 # Homebrew is already set up in .zprofile
 export PATH="$(yarn global bin):$PATH"
 
-# Ruby setup (frum)
-eval "$(frum init)"
+# Ruby setup (rv)
+eval "$(rv shell init zsh)"
 
 # Go setup (golang plugin will add aliases, but we still need GOPATH)
 GOPATH=$HOME/go
