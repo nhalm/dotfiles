@@ -8,18 +8,20 @@ fish_add_path $HOME/.local/bin
 set -gx PROJECTS_DIR "$HOME/work:$HOME/personal:$HOME/dev"
 
 # Pyenv setup
-set -gx PYENV_ROOT $HOME/.pyenv
-set -gx PATH $PYENV_ROOT/bin $PATH
-status is-command-substitution; or pyenv init --path | source
+if test -d $HOME/.pyenv
+    set -gx PYENV_ROOT $HOME/.pyenv
+    set -gx PATH $PYENV_ROOT/bin $PATH
+    status is-command-substitution; or pyenv init --path | source
+end
 
 if status is-interactive
     # Commands to run in interactive sessions can go here
     
     # Ruby setup (rv)
-    rv shell init fish | source
+    command -q rv; and rv shell init fish | source
     
     # Node.js setup (fnm)
-    fnm env --use-on-cd | source
+    command -q fnm; and fnm env --use-on-cd | source
     
     # Tmux sessionizer alias
     alias tmf="~/.local/scripts/tmux-sessionizer.sh"
@@ -28,5 +30,5 @@ if status is-interactive
     alias vim="nvim"
     
     # Pyenv interactive setup
-    pyenv init - | source
+    command -q pyenv; and pyenv init - | source
 end
