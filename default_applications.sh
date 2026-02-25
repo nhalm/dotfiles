@@ -118,7 +118,7 @@ function _mac() {
 
 #	chsh -s /bin/zsh
 
-	brew upgrade
+	brew upgrade || true
 
 # Install command line tools
 	brew install \
