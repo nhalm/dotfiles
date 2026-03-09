@@ -45,7 +45,7 @@ chmod 600 "$CONFIG_DIR/env.sh"
 echo "Created $CONFIG_DIR/env.sh"
 
 echo
-KEYCHAIN_EXISTS=$(security find-generic-password -s restic-backup -a "$USER" 2>/dev/null && echo "yes" || echo "no")
+KEYCHAIN_EXISTS=$(security find-generic-password -s restic-backup -a "$USER" >/dev/null 2>&1 && echo "yes" || echo "no")
 if [[ "$KEYCHAIN_EXISTS" == "yes" ]]; then
     read -p "Keychain entry exists. Overwrite? [y/N]: " OVERWRITE
     if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then

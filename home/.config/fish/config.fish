@@ -4,6 +4,9 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Add local bin to PATH (for Claude Code, etc.)
 fish_add_path $HOME/.local/bin
 
+# 1Password SSH agent
+set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
 # Projects directories for git scanning
 set -gx PROJECTS_DIR "$HOME/work:$HOME/personal:$HOME/dev"
 
