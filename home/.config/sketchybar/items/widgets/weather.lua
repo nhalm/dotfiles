@@ -84,7 +84,7 @@ end
 local function refresh_chip()
 	get_location(function(loc)
 		sbar.exec(
-			string.format([[curl -s 'https://wttr.in/%s?format=%%t+%%C&lang=en&u' | tr -d '\n']], loc),
+			string.format([[curl -s -m 10 'https://wttr.in/%s?format=%%t+%%C&lang=en&u' | tr -d '\n']], loc),
 			function(out)
 				if not out or out == "" then
 					return
@@ -122,7 +122,7 @@ local function refresh_popup()
 		print("[WEATHER DEBUG] Fetching URL: " .. url)
 		local cmd = [[/bin/bash -lc '
     export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-    curl -fsSL "]] .. url .. [[" | jq -r "
+    curl -fsSL -m 10 "]] .. url .. [[" | jq -r "
       def h(i): .weather[0].hourly[i] | \"\\(.tempF)°F, \\(.weatherDesc[0].value)\";
       [
         (.nearest_area[0].areaName[0].value + \", \" + .nearest_area[0].region[0].value), # city, state

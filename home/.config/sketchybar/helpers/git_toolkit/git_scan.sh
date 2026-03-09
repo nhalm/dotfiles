@@ -71,7 +71,7 @@ while IFS= read -r line; do
     sorted+=("$line")
 done < <(
     for p in "${filtered[@]}"; do
-        ts="$(git -C "$p" log -1 --format=%ct 2>/dev/null || echo 0)"
+        ts="$(timeout 5 git -C "$p" log -1 --format=%ct 2>/dev/null || echo 0)"
         printf "%s %s\n" "$ts" "$p"
     done | sort -nr | awk '{ $1=""; sub(/^ /,""); print }'
 )
@@ -83,22 +83,20 @@ for r in "${sorted[@]}"; do
     [[ -d "$r/.git" ]] || continue
 
     if ((RECENT_DAYS > 0)); then
-        ts="$(git -C "$r" log -1 --format=%ct 2>/dev/null || echo 0)"
+        ts="$(timeout 5 git -C "$r" log -1 --format=%ct 2>/dev/null || echo 0)"
         ((ts == 0)) && continue
         ((now - ts > RECENT_DAYS * 24 * 3600)) && continue
     fi
 
     name="$(basename "$r")"
-    branch="$(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '-')"
+    branch="$(timeout 5 git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '-')"
 
-    # dirty (incl. untracked)
     dirty="0"
-    git -C "$r" status --porcelain >/dev/null 2>&1 &&
-        [[ -n "$(git -C "$r" status --porcelain 2>/dev/null)" ]] && dirty="1"
+    timeout 5 git -C "$r" status --porcelain >/dev/null 2>&1 &&
+        [[ -n "$(timeout 5 git -C "$r" status --porcelain 2>/dev/null)" ]] && dirty="1"
 
-    # ahead/behind (safe if no upstream)
-    if git -C "$r" rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
-        read -r behind ahead < <(git -C "$r" rev-list --left-right --count @{u}...HEAD 2>/dev/null | awk '{print $1, $2}')
+    if timeout 5 git -C "$r" rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+        read -r behind ahead < <(timeout 5 git -C "$r" rev-list --left-right --count @{u}...HEAD 2>/dev/null | awk '{print $1, $2}')
         ahead="${ahead:-0}"
         behind="${behind:-0}"
     else
@@ -106,9 +104,9 @@ for r in "${sorted[@]}"; do
         behind="0"
     fi
 
-    rel="$(git -C "$r" log -1 --date=relative --format='%ad' 2>/dev/null || echo '-')"
+    rel="$(timeout 5 git -C "$r" log -1 --date=relative --format='%ad' 2>/dev/null || echo '-')"
 
-    remote_url="$(git -C "$r" remote get-url origin 2>/dev/null || echo '-')"
+    remote_url="$(timeout 5 git -C "$r" remote get-url origin 2>/dev/null || echo '-')"
     slug="-"
     if [[ "$remote_url" =~ github.com[:/]+([^/]+)/([^/.]+) ]]; then
         slug="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"

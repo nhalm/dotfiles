@@ -429,12 +429,20 @@ sbar.add("item", "aws.observer", { drawing = "off", updates = true })
 		update_all_workspaces()
 	end)
 
--- Set up periodic refresh to catch window open/close events
--- and display changes
+local refresh_in_flight = false
+
 local function periodic_refresh()
-	check_display_changes() -- Check for display count changes
+	if refresh_in_flight then
+		sbar.delay(5, periodic_refresh)
+		return
+	end
+	refresh_in_flight = true
+	check_display_changes()
 	update_all_workspaces()
-	sbar.delay(5, periodic_refresh) -- Refresh every 5 seconds
+	sbar.delay(0.5, function()
+		refresh_in_flight = false
+	end)
+	sbar.delay(5, periodic_refresh)
 end
 
 -- Perform initial update and start periodic refresh

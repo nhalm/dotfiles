@@ -37,7 +37,7 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
-        "marksman",
+        "markdown-oxide",
         "gopls",
       },
       -- auto-install configured servers (with lspconfig)
@@ -50,7 +50,6 @@ return {
         "stylua", -- lua formatter
         "ruff", -- python linter and formatter
         "eslint_d", -- js linter
-        "markdownlint",
         "gofumpt",
         "golines",
         "goimports",

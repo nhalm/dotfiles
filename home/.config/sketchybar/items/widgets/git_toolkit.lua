@@ -306,7 +306,7 @@ local function refresh_chip()
 	log("Starting chip refresh with cache update...")
 	state.scan_in_flight = true
 
-	local cmd = "/bin/bash -lc 'export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin; \""
+	local cmd = "timeout 30 /bin/bash -lc 'export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin; \""
 		.. escape_for_bash_double(SCAN_SCRIPT)
 		.. "\" \""
 		.. escape_for_bash_double(CACHE_FILE)

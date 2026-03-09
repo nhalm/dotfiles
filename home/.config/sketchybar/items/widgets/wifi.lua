@@ -3,7 +3,7 @@ local colors = require("colors")
 local settings = require("settings")
 
 sbar.exec(
-	"killall network_load >/dev/null; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load en0 network_update 2.0"
+	"pkill -x network_load 2>/dev/null; sleep 0.5; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load en0 network_update 2.0"
 )
 
 local popup_width = 250
