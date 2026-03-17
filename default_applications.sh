@@ -85,6 +85,7 @@ function _install_python_brew() {
 }
 
 function _install_ruby_brew() {
+	PROMPT_COMMAND="${PROMPT_COMMAND:-}"
 	eval "$(rv shell init bash)"
 
 	ruby_version="3.4.1"
