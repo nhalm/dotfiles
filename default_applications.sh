@@ -112,6 +112,18 @@ function _install_node_brew() {
 	fnm default "${lts_version}"
 }
 
+function _install_elixir() {
+	# Install mise via standalone installer (no brew dependency)
+	if ! command -v mise &> /dev/null; then
+		echo "Installing mise..."
+		curl https://mise.run | sh
+		export PATH="$HOME/.local/bin:$PATH"
+	fi
+
+	# Erlang and Elixir will be installed automatically
+	# when entering a project with a mise.toml or .tool-versions
+}
+
 function _mac() {
   _install_nix
   _install_brew
@@ -199,6 +211,7 @@ function _mac() {
 	_install_python_brew
 	_install_ruby_brew
 	_install_node_brew
+	_install_elixir
 
 	# Install/update carbonyl (terminal browser) via npm
 	if command -v carbonyl &> /dev/null; then

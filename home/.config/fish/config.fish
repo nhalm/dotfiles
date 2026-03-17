@@ -25,6 +25,9 @@ if status is-interactive
     
     # Node.js setup (fnm)
     command -q fnm; and fnm env --use-on-cd | source
+
+    # Mise (Elixir/Erlang version manager)
+    command -q mise; and mise activate fish | source
     
     # Tmux sessionizer alias
     alias tmf="~/.local/scripts/tmux-sessionizer.sh"
