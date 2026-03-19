@@ -188,7 +188,8 @@ function _mac() {
 		readline \
     restic
 
-  brew install --cask corelocationcli
+  brew install --cask corelocationcli \
+    cloudflare-warp
 
 	# Install fonts
 	brew install --cask font-monaspace \
