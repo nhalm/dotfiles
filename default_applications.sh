@@ -60,69 +60,40 @@ function _install_brew() {
 
 # Fish setup moved to initial_setup.sh to run after stow creates symlinks
 
-function _install_python_brew() {
+function _install_python() {
 	# Install Python with uv (fast, pre-built binaries)
 	if command -v uv &> /dev/null; then
 		uv python install 3.13
 	fi
 
-	# Install pyenv and pyenv-virtualenv for Python version management
-	if ! command -v pyenv &> /dev/null; then
-		brew install pyenv pyenv-virtualenv
-	else
-		# Ensure pyenv-virtualenv is installed even if pyenv already exists
-		brew list pyenv-virtualenv &>/dev/null || brew install pyenv-virtualenv
-	fi
+	python3_version="3.14"
+	echo "python_version=${python3_version}"
 
-	eval "$(pyenv init --path)"
-	python3_version=$(pyenv install -l | grep --extended-regexp "\s3.*\.[0-9]*$" | tail -n 1 | xargs)
-
-	if ! pyenv versions --bare | grep -q "^${python3_version}$"; then
-		pyenv install -s "$python3_version"
-	fi
-	
-	pyenv global "$python3_version"
+	mise install python@"${python3_version}"
+	mise use -g python@"${python3_version}"
 }
 
-function _install_ruby_brew() {
-	PROMPT_COMMAND="${PROMPT_COMMAND:-}"
-	eval "$(rv shell init bash)"
-
+function _install_ruby() {
 	ruby_version="3.4.1"
 	echo "ruby_version=${ruby_version}"
 
-	rv ruby install "${ruby_version}"
-	rv ruby pin "${ruby_version}"
+	mise install ruby@"${ruby_version}"
+	mise use -g ruby@"${ruby_version}"
 }
 
-function _install_node_brew() {
-	# Initialize fnm for this session
-	export PATH="$HOME/.fnm:$PATH"
-	eval "$(fnm env)"
-	
-	# Get latest LTS version
-	lts_version=$(fnm list-remote --lts | tail -n 1 | xargs)
-	echo "node_version=${lts_version}"
-	
-	# Check if LTS version is already installed
-	if ! fnm list | grep -q "${lts_version}"; then
-		fnm install "${lts_version}"
-	fi
-	
-	fnm use "${lts_version}"
-	fnm default "${lts_version}"
+function _install_node() {
+	echo "Installing Node.js LTS via mise..."
+
+	mise install node@lts
+	mise use -g node@lts
 }
 
-function _install_elixir() {
-	# Install mise via standalone installer (no brew dependency)
+function _install_mise() {
 	if ! command -v mise &> /dev/null; then
 		echo "Installing mise..."
 		curl https://mise.run | sh
 		export PATH="$HOME/.local/bin:$PATH"
 	fi
-
-	# Erlang and Elixir will be installed automatically
-	# when entering a project with a mise.toml or .tool-versions
 }
 
 function _mac() {
@@ -164,7 +135,6 @@ function _mac() {
 	# Install development tools
 	brew install \
 		golang \
-		fnm \
 		yarn \
 		openjdk \
 		uv \
@@ -181,7 +151,6 @@ function _mac() {
 		kubernetes-cli \
 		terraform \
 		yq \
-		rv \
 		php \
 		composer \
 		libyaml \
@@ -210,10 +179,10 @@ function _mac() {
 
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 
-	_install_python_brew
-	_install_ruby_brew
-	_install_node_brew
-	_install_elixir
+	_install_mise
+	_install_python
+	_install_ruby
+	_install_node
 
 	# Install/update carbonyl (terminal browser) via npm
 	if command -v carbonyl &> /dev/null; then

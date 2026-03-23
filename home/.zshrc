@@ -70,7 +70,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git brew macos node pyenv golang docker kubectl)
+plugins=(git brew macos node golang docker kubectl)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -84,8 +84,8 @@ export VISUAL='nvim'
 # Homebrew is already set up in .zprofile
 export PATH="$(yarn global bin):$PATH"
 
-# Ruby setup (rv)
-eval "$(rv shell init zsh)"
+# Mise (Python, Ruby, Node.js, Elixir/Erlang version manager)
+eval "$(mise activate zsh)"
 
 # Go setup (golang plugin will add aliases, but we still need GOPATH)
 GOPATH=$HOME/go
@@ -104,13 +104,6 @@ if type nvim > /dev/null 2>&1; then
 	alias vim='nvim'
 fi
 
-# Python virtual environment (pyenv plugin handles the rest)
-if which pyenv-virtualenv-init > /dev/null; then 
-	eval "$(pyenv virtualenv-init -)"
-fi
-
-# Node.js setup (fnm)
-eval "$(fnm env --use-on-cd)"
 
 # Tmux sessionizer alias
 alias tmf="~/.local/scripts/tmux-sessionizer.sh"

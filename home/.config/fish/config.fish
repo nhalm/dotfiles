@@ -20,13 +20,7 @@ end
 if status is-interactive
     # Commands to run in interactive sessions can go here
     
-    # Ruby setup (rv)
-    command -q rv; and rv shell init fish | source
-    
-    # Node.js setup (fnm)
-    command -q fnm; and fnm env --use-on-cd | source
-
-    # Mise (Elixir/Erlang version manager)
+    # Mise (Python, Ruby, Node.js, Elixir/Erlang version manager)
     command -q mise; and mise activate fish | source
     
     # Tmux sessionizer alias
