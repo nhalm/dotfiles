@@ -61,12 +61,7 @@ function _install_brew() {
 # Fish setup moved to initial_setup.sh to run after stow creates symlinks
 
 function _install_python() {
-	# Install Python with uv (fast, pre-built binaries)
-	if command -v uv &> /dev/null; then
-		uv python install 3.13
-	fi
-
-	python3_version="3.14"
+	python3_version="3.13"
 	echo "python_version=${python3_version}"
 
 	mise install python@"${python3_version}"
@@ -86,6 +81,21 @@ function _install_node() {
 
 	mise install node@lts
 	mise use -g node@lts
+}
+
+function _install_lua() {
+	echo "Installing Lua via mise..."
+
+	# luarocks is bundled with the mise lua install
+	mise install lua@5.4
+	mise use -g lua@5.4
+}
+
+function _install_rust() {
+	echo "Installing Rust via mise..."
+
+	mise install rust@latest
+	mise use -g rust@latest
 }
 
 function _install_mise() {
@@ -157,8 +167,8 @@ function _mac() {
 		readline \
     restic
 
-  brew install --cask corelocationcli \
-    cloudflare-warp
+  # --adopt: prevent errors when app already exists but brew lost track of it (e.g. after OS upgrades)
+  brew install --adopt --cask corelocationcli
 
 	# Install fonts
 	brew install --cask font-monaspace \
@@ -183,6 +193,8 @@ function _mac() {
 	_install_python
 	_install_ruby
 	_install_node
+	_install_lua
+	_install_rust
 
 	# Install/update carbonyl (terminal browser) via npm
 	if command -v carbonyl &> /dev/null; then
