@@ -21,7 +21,10 @@ return {
         liquid = { "prettier" },
         lua = { "stylua" },
         python = { "ruff_fix", "ruff_format", "ruff_organize_imports" },
-        go = {"gofumpt", "goimports"}
+        go = {"gofumpt", "goimports"},
+        elixir = { "mix" },
+        heex = { "mix" },
+        eelixir = { "mix" },
       },
       formatters = {
         prettier = {},

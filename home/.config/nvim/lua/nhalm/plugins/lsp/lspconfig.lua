@@ -156,6 +156,17 @@ return {
       },
     })
 
+    vim.lsp.config("elixirls", {
+      cmd = { "elixir-ls" },
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      settings = {
+        elixirLS = {
+          dialyzerEnabled = false,
+          fetchDeps = false,
+        },
+      },
+    })
+
     vim.lsp.config("lua_ls", {
       settings = {
         Lua = {
@@ -182,6 +193,7 @@ return {
       "marksman",
       "gopls",
       "lua_ls",
+      "elixirls",
     })
   end,
 }

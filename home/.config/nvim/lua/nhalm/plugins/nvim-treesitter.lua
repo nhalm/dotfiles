@@ -42,6 +42,9 @@ return {
           "dockerfile",
           "gitignore",
           "query",
+          "elixir",
+          "heex",
+          "eex",
         },
         incremental_selection = {
           enable = true,
