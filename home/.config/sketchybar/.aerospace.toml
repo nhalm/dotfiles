@@ -18,7 +18,7 @@ after-login-command = []
 
 # Commands to run after AeroSpace startup
 # 'after-startup-command' is run after 'after-login-command'
-after-startup-command = ['exec-and-forget sketchybar']
+after-startup-command = ['exec-and-forget PATH=$HOME/.local/share/mise/shims:$PATH sketchybar']
 
 exec-on-workspace-change = ['/bin/bash', '-c',
     'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
