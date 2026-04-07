@@ -101,8 +101,7 @@ function _install_rust() {
 function _install_mise() {
 	if ! command -v mise &> /dev/null; then
 		echo "Installing mise..."
-		curl https://mise.run | sh
-		export PATH="$HOME/.local/bin:$PATH"
+		brew install mise
 	fi
 }
 
