@@ -27,3 +27,8 @@ esac
 
 safe_stow home
 safe_stow bin
+
+# Trust the mise config so shims work outside of interactive shells (e.g. sketchybar)
+if command -v mise &> /dev/null; then
+	mise trust "$HOME/.config/mise/config.toml"
+fi

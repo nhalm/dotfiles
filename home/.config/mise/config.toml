@@ -1,0 +1,6 @@
+[tools]
+lua = "5.4"
+node = "lts"
+python = "3.13"
+ruby = "3.4.1"
+rust = "latest"
