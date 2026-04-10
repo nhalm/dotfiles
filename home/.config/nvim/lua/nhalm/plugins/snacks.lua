@@ -6,9 +6,12 @@ return {
     -- Enable the modules we want to use
     dashboard = { enabled = true },
     zen = { enabled = true },
+    image = { enabled = true },
+    lazygit = { enabled = false },
     picker = {
       enabled = true,
       hidden = true,
+      ui_select = true,
       sources = {
         explorer = {
           hidden = true,

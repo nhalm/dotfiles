@@ -37,7 +37,7 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
-        "markdown-oxide",
+        "markdown_oxide",
         "gopls",
         "elixirls",
       },

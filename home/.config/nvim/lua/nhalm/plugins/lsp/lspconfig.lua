@@ -114,7 +114,7 @@ return {
     vim.lsp.config("prismals", {})
 
     vim.lsp.config("graphql", {
-      filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
+      filetypes = { "graphql", "svelte", "typescriptreact", "javascriptreact" },
     })
 
     vim.lsp.config("emmet_ls", {
@@ -135,13 +135,11 @@ return {
       },
     })
 
-    vim.lsp.config("marksman", {
-      filetypes = { "markdown", "markdown.mdx" },
-    })
+    vim.lsp.config("markdown_oxide", {})
 
     vim.lsp.config("gopls", {
       cmd = { "gopls" },
-      filetypes = { "go", "gomod", "gowork", "gotmpl" },
+      filetypes = { "go", "gomod" },
       settings = {
         gopls = {
           buildFlags = { "-tags=integration unit" },
@@ -158,7 +156,7 @@ return {
 
     vim.lsp.config("elixirls", {
       cmd = { "elixir-ls" },
-      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      filetypes = { "elixir", "heex" },
       settings = {
         elixirLS = {
           dialyzerEnabled = false,
@@ -190,7 +188,7 @@ return {
       "graphql",
       "emmet_ls",
       "pyright",
-      "marksman",
+      "markdown_oxide",
       "gopls",
       "lua_ls",
       "elixirls",

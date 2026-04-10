@@ -138,6 +138,11 @@ function _mac() {
 		glow \
 		bat \
 		fish \
+    tree-sitter-cli \
+    imagemagick \
+    ghostscript \
+    tectonic \
+    mermaid-cli \
     1password-cli \
     karabiner-elements
 
