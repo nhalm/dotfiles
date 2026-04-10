@@ -6,7 +6,15 @@ return {
     -- Enable the modules we want to use
     dashboard = { enabled = true },
     zen = { enabled = true },
-    image = { enabled = true },
+    image = {
+      enabled = true,
+      doc = {
+        inline = false,
+        float = true,
+        max_width = 120,
+        max_height = 60,
+      },
+    },
     lazygit = { enabled = false },
     picker = {
       enabled = true,
@@ -42,30 +50,121 @@ return {
   },
   keys = {
     -- Dashboard
-    { "<leader>bd", function() Snacks.dashboard() end, desc = "Dashboard" },
-    
+    {
+      "<leader>bd",
+      function()
+        Snacks.dashboard()
+      end,
+      desc = "Dashboard",
+    },
+
     -- Zen mode
-    { "<leader>z", function() Snacks.zen() end, desc = "Toggle Zen Mode" },
-    
+    {
+      "<leader>z",
+      function()
+        Snacks.zen()
+      end,
+      desc = "Toggle Zen Mode",
+    },
+
     -- File explorer
-    { "<leader>e", function() Snacks.explorer() end, desc = "Explorer" },
-    
+    {
+      "<leader>e",
+      function()
+        Snacks.explorer()
+      end,
+      desc = "Explorer",
+    },
+
     -- Picker (telescope replacement)
-    { "<leader>ff", function() Snacks.picker.files() end, desc = "Find Files" },
-    { "<leader>fg", function() Snacks.picker.grep() end, desc = "Live Grep" },
-    { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Find Buffers" },
-    { "<leader>fh", function() Snacks.picker.help() end, desc = "Help Pages" },
-    { "<leader>fr", function() Snacks.picker.recent() end, desc = "Recent Files" },
-    { "<leader>fc", function() Snacks.picker.colorschemes() end, desc = "Colorschemes" },
-    { "<leader>fk", function() Snacks.picker.keymaps() end, desc = "Find Keymaps" },
-    
+    {
+      "<leader>ff",
+      function()
+        Snacks.picker.files()
+      end,
+      desc = "Find Files",
+    },
+    {
+      "<leader>fg",
+      function()
+        Snacks.picker.grep()
+      end,
+      desc = "Live Grep",
+    },
+    {
+      "<leader>fb",
+      function()
+        Snacks.picker.buffers()
+      end,
+      desc = "Find Buffers",
+    },
+    {
+      "<leader>fh",
+      function()
+        Snacks.picker.help()
+      end,
+      desc = "Help Pages",
+    },
+    {
+      "<leader>fr",
+      function()
+        Snacks.picker.recent()
+      end,
+      desc = "Recent Files",
+    },
+    {
+      "<leader>fc",
+      function()
+        Snacks.picker.colorschemes()
+      end,
+      desc = "Colorschemes",
+    },
+    {
+      "<leader>fk",
+      function()
+        Snacks.picker.keymaps()
+      end,
+      desc = "Find Keymaps",
+    },
+
     -- Git
-    { "<leader>gb", function() Snacks.git.browse() end, desc = "Git Browse" },
-    { "<leader>gl", function() Snacks.git.log() end, desc = "Git Log" },
-    
+    {
+      "<leader>gb",
+      function()
+        Snacks.git.browse()
+      end,
+      desc = "Git Browse",
+    },
+    {
+      "<leader>gl",
+      function()
+        Snacks.git.log()
+      end,
+      desc = "Git Log",
+    },
+
     -- Terminal (replace our basic terminal keymaps)
-    { "<leader>tt", function() Snacks.terminal() end, desc = "Terminal", mode = { "n", "t" } },
-    { "<leader>th", function() Snacks.terminal.split() end, desc = "Terminal Split" },
-    { "<leader>tv", function() Snacks.terminal.vsplit() end, desc = "Terminal Vsplit" },
+    {
+      "<leader>tt",
+      function()
+        Snacks.terminal()
+      end,
+      desc = "Terminal",
+      mode = { "n", "t" },
+    },
+    {
+      "<leader>th",
+      function()
+        Snacks.terminal.split()
+      end,
+      desc = "Terminal Split",
+    },
+    {
+      "<leader>tv",
+      function()
+        Snacks.terminal.vsplit()
+      end,
+      desc = "Terminal Vsplit",
+    },
   },
 }
