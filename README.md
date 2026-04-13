@@ -9,13 +9,12 @@ Personal dotfiles configuration for macOS development environment.
 ```
 
 This will:
-1. Install all required applications via Homebrew
-2. Create symbolic links for all configurations
+1. Install all required applications via Homebrew and mise
+2. Create symbolic links for all configurations via stow
 3. Install Tmux Plugin Manager (TPM)
-4. Setup a dedicated Python environment for Neovim
-5. Configure Fish shell with plugins
-6. Setup Neovim plugins and LSP servers
-7. Ensure all health checks pass
+4. Configure Docker Compose CLI plugin
+5. Configure Fish shell with Fisher plugins and Tide prompt
+6. Set Fish as the default shell
 
 ## Shell Configuration
 
@@ -53,7 +52,7 @@ This will:
 - **Focus Events**: Enabled for proper Neovim file change detection
 - **Optimized Escape Time**: Set to 10ms for better Neovim responsiveness
 - **Sessionizer** (`Ctrl+b f`): Quick project switching using fzf
-  - Searches ~/git for projects
+  - Searches ~/dev, ~/personal, ~/work, ~/Downloads, ~/Documents
   - Creates/attaches to tmux sessions per project
   - Accessible via `tmux-sessionizer` command
 - **Custom Keybindings**:
@@ -67,54 +66,51 @@ This will:
 - **Useful Aliases**:
   - `git co` - checkout
   - `git cob` - checkout new branch
-  - `git publish` - push current branch to origin
   - `git amend` - amend last commit
   - `git ll` - pretty log with file changes
   - `git bclean` - clean merged branches
+  - `git fpush` - force push
 - **Auto-rebase on pull**: Keeps history linear
 
 ## Package Management
 
 ### Homebrew
-Primary package manager for macOS with all tools installed via brew/cask
+Primary package manager for macOS — CLI tools, Go, and GUI apps via brew/cask
 
-### Language-Specific
-- **Node.js**: fnm (Fast Node Manager) with nvm.fish integration
-- **Python**: 
-  - pyenv for version management
-  - uv for fast package management
-  - Dedicated Neovim virtualenv with pynvim pre-installed
-- **Go**: Latest version via Homebrew
+### mise (Runtime Manager)
+Language runtimes are managed by [mise](https://mise.jdx.dev/):
+- **Node.js**: LTS
+- **Python**: 3.13 (uv for package management)
+- **Ruby**: 3.4.x
+- **Lua**: 5.4 (includes luarocks)
+- **Rust**: Latest
 
 ## Command Line Tools
 - **Search**: ripgrep (rg), fd, fzf for fast file/text searching
 - **File Management**: bat (better cat), glow (markdown viewer), tree
-- **System Monitoring**: htop, bottom
+- **System Monitoring**: htop
 - **JSON/YAML**: jq, yq for processing
-- **HTTP**: httpie for API testing
 - **Git Enhancement**: gh for GitHub CLI operations
 
 ## Cloud & DevOps
 - **AWS**: AWS CLI v2, aws-vault for credential management
-- **Kubernetes**: kubectl, helm, k9s for cluster management
+- **Kubernetes**: kubectl, helm
 - **Infrastructure**: Terraform
-- **Containers**: Docker via Colima (lightweight VM)
+- **Containers**: Docker via Colima (lightweight VM, NFS-backed storage)
 
 ## Claude AI Integration
-- **Custom Agents** (`~/.claude/agents/`):
-  - backend-architect, python-dev, golang-dev, sql-pro
-  - deployment-engineer, performance-engineer
-  - code-reviewer, error-detective
-- **Workflows** (`~/.claude/workflows/`):
-  - git-workflow, smart-fix, workflow-automate
+- **Custom Commands** (`~/.claude/commands/`)
+- **Custom Scripts** (`~/.claude/scripts/`)
+- **Custom Skills** (`~/.claude/skills/`)
 - **Personal Configuration**: CLAUDE.md with role context and preferences
 
 ## GUI Applications
-- **Terminals**: Kitty (GPU-accelerated)
-- **Editors**: VS Code, Cursor (AI-enhanced)
+- **Terminals**: Kitty, Ghostty
+- **Editor**: Cursor (AI-enhanced)
 - **Browser**: Brave
 - **Productivity**: Raycast (launcher), CleanShot (screenshots)
-- **AI Tools**: Claude desktop, Claude Code CLI
+- **Window Management**: AeroSpace (tiling WM), sketchybar (status bar), borders
+- **AI Tools**: Claude desktop, ChatGPT, Claude Code CLI
 
 ## Directory Structure
 
@@ -137,19 +133,19 @@ Primary package manager for macOS with all tools installed via brew/cask
 
 ## Health Checks
 
-After setup, run `:checkhealth` in Neovim to verify everything is configured correctly. The setup scripts automatically fix common issues:
+After setup, run `:checkhealth` in Neovim to verify everything is configured correctly.
 
-- ✅ Tmux focus-events enabled for file change detection
-- ✅ Proper sessionoptions for auto-session plugin
-- ✅ Dedicated Python virtualenv for Neovim
-- ✅ Disabled unused providers (Perl, Ruby) to remove warnings
-- ✅ All LSP servers and formatters auto-installed via Mason
-- ✅ stylua available for Lua file formatting
+## Colima (Docker)
 
-### Optional Language Support
+Docker runs via Colima with a lightweight vz VM. Docker's data-root is on the NFS share to keep the local disk small.
 
-Uncomment lines in `default_applications.sh` to add:
-- Rust toolchain (includes cargo)
-- Tree-sitter CLI for grammar compilation
-- PHP and Composer
-- Julia language support
+```bash
+colima start --vm-type vz --disk 10 --mount ~:w --mount /Volumes/nfs/dev-storage:w
+```
+
+- **VM disk**: 10 GB (minimal — only for OS/runtime)
+- **Docker data-root**: `/Volumes/nfs/dev-storage/colima/docker` (images, volumes, build cache all on NFS)
+- **Mounts**: Home directory (read/write) + NFS share (read/write)
+- **Config**: `~/.colima/default/colima.yaml` — sets `docker.data-root` to the NFS path
+
+Volume backups are stored at `/Volumes/nfs/dev-storage/colima/volume-backups/`.
