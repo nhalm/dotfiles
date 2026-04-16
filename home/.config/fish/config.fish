@@ -19,6 +19,9 @@ if status is-interactive
     # Mise (Python, Ruby, Node.js, Lua, Elixir/Erlang version manager)
     command -q mise; and mise activate fish | source
 
+    # Zoxide (smarter cd with frecency)
+    command -q zoxide; and zoxide init fish --cmd cd | source
+
     # Tmux sessionizer alias
     alias tmf="~/.local/scripts/tmux-sessionizer.sh"
 
