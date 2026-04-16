@@ -62,7 +62,7 @@ return {
         
         -- General
         { pattern = "toggle", icon = "󰔡", color = "magenta" },
-        { pattern = "zen", icon = "󰚀", color = "magenta" },
+        { pattern = "fold", icon = "󰘖", color = "magenta" },
         { pattern = "explorer", icon = "󰙅", color = "green" },
       },
     },
@@ -83,6 +83,7 @@ return {
       { "<leader>w", group = " Workspace", icon = "󰖲" },
       { "<leader>r", group = " Rename/Resize", icon = "󰑕" },
       { "<leader>b", group = " Buffer", icon = "󰛨" },
+      { "<leader>z", group = " Fold", icon = "󰘖" },
     },
   },
 }

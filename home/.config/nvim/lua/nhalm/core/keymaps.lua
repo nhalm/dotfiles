@@ -40,6 +40,13 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 -- terminal navigation keymaps
 keymap.set("t", "<C-w>", "<C-\\><C-n><C-w>", { desc = "Window command from terminal" })
 
+-- folding
+keymap.set("n", "<leader>za", "za", { desc = "Toggle fold" })
+keymap.set("n", "<leader>zo", "zr", { desc = "Open one level" })
+keymap.set("n", "<leader>zc", "zm", { desc = "Close one level" })
+keymap.set("n", "<leader>zO", "zR", { desc = "Open all folds" })
+keymap.set("n", "<leader>zC", "zM", { desc = "Close all folds" })
+
 -- claude code
 keymap.set("n", "<leader>ai", "<cmd>ClaudeCode<CR>", { desc = "AI: Toggle Claude Code terminal" })
 keymap.set("t", "<leader>ai", "<cmd>ClaudeCode<CR>", { desc = "AI: Toggle Claude Code terminal" })

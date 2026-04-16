@@ -5,7 +5,7 @@ return {
   opts = {
     -- Enable the modules we want to use
     dashboard = { enabled = true },
-    zen = { enabled = true },
+    zen = { enabled = false },
     image = {
       enabled = true,
       doc = {
@@ -56,15 +56,6 @@ return {
         Snacks.dashboard()
       end,
       desc = "Dashboard",
-    },
-
-    -- Zen mode
-    {
-      "<leader>z",
-      function()
-        Snacks.zen()
-      end,
-      desc = "Toggle Zen Mode",
     },
 
     -- File explorer
