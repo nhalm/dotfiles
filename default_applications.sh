@@ -119,7 +119,6 @@ function _mac() {
     imagemagick \
     ghostscript \
     tectonic \
-    mermaid-cli \
     1password-cli \
     karabiner-elements
 
@@ -172,12 +171,14 @@ function _mac() {
 
 	_install_mise
 
-	# Install/update carbonyl (terminal browser) via npm
-	if command -v carbonyl &> /dev/null; then
-		npm update -g carbonyl
-	else
-		npm install -g carbonyl
-	fi
+	# Install/update global npm packages (use mise-managed node, not brew)
+	for pkg in carbonyl @mermaid-js/mermaid-cli ccusage; do
+		if npm list -g "$pkg" &> /dev/null; then
+			npm update -g "$pkg"
+		else
+			npm install -g "$pkg"
+		fi
+	done
 
 	# Install claude-code via npm
 	# if ! command -v claude &> /dev/null; then
