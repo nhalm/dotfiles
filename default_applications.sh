@@ -68,6 +68,18 @@ function _install_mise() {
 
 	echo "Installing mise tools from config..."
 	mise install
+
+	_activate_mise_tools
+}
+
+function _activate_mise_tools() {
+	echo "Activating mise tools as global defaults..."
+	mise use -g lua@5.4
+	mise use -g node@lts
+	mise use -g python@3.13
+	mise use -g ruby@3.4.1
+	mise use -g rust@latest
+	mise use -g zoxide@latest
 }
 
 function _mac() {

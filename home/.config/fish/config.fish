@@ -4,8 +4,11 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Add local bin to PATH (for Claude Code, etc.)
 fish_add_path $HOME/.local/bin
 
-# Add mise shims to PATH so non-interactive processes (e.g. sketchybar) can find mise-managed tools
-fish_add_path $HOME/.local/share/mise/shims
+# Add mise shims to PATH only for non-interactive processes (e.g. sketchybar).
+# Interactive shells use `mise activate` instead, which always resolves the correct version.
+if not status is-interactive
+    fish_add_path $HOME/.local/share/mise/shims
+end
 
 # 1Password SSH agent
 set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
