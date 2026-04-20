@@ -60,49 +60,14 @@ function _install_brew() {
 
 # Fish setup moved to initial_setup.sh to run after stow creates symlinks
 
-function _install_python() {
-	python3_version="3.13"
-	echo "python_version=${python3_version}"
-
-	mise install python@"${python3_version}"
-	mise use -g python@"${python3_version}"
-}
-
-function _install_ruby() {
-	ruby_version="3.4.1"
-	echo "ruby_version=${ruby_version}"
-
-	mise install ruby@"${ruby_version}"
-	mise use -g ruby@"${ruby_version}"
-}
-
-function _install_node() {
-	echo "Installing Node.js LTS via mise..."
-
-	mise install node@lts
-	mise use -g node@lts
-}
-
-function _install_lua() {
-	echo "Installing Lua via mise..."
-
-	# luarocks is bundled with the mise lua install
-	mise install lua@5.4
-	mise use -g lua@5.4
-}
-
-function _install_rust() {
-	echo "Installing Rust via mise..."
-
-	mise install rust@latest
-	mise use -g rust@latest
-}
-
 function _install_mise() {
 	if ! command -v mise &> /dev/null; then
 		echo "Installing mise..."
 		brew install mise
 	fi
+
+	echo "Installing mise tools from config..."
+	mise install
 }
 
 function _mac() {
@@ -194,11 +159,6 @@ function _mac() {
 	# GUI applications moved to gui_applications.sh to avoid password prompts 
 
 	_install_mise
-	_install_python
-	_install_ruby
-	_install_node
-	_install_lua
-	_install_rust
 
 	# Install/update carbonyl (terminal browser) via npm
 	if command -v carbonyl &> /dev/null; then
