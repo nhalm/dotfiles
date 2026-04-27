@@ -40,5 +40,6 @@
   },
   "autoUpdatesChannel": "latest",
   "minimumVersion": "2.1.42",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "autoCompactEnabled": false
 }
