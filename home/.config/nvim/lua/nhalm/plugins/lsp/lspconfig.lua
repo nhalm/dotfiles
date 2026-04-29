@@ -135,7 +135,7 @@ return {
       },
     })
 
-    vim.lsp.config("markdown_oxide", {})
+    vim.lsp.config("marksman", {})
 
     vim.lsp.config("gopls", {
       cmd = { "gopls" },
@@ -188,7 +188,7 @@ return {
       "graphql",
       "emmet_ls",
       "pyright",
-      "markdown_oxide",
+      "marksman",
       "gopls",
       "lua_ls",
       "elixirls",
