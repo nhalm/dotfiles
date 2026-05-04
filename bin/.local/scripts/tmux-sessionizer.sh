@@ -1,19 +1,26 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
+# Parse --windows flag
+SETUP_WINDOWS=false
+if [[ "${1:-}" == "--windows" ]]; then
+    SETUP_WINDOWS=true
+    shift
+fi
+
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
     # Find all git repositories in common directories (up to 2 levels deep)
     git_repos=$(find ~/dev ~/Downloads ~/Documents ~/personal ~/work -maxdepth 3 -type d -name .git 2>/dev/null | sed 's/\/.git$//' | sort -u || true)
-    
+
     # Find regular directories (1 level deep)
     regular_dirs=$(find ~/dev ~/Downloads ~/Documents ~/personal ~/work ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u || true)
-    
+
     # Get existing tmux sessions
     existing_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | sort || true)
     current_session=$(tmux display-message -p "#{session_name}" 2>/dev/null || true)
-    
+
     # Combine directories
     directory_options=$(echo -e "$git_repos\n$regular_dirs" | grep -v '^$' | sort -u)
 
@@ -33,7 +40,7 @@ else
 
     # Add directories at the bottom
     all_options="${all_options}"$'\n'"${directory_options}"
-    
+
     # Use fzf with preview
     selected=$(printf '%s' "$all_options" | SHELL=/bin/bash fzf --preview 'if [ -d {} ]; then ls -la {} | head -40; elif tmux has-session -t {} 2>/dev/null; then tmux capture-pane -ep -t {} | tail -40; else echo {}; fi' --preview-window=right:50%:wrap)
 fi
@@ -53,9 +60,10 @@ if [[ $selected == "Create new session..." ]]; then
     selected_name=$(echo "$session_name" | tr . _ | tr ' ' _)
     selected=""  # No directory for this session
 elif tmux has-session -t="$selected" 2>/dev/null; then
-    # Selected is an existing session name
+    # Selected is an existing session name — just switch, no window setup
     selected_name=$selected
-    selected=""  # No directory needed for existing session
+    SETUP_WINDOWS=false
+    selected=""
 else
     # Create session name from directory path
     selected_name=$(basename "$selected" | tr . _)
@@ -63,23 +71,39 @@ fi
 
 tmux_running=$(pgrep tmux || true)
 
+setup_windows() {
+    tmux rename-window -t "${selected_name}:1" "Agent" || true
+    tmux new-window -t "$selected_name" -n "terminal" || true
+    tmux new-window -t "$selected_name" -n "editor" || true
+    tmux select-window -t "${selected_name}:Agent" || true
+}
+
 # Check if we're not in tmux and tmux isn't running at all
 if [[ -z ${TMUX:-} ]] && [[ -z $tmux_running ]]; then
     if [[ -n $selected ]]; then
-        tmux new-session -s $selected_name -c $selected
+        tmux new-session -ds $selected_name -c $selected
     else
-        tmux new-session -s $selected_name
+        tmux new-session -ds $selected_name
     fi
+    if [[ $SETUP_WINDOWS == true ]]; then
+        setup_windows
+    fi
+    tmux attach-session -t $selected_name
     exit 0
 fi
 
-# Only create new session if it doesn't exist
+session_created=false
 if ! tmux has-session -t=$selected_name 2> /dev/null; then
     if [[ -n $selected ]]; then
         tmux new-session -ds $selected_name -c $selected
     else
         tmux new-session -ds $selected_name
     fi
+    session_created=true
+fi
+
+if [[ $SETUP_WINDOWS == true ]] && [[ $session_created == true ]]; then
+    setup_windows
 fi
 
 # If we're inside tmux, switch to the session

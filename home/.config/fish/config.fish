@@ -25,8 +25,9 @@ if status is-interactive
     # Zoxide (smarter cd with frecency)
     command -q zoxide; and zoxide init fish --cmd cd | source
 
-    # Tmux sessionizer alias
-    alias tmf="~/.local/scripts/tmux-sessionizer.sh"
+    # Tmux sessionizer aliases
+    alias tmf="~/.local/scripts/tmux-sessionizer.sh --windows"
+    alias tmc="~/.local/scripts/tmux-sessionizer.sh"
 
     # Use neovim for vim
     alias vim="nvim"

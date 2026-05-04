@@ -146,14 +146,14 @@ return {
     {
       "<leader>th",
       function()
-        Snacks.terminal.split()
+        Snacks.terminal(nil, { win = { position = "bottom" } })
       end,
       desc = "Terminal Split",
     },
     {
       "<leader>tv",
       function()
-        Snacks.terminal.vsplit()
+        Snacks.terminal(nil, { win = { position = "right" } })
       end,
       desc = "Terminal Vsplit",
     },
