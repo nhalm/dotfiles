@@ -15,7 +15,7 @@ return {
         max_height = 60,
       },
     },
-    lazygit = { enabled = false },
+    lazygit = { enabled = true },
     picker = {
       enabled = true,
       hidden = true,
@@ -119,6 +119,13 @@ return {
     },
 
     -- Git
+    {
+      "<leader>gg",
+      function()
+        Snacks.lazygit()
+      end,
+      desc = "Lazygit",
+    },
     {
       "<leader>gb",
       function()
