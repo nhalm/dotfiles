@@ -10,6 +10,7 @@ Activate when you see:
 - `db.ReadQuery()` or `db.ReadQueryRow()` calls
 - `pgxkit.Executor` interface usage
 - `db.BeginTx()` returning `*pgxkit.Tx`
+- `EnableGolden` / `AssertGolden` (transcript testing) or `EnableAssertPlan` / `AssertPlan` (plan-regression testing) calls
 - go.mod contains `github.com/nhalm/pgxkit/v2` dependency
 - User explicitly requests pgxkit usage
 - Debugging replica lag issues with pgxkit's read/write split
@@ -33,6 +34,7 @@ Do NOT trigger for:
 7. **`*Tx` is NOT concurrent-safe** - use one goroutine per transaction
 8. **Check `ErrTxFinalized`** when operations might run on already-committed/rolled-back transactions
 9. **Use `Executor` interface** for functions that should work with both `*DB` and `*Tx`
+10. **Never `defer` cleanup of golden / plan baselines** — the baseline file is meant to persist across runs; deleting it every test makes the regression check pass against itself. Refresh goldens with `go test -overwrite-golden`; refresh plan baselines by `rm`-ing the `.baseline` file
 
 ## Core Philosophy
 
@@ -45,7 +47,7 @@ Do NOT trigger for:
 ## Skill Files
 
 - `core.md` - Connections, queries, transactions, quick reference
-- `testing.md` - RequireDB, TestDB, golden testing, test patterns
+- `testing.md` - RequireDB, TestDB, plan-regression (`AssertPlan`), golden transcript (`AssertGolden`), test patterns
 - `types.md` - Type conversions between Go and pgtype for NULL handling
 - `hooks.md` - Hooks, observability, health checks, graceful shutdown
 - `retry.md` - Retry logic, timeouts, error handling
@@ -59,6 +61,8 @@ Do NOT trigger for:
 | rows iteration failed silently | core.md | Common Pitfalls (rows.Err) |
 | `ErrTxFinalized` | core.md | Tx Type |
 | "test database not available" | testing.md | Troubleshooting |
+| Plan-regression test fails after schema change | testing.md | Troubleshooting |
+| Golden test never catches anything | testing.md | Troubleshooting (don't `defer` baseline cleanup) |
 | nil pointer with NULL column | types.md | Nullable (Pointer) Variants |
 | Hook not executing | hooks.md | Common Pitfall |
 | AfterTransaction not receiving outcome | hooks.md | Transaction Hooks |

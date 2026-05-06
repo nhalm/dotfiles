@@ -44,50 +44,113 @@ func TestWithCleanup(t *testing.T) {
 }
 ```
 
-## Golden Testing (Query Plan Regression)
+## Plan-Regression Testing (`EnableAssertPlan` / `AssertPlan`)
 
-Captures EXPLAIN plans for SELECT queries and compares against baseline to detect query regressions.
+Captures the **structural query plan** (`EXPLAIN (FORMAT JSON, COSTS OFF)`) for every eligible query and compares against a baseline. Detects plan changes — a seq-scan replacing an index-scan, a nested-loop turning into a hash-join, a different join order, a new sort node — without churning on volatile fields like `Actual Total Time` or planner cost estimates.
 
 **Use when:**
-- Query performance is critical
-- Schema changes might break optimization
-- You want CI to catch N+1 or missing index problems
+- Query performance is critical and you want CI to flag plan regressions.
+- Schema changes might silently break optimization (missing index, dropped constraint).
+- You want to assert structure of the plan, not result rows.
 
 ```go
-func TestQueryPerformance(t *testing.T) {
+func TestQueryPlan(t *testing.T) {
     ctx := context.Background()
     testDB := pgxkit.RequireDB(t)
     defer testDB.Shutdown(ctx)
 
-    db := testDB.EnableGolden("TestQueryPerformance")
+    db := testDB.EnableAssertPlan("TestQueryPlan")
 
     rows, err := db.Query(ctx, "SELECT * FROM users WHERE active = $1", true)
     require.NoError(t, err)
-    defer rows.Close()
+    rows.Close()
 
-    db.AssertGolden(t, "TestQueryPerformance")
+    db.AssertPlan(t, "TestQueryPlan")
 }
 ```
 
-**Golden file workflow:**
-1. First run: Creates `testdata/golden/TestName.json` (auto-becomes baseline)
-2. Subsequent runs: Compares against baseline
-3. To update after intentional changes:
-   ```bash
-   cp testdata/golden/TestName.json testdata/golden/TestName.json.baseline
-   ```
+**File workflow:**
+1. First run: writes `testdata/plans/TestQueryPlan.json` and `.json.baseline`, passes (logs creation).
+2. Subsequent runs: compares the freshly-captured `.json` against `.json.baseline`, fails on diff.
+3. To refresh after intentional changes: `rm testdata/plans/TestQueryPlan.json.baseline` (next run creates a fresh one).
+
+**Coverage:**
+- `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `WITH` are all captured.
+- Since `EXPLAIN` no longer runs `ANALYZE`, DML doesn't execute and doesn't need transaction wrapping.
+- `EXPLAIN`-prefixed statements are skipped to avoid recursion.
+
+## Golden Transcript Testing (`EnableGolden` / `AssertGolden`)
+
+Captures the **full sequence of database events** a scenario produces — `BEGIN`, every `Query`/`Exec` (with SQL, normalized args, materialized result rows), and the closing `COMMIT` or `ROLLBACK` — and asserts subsequent runs match the recorded baseline.
+
+**Use when:**
+- You want to detect behavior regressions: an extra UPDATE, a missing INSERT, a different argument, a different returned row, a `COMMIT` that became a `ROLLBACK`.
+- The scenario is a multi-statement repository call where result-row comparison alone misses things.
+- You want a single artifact that captures *what the code did*, not just *what it returned*.
 
 ```go
-pgxkit.CleanupGolden("TestQueryPerformance")  // Remove golden files
+func TestCreateOrder(t *testing.T) {
+    ctx := context.Background()
+    testDB := pgxkit.RequireDB(t)
+    defer testDB.Shutdown(ctx)
+
+    golden := testDB.EnableGolden("TestCreateOrder")
+
+    // Run the code under test using golden as the DB
+    tx, err := golden.BeginTx(ctx, pgx.TxOptions{})
+    require.NoError(t, err)
+    defer tx.Rollback(ctx)
+
+    var orderID int
+    err = tx.QueryRow(ctx,
+        "INSERT INTO orders (total) VALUES ($1) RETURNING id", 100,
+    ).Scan(&orderID)
+    require.NoError(t, err)
+
+    require.NoError(t, tx.Commit(ctx))
+
+    golden.AssertGolden(t, "TestCreateOrder")
+}
+```
+
+**File workflow:**
+1. First run: writes `testdata/golden/TestCreateOrder.json`, passes (logs baseline creation).
+2. Subsequent runs: compares against the baseline, fails with a unified diff on mismatch.
+3. To regenerate after intentional changes: `go test -overwrite-golden` (only rewrites goldens for tests that actually run — safe with `-run`).
+
+**Default normalization** (so transcripts compare cleanly across runs):
+- `time.Time` → `<TIMESTAMP>`
+- UUIDs (`uuid.UUID`, `[16]byte`, canonical-string) → `<UUID:N>` (first-seen, scenario-scoped, stable across same value)
+- Integer columns named `id` or `*_id` → `<ID:N>` (first-seen by value)
+
+**Custom normalizers** run before the defaults — register via `WithGoldenNormalizer`:
+```go
+golden := testDB.EnableGolden("TestCreateOrder",
+    pgxkit.WithGoldenNormalizer(func(v any) (any, bool) {
+        if order, ok := v.(OrderNumber); ok {
+            return "<ORDER>", true
+        }
+        return nil, false
+    }),
+)
 ```
 
 **Limitations:**
-- DML queries (INSERT/UPDATE/DELETE) are captured in a rolled-back transaction for EXPLAIN
-- EXPLAIN queries automatically skipped to avoid recursion
+- Sequential scenarios only. Concurrent fan-out within one scenario produces a non-deterministic transcript.
+- Replay rows returned to your code have `RawValues()` and `Conn()` that return `nil` — fine for normal `Scan`, but custom code that relies on the raw wire bytes won't work in capture mode.
+- Don't `defer` any cleanup of the baseline file — the baseline is meant to persist; that's the whole point.
+
+## Plan-Regression vs Golden — Which?
+
+| Question | Answer |
+|----------|--------|
+| Did the query *plan* change? | `AssertPlan` |
+| Did the *behavior* change (extra/missing statement, different args, different rows, COMMIT→ROLLBACK)? | `AssertGolden` |
+| Both? | Pick one per scenario. `EnableGolden` and `EnableAssertPlan` each return a fresh `*DB`, so they don't compose on one instance. |
 
 ## Parallel Test Safety
 
-Tests using `RequireDB` are safe for parallel execution - each gets its own context.
+Tests using `RequireDB` are safe for parallel execution — each gets its own context.
 
 ```go
 func TestParallel(t *testing.T) {
@@ -101,7 +164,7 @@ func TestParallel(t *testing.T) {
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            t.Parallel()  // Safe with pgxkit
+            t.Parallel()
             ctx := context.Background()
             testDB := pgxkit.RequireDB(t)
             defer testDB.Shutdown(ctx)
@@ -110,6 +173,8 @@ func TestParallel(t *testing.T) {
     }
 }
 ```
+
+Plan-regression and Golden tests should NOT run in parallel within a single scenario — both rely on a shared step counter / hook ordering that assumes sequential calls.
 
 ## Test Data Isolation
 
@@ -121,16 +186,13 @@ func TestWithTransaction(t *testing.T) {
     testDB := pgxkit.RequireDB(t)
     defer testDB.Shutdown(ctx)
 
-    // Start transaction that will be rolled back
     tx, err := testDB.BeginTx(ctx, pgx.TxOptions{})
     require.NoError(t, err)
     defer tx.Rollback(ctx)  // Auto-cleanup
 
-    // All operations in tx are isolated
     _, err = tx.Exec(ctx, "INSERT INTO users (name) VALUES ($1)", "test")
     require.NoError(t, err)
 
-    // Query within same transaction sees the insert
     var name string
     err = tx.QueryRow(ctx, "SELECT name FROM users WHERE name = $1", "test").Scan(&name)
     require.NoError(t, err)
@@ -142,23 +204,27 @@ func TestWithTransaction(t *testing.T) {
 ## Troubleshooting
 
 **"Test database not available"**
-- Set `TEST_DATABASE_URL` environment variable
-- Verify database exists and is accessible
+- Set `TEST_DATABASE_URL` environment variable.
+- Verify database exists and is accessible.
 
 **Tests interfering with each other**
-- Use transaction-based isolation (see above)
-- Or use `CleanupTestData()` with TRUNCATE statements
+- Use transaction-based isolation (above).
+- Or use `CleanupTestData()` with `TRUNCATE` statements.
 
-**Golden test failures after schema change**
-- Update baseline: `cp testdata/golden/TestName.json testdata/golden/TestName.json.baseline`
-- Review the diff to ensure changes are intentional
+**Plan-regression test fails after schema change**
+- `rm testdata/plans/TestName.json.baseline` and re-run; pgxkit will write a fresh baseline. Review the diff in the next PR.
+
+**Golden test fails after intentional behavior change**
+- `go test -overwrite-golden -run TestName` regenerates the baseline for just that test. Inspect the diff with `git diff testdata/golden/TestName.json` before committing.
+
+**Golden test passes every run but never catches anything**
+- You're probably deferring something that deletes the baseline (don't). The baseline file at `testdata/golden/<name>.json` should be committed and persistent.
 
 ## Test Data Cleanup
 
 For custom cleanup between tests:
 
 ```go
-// Run arbitrary cleanup SQL
 pgxkit.CleanupTestData(
     "TRUNCATE users CASCADE",
     "DELETE FROM sessions WHERE expired = true",
@@ -167,7 +233,7 @@ pgxkit.CleanupTestData(
 
 ## Test Pool Sizing
 
-TestDB uses the same pool defaults as production. For tests, consider using smaller pools:
+TestDB uses the same pool defaults as production. For tests, consider smaller pools:
 
 ```go
 testDB := pgxkit.NewTestDB()
