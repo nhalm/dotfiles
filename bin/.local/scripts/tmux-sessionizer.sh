@@ -72,9 +72,13 @@ fi
 tmux_running=$(pgrep tmux || true)
 
 setup_windows() {
+    local dir="${selected:-}"
+    if [[ -z $dir ]]; then
+        dir=$(tmux display-message -p -t "${selected_name}:1" '#{pane_current_path}' 2>/dev/null || echo "$HOME")
+    fi
     tmux rename-window -t "${selected_name}:1" "Agent" || true
-    tmux new-window -t "$selected_name" -n "terminal" || true
-    tmux new-window -t "$selected_name" -n "editor" || true
+    tmux new-window -t "$selected_name" -c "$dir" -n "terminal" || true
+    tmux new-window -t "$selected_name" -c "$dir" -n "editor" || true
     tmux select-window -t "${selected_name}:Agent" || true
 }
 
