@@ -63,21 +63,45 @@ local h1 = add_row("widgets.weather.row.h1", "Next 1h", "—")
 local h3 = add_row("widgets.weather.row.h3", "Next 3h", "—")
 local h6 = add_row("widgets.weather.row.h6", "Next 6h", "—")
 
--- Get location from CoreLocationCLI, fallback to auto-detect
+-- Cache CoreLocationCLI results: spawning it every refresh is expensive when
+-- Location Services is denied (falls back to a multi-second prompt path).
+local LOCATION_TTL = 1800
+local location_cache = nil
+local location_cache_ts = 0
+
 local function get_location(callback)
+	if location_cache ~= nil and (os.time() - location_cache_ts) < LOCATION_TTL then
+		callback(location_cache)
+		return
+	end
 	sbar.exec(
 		[[CoreLocationCLI -format "%latitude,%longitude" 2>/dev/null | tr ' ' ',' | tr -d '\n' || echo ""]],
 		function(out)
-			print("[WEATHER DEBUG] CoreLocationCLI output: '" .. tostring(out) .. "'")
 			if out and out ~= "" and out:match("^%-?[%d%.]+,%-?[%d%.]+$") then
-				print("[WEATHER DEBUG] Using coordinates: " .. out)
-				callback(out)
+				location_cache = out
 			else
-				print("[WEATHER DEBUG] Falling back to IP detection")
-				callback("")
+				location_cache = ""
 			end
+			location_cache_ts = os.time()
+			callback(location_cache)
 		end
 	)
+end
+
+-- wttr.in is flaky; back off exponentially on failure to avoid clogging the
+-- lua event loop with 10s curl timeouts (which stalls other items' updates).
+local fetch_failures = 0
+local next_allowed_ts = 0
+
+local function on_fetch_success()
+	fetch_failures = 0
+	next_allowed_ts = 0
+end
+
+local function on_fetch_failure()
+	fetch_failures = math.min(fetch_failures + 1, 6)
+	local backoff = math.min(600 * (2 ^ (fetch_failures - 1)), 6 * 3600)
+	next_allowed_ts = os.time() + backoff
 end
 
 -- === CHIP REFRESH (icon + temp)
@@ -87,12 +111,15 @@ local function refresh_chip()
 			string.format([[curl -s -m 10 'https://wttr.in/%s?format=%%t+%%C&lang=en&u' | tr -d '\n']], loc),
 			function(out)
 				if not out or out == "" then
+					on_fetch_failure()
 					return
 				end
 				local temp, condition = out:match("([%+%-]?%d+°F)%s+(.+)")
 				if not temp or not condition then
+					on_fetch_failure()
 					return
 				end
+				on_fetch_success()
 
 				local c = condition:lower()
 				local icon = "􀇃" -- cloud.sun
@@ -117,9 +144,7 @@ end
 -- === POPUP REFRESH (details) — harden PATH for jq when launched by services
 local function refresh_popup()
 	get_location(function(loc)
-		print("[WEATHER DEBUG] Location for popup: '" .. loc .. "'")
 		local url = string.format("https://wttr.in/%s?format=j1&lang=en&u", loc)
-		print("[WEATHER DEBUG] Fetching URL: " .. url)
 		local cmd = [[/bin/bash -lc '
     export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
     curl -fsSL -m 10 "]] .. url .. [[" | jq -r "
@@ -138,6 +163,7 @@ local function refresh_popup()
 
 		sbar.exec(cmd, function(out)
 			if not out or out == "" then
+				on_fetch_failure()
 				return
 			end
 			local lines = {}
@@ -145,8 +171,10 @@ local function refresh_popup()
 				lines[#lines + 1] = line
 			end
 			if #lines < 9 then
+				on_fetch_failure()
 				return
-			end -- expect 9 fields
+			end
+			on_fetch_success()
 
 			local location, tempF, desc, feelF, humP, windStr, n1, n3, n6 =
 				lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7], lines[8], lines[9]
@@ -197,9 +225,19 @@ h3:subscribe("mouse.exited.global", hide_popup)
 h6:subscribe("mouse.exited.global", hide_popup)
 
 -- === Periodic updates ===
-weather:subscribe({ "routine", "system_woke" }, function()
+weather:subscribe("routine", function()
+	if os.time() < next_allowed_ts then
+		return
+	end
 	refresh_chip()
-	sbar.delay(300, refresh_popup) -- soft refresh even if popup closed
+end)
+
+-- Network state likely changed on wake; clear backoff and refetch.
+weather:subscribe("system_woke", function()
+	fetch_failures = 0
+	next_allowed_ts = 0
+	location_cache = nil
+	refresh_chip()
 end)
 
 -- Spacing after widget

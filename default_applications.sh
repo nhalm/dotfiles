@@ -66,6 +66,12 @@ function _install_mise() {
 		brew install mise
 	fi
 
+	# Trust the dotfiles config before any `mise install` / shim use. Without this,
+	# launchd-spawned processes (e.g. sketchybar) hit "config files are not trusted"
+	# on every shim resolution.
+	echo "Trusting dotfiles mise config..."
+	mise trust "$HOME/dotfiles/home/.config/mise/config.toml"
+
 	echo "Installing mise tools from config..."
 	mise install
 
