@@ -14,7 +14,7 @@ source "$ENV_FILE"
 export RESTIC_REPOSITORY="sftp:${RESTIC_USER}@${RESTIC_TARGET_HOST}:${RESTIC_TARGET_PATH}"
 export RESTIC_PASSWORD_COMMAND="security find-generic-password -s restic-backup -a $USER -w"
 
-SFTP_CMD="ssh -i $HOME/.ssh/restic ${RESTIC_USER}@${RESTIC_TARGET_HOST} -s sftp"
+SFTP_CMD="/usr/bin/ssh -F /dev/null -i $HOME/.ssh/restic -o IdentitiesOnly=yes -o IdentityAgent=none ${RESTIC_USER}@${RESTIC_TARGET_HOST} -s sftp"
 EXCLUDE_FILE="$CONFIG_DIR/excludes.txt"
 INCLUDE_FILE="$CONFIG_DIR/includes.txt"
 

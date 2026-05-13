@@ -3,7 +3,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$HOME/.config/restic"
-LAUNCHD_PLIST="$HOME/Library/LaunchAgents/com.restic.backup.plist"
 
 echo "=== Restic Backup Setup ==="
 echo
@@ -52,13 +51,13 @@ if [[ "$KEYCHAIN_EXISTS" == "yes" ]]; then
         security delete-generic-password -s restic-backup -a "$USER" 2>/dev/null || true
         read -sp "Enter restic repository password: " RESTIC_PASSWORD
         echo
-        security add-generic-password -s restic-backup -a "$USER" -w "$RESTIC_PASSWORD"
+        security add-generic-password -s restic-backup -a "$USER" -T /usr/bin/security -w "$RESTIC_PASSWORD"
         echo "Updated Keychain entry"
     fi
 else
     read -sp "Enter restic repository password: " RESTIC_PASSWORD
     echo
-    security add-generic-password -s restic-backup -a "$USER" -w "$RESTIC_PASSWORD"
+    security add-generic-password -s restic-backup -a "$USER" -T /usr/bin/security -w "$RESTIC_PASSWORD"
     echo "Stored password in Keychain (restic-backup)"
 fi
 
@@ -73,43 +72,7 @@ fi
 echo
 read -p "Setup daily backup schedule? [Y/n]: " SETUP_LAUNCHD
 if [[ ! "$SETUP_LAUNCHD" =~ ^[Nn]$ ]]; then
-    read -p "Backup hour (0-23) [10]: " BACKUP_HOUR
-    BACKUP_HOUR="${BACKUP_HOUR:-10}"
-
-    launchctl unload "$LAUNCHD_PLIST" 2>/dev/null || true
-    mkdir -p "$(dirname "$LAUNCHD_PLIST")"
-
-    cat > "$LAUNCHD_PLIST" << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.restic.backup</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>$CONFIG_DIR/backup.sh</string>
-        <string>backup</string>
-    </array>
-    <key>StartCalendarInterval</key>
-    <dict>
-        <key>Hour</key>
-        <integer>$BACKUP_HOUR</integer>
-        <key>Minute</key>
-        <integer>0</integer>
-    </dict>
-    <key>StandardOutPath</key>
-    <string>$CONFIG_DIR/backup.log</string>
-    <key>StandardErrorPath</key>
-    <string>$CONFIG_DIR/backup.log</string>
-    <key>RunAtLoad</key>
-    <false/>
-</dict>
-</plist>
-EOF
-
-    launchctl load "$LAUNCHD_PLIST"
-    echo "Scheduled daily backup at ${BACKUP_HOUR}:00"
+    "$SCRIPT_DIR/install_scheduled.sh"
 fi
 
 echo
