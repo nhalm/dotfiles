@@ -69,6 +69,30 @@ case "${1:-backup}" in
     init)
         run_restic init
         ;;
+    config)
+        LAUNCHD_PLIST="$HOME/Library/LaunchAgents/com.restic.backup.plist"
+        echo "Host name:   ${RESTIC_HOST_NAME:-$(hostname -s)}"
+        echo "SFTP user:   $RESTIC_USER"
+        echo "Target host: $RESTIC_TARGET_HOST"
+        echo "Target path: $RESTIC_TARGET_PATH"
+        echo "Repository:  $RESTIC_REPOSITORY"
+        echo "Env file:    $ENV_FILE"
+        echo "Includes:    $INCLUDE_FILE"
+        echo "Excludes:    $EXCLUDE_FILE"
+        if security find-generic-password -s restic-backup -a "$USER" >/dev/null 2>&1; then
+            echo "Keychain:    restic-backup (present)"
+        else
+            echo "Keychain:    restic-backup (MISSING)"
+        fi
+        if [[ -f "$LAUNCHD_PLIST" ]]; then
+            HOUR=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$LAUNCHD_PLIST" 2>/dev/null || echo "?")
+            MIN=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$LAUNCHD_PLIST" 2>/dev/null || echo "?")
+            LOADED=$(launchctl list | awk '$3 == "com.restic.backup" {print "loaded (last exit "$2")"}')
+            printf "Schedule:    %02d:%02d daily — %s\n" "$HOUR" "$MIN" "${LOADED:-not loaded}"
+        else
+            echo "Schedule:    not installed"
+        fi
+        ;;
     *)
         run_restic "$@"
         ;;
