@@ -34,7 +34,7 @@ Do NOT trigger for:
 7. **`*Tx` is NOT concurrent-safe** - use one goroutine per transaction
 8. **Check `ErrTxFinalized`** when operations might run on already-committed/rolled-back transactions
 9. **Use `Executor` interface** for functions that should work with both `*DB` and `*Tx`
-10. **Never `defer` cleanup of golden / plan baselines** — the baseline file is meant to persist across runs; deleting it every test makes the regression check pass against itself. Refresh goldens with `go test -overwrite-golden`; refresh plan baselines by `rm`-ing the `.baseline` file
+10. **Never `defer` cleanup of golden / plan baselines** — the baseline file is meant to persist across runs; deleting it every test makes the regression check pass against itself. Refresh goldens with `go test -overwrite-golden`; refresh plan baselines with `go test -overwrite-plan` (or `rm` the `testdata/plans/<name>.json` file)
 
 ## Core Philosophy
 
