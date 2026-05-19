@@ -75,47 +75,6 @@ local function build_workspace_layout(display_count)
 	end
 end
 
--- Reinitializes the entire workspace system with new layout
-local function reinitialize_workspaces(new_layout)
-	WORKSPACE_LAYOUT = new_layout
-
-	-- Clear existing items
-	workspace_items = {}
-	padding_items = {}
-	separator_items = {}
-
-	-- Rebuild workspace_to_display mapping
-	workspace_to_display = {}
-	for _, group in ipairs(WORKSPACE_LAYOUT) do
-		for _, ws in ipairs(group.workspaces) do
-			workspace_to_display[ws] = group.display
-		end
-	end
-
-	-- Create all workspace items
-	for _, group in ipairs(WORKSPACE_LAYOUT) do
-		for _, ws in ipairs(group.workspaces) do
-			ensure_workspace_exists(ws)
-		end
-	end
-
-	-- Recreate separators
-	create_separators()
-
-	-- Update all workspaces
-	update_all_workspaces()
-end
-
--- Checks for display count changes and reconfigures if needed
-local function check_display_changes()
-	local new_count = get_display_count()
-	if new_count ~= current_display_count then
-		current_display_count = new_count
-		local new_layout = build_workspace_layout(new_count)
-		reinitialize_workspaces(new_layout)
-	end
-end
-
 -- ============================================================================
 -- STATE MANAGEMENT
 -- ============================================================================
@@ -395,6 +354,40 @@ local function update_all_workspaces()
 			end
 		end
 	end)
+end
+
+-- Reinitializes the entire workspace system with new layout
+local function reinitialize_workspaces(new_layout)
+	WORKSPACE_LAYOUT = new_layout
+
+	workspace_items = {}
+	padding_items = {}
+	separator_items = {}
+
+	workspace_to_display = {}
+	for _, group in ipairs(WORKSPACE_LAYOUT) do
+		for _, ws in ipairs(group.workspaces) do
+			workspace_to_display[ws] = group.display
+		end
+	end
+
+	for _, group in ipairs(WORKSPACE_LAYOUT) do
+		for _, ws in ipairs(group.workspaces) do
+			ensure_workspace_exists(ws)
+		end
+	end
+
+	create_separators()
+	update_all_workspaces()
+end
+
+local function check_display_changes()
+	local new_count = get_display_count()
+	if new_count ~= current_display_count then
+		current_display_count = new_count
+		local new_layout = build_workspace_layout(new_count)
+		reinitialize_workspaces(new_layout)
+	end
 end
 
 -- ============================================================================
