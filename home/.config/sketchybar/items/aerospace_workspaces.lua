@@ -1,106 +1,63 @@
--- ~/.config/sketchybar/items/aerospace_workspaces.lua
+-- AeroSpace workspace chips for SketchyBar.
 --
--- AeroSpace Workspace Integration for SketchyBar
--- Creates workspace indicators that show on their respective monitors,
--- display app icons for windows in each workspace, and handle click interactions
+-- Design follows the canonical FelixKratz pattern (SketchyBar discussion #599
+-- and SbarLua example/items/spaces.lua):
+--   * Items are created once at startup; nothing is ever recreated.
+--   * A single observer runs ONE bulk refresh per event, updating every item
+--     in one pass. Per-item subscriptions + per-workspace exec calls have
+--     historically deadlocked sketchybar via SbarLua issue #794 (mach port
+--     queue saturation when many :set() calls dispatch concurrently).
+--   * No polling loop.
+--   * No item:query() — visibility / pinning are tracked in Lua.
 
 local colors = require("colors")
 local settings = require("settings")
 local app_icons = require("helpers.app_icons")
 
--- Register the custom event that AeroSpace will emit
 sbar.add("event", "aerospace_workspace_change")
 
--- ============================================================================
--- CONFIGURATION
--- ============================================================================
-
--- Workspace definitions by group
-local WORKSPACE_GROUPS = {
-	left = { "P", "A", "E", "R", "T", "Y", "U", "I", "O", "P" },
-	right = { "C", "2", "D", "F", "G", "Z", "X", "C", "V", "B" },
-}
-
--- Current workspace layout (will be dynamically set based on display count)
-local WORKSPACE_LAYOUT = {}
-
--- Current display count (will be detected at runtime)
-local current_display_count = 0
-
--- Visual styling constants
 local STYLE = {
-	chip_bg = colors.bg1, -- Background color for workspace chips
-	chip_border = colors.black, -- Border color for workspace chips
-	chip_height = 26, -- Height of workspace chips
-	bracket_border = colors.bg2, -- Border color for workspace brackets
-	active_icon_highlight = colors.red, -- Highlight color for active workspace icon
-	active_label_highlight = colors.white, -- Highlight color for active workspace label
-	inactive_icon_color = colors.white, -- Color for inactive workspace icons
-	inactive_label_color = colors.grey, -- Color for inactive workspace labels
+	chip_bg = colors.bg1,
+	chip_border = colors.black,
+	chip_height = 26,
+	bracket_border = colors.bg2,
+	active_bracket_border = colors.grey,
+	active_icon_highlight = colors.red,
+	active_label_highlight = colors.white,
+	inactive_icon_color = colors.white,
+	inactive_label_color = colors.grey,
 }
 
--- ============================================================================
--- DISPLAY DETECTION AND LAYOUT MANAGEMENT
--- ============================================================================
-
--- Detects the number of connected displays
-local function get_display_count()
-	local handle = io.popen("system_profiler SPDisplaysDataType 2>/dev/null | grep -c 'Resolution:'")
-	local result = handle:read("*a")
-	handle:close()
-	return tonumber(result:match("%d+")) or 1
-end
-
--- Builds workspace layout based on number of displays
-local function build_workspace_layout(display_count)
-	if display_count == 1 then
-		-- Single display: show all workspaces on display 1
-		local all_workspaces = {}
-		for _, ws in ipairs(WORKSPACE_GROUPS.left) do
-			table.insert(all_workspaces, ws)
-		end
-		for _, ws in ipairs(WORKSPACE_GROUPS.right) do
-			table.insert(all_workspaces, ws)
-		end
-		return {
-			{ display = 1, workspaces = all_workspaces }
-		}
-	else
-		-- Multiple displays: split workspaces across displays
-		-- Display 2 = left monitor, Display 1 = right monitor
-		return {
-			{ display = 2, workspaces = WORKSPACE_GROUPS.left },
-			{ display = 1, workspaces = WORKSPACE_GROUPS.right },
-		}
+local function read_sync(cmd)
+	local f = io.popen(cmd)
+	local out = (f and f:read("*a")) or ""
+	if f then
+		f:close()
 	end
+	return out
 end
 
--- ============================================================================
--- STATE MANAGEMENT
--- ============================================================================
+local function lines(s)
+	local r = {}
+	for line in s:gmatch("[^\r\n]+") do
+		r[#r + 1] = line
+	end
+	return r
+end
 
--- Storage for workspace items and their associated elements
-local workspace_items = {} -- workspace -> { item, bracket, display }
-local padding_items = {} -- workspace -> padding item name
-local separator_items = {} -- display -> separator item name
+local workspaces = lines(read_sync("aerospace list-workspaces --all 2>/dev/null"))
 
--- Workspace -> display mapping (built dynamically during initialization)
-local workspace_to_display = {}
+local items = {}
+local brackets = {}
+local pinned_display = {}
 
--- ============================================================================
--- ITEM CREATION FUNCTIONS
--- ============================================================================
-
--- Creates a workspace item (the clickable chip that shows the workspace)
-local function create_workspace_item(ws)
-	local display = workspace_to_display[ws] or "active"
-
+for _, ws in ipairs(workspaces) do
 	local item = sbar.add("item", "aws." .. ws, {
 		position = "left",
-		display = display, -- Pin this chip to its designated monitor
+		display = "active",
 		icon = {
 			font = { family = settings.font.numbers },
-			string = ws, -- Display the workspace name/letter
+			string = ws,
 			padding_left = 15,
 			padding_right = 8,
 			color = STYLE.inactive_icon_color,
@@ -110,334 +67,138 @@ local function create_workspace_item(ws)
 			padding_right = 20,
 			color = STYLE.inactive_label_color,
 			highlight_color = STYLE.active_label_highlight,
-			font = "sketchybar-app-font:Regular:16.0", -- Use app font for icons
+			font = "sketchybar-app-font:Regular:16.0",
 			y_offset = -1,
+			string = " —",
 		},
-		padding_right = 1,
 		padding_left = 1,
+		padding_right = 1,
 		background = {
 			color = STYLE.chip_bg,
 			border_width = 1,
 			height = STYLE.chip_height,
 			border_color = STYLE.chip_border,
 		},
-		click_script = "aerospace workspace " .. ws, -- Left click switches to workspace
-		drawing = "off", -- Initially hidden
+		click_script = "aerospace workspace " .. ws,
 	})
 
-	-- Create a bracket around the workspace item for visual grouping
-	local bracket = sbar.add("bracket", { item.name }, {
-		display = display, -- Bracket appears on same monitor as the item
+	local bracket = sbar.add("bracket", "aws.bracket." .. ws, { item.name }, {
 		background = {
 			color = colors.transparent,
 			border_color = STYLE.bracket_border,
 			height = STYLE.chip_height + 2,
 			border_width = 2,
 		},
-		drawing = "off", -- Initially hidden
 	})
 
-	-- Handle right-click to move focused window to this workspace
 	item:subscribe("mouse.clicked", function(env)
 		if env.BUTTON == "right" then
 			sbar.exec("aerospace move-node-to-workspace " .. ws)
 		end
 	end)
 
-	return item, bracket
+	items[ws] = item
+	brackets[ws] = bracket
+	pinned_display[ws] = "active"
 end
 
--- Creates a padding item for spacing between workspace groups
-local function create_padding_item(ws, display)
-	return sbar.add("item", "aws.pad." .. ws, {
-		position = "left",
-		display = display,
-		width = settings.group_paddings,
-		drawing = "off", -- Initially hidden
-	})
-end
+sbar.add("item", { position = "left", width = settings.group_paddings })
 
--- Ensures a workspace item exists, creating it if necessary
-local function ensure_workspace_exists(ws)
-	if workspace_items[ws] then
-		return workspace_items[ws]
-	end
-
-	local display = workspace_to_display[ws] or "active"
-	local item, bracket = create_workspace_item(ws)
-	local pad = create_padding_item(ws, display)
-
-	-- Store references to all created items
-	workspace_items[ws] = { item = item, bracket = bracket, display = display }
-	padding_items[ws] = pad.name
-
-	return workspace_items[ws]
-end
-
--- Creates separator items between monitor groups
-local function create_separators()
-	for _, group in ipairs(WORKSPACE_LAYOUT) do
-		local display = group.display
-		if not separator_items[display] then
-			local sep = sbar.add("item", string.format("aws.sep.%d", display), {
-				position = "left",
-				display = display,
-				width = settings.group_paddings * 2, -- Double width for visual separation
-				drawing = "off", -- Initially hidden
-			})
-			separator_items[display] = sep.name
-		end
-	end
-end
-
--- ============================================================================
--- VISIBILITY AND STYLING FUNCTIONS
--- ============================================================================
-
--- Shows or hides a workspace and its associated elements
-local function set_workspace_visibility(ws, visible)
-	local workspace = ensure_workspace_exists(ws)
-	local drawing_state = visible and "on" or "off"
-
-	-- Show/hide the main workspace item, bracket, and padding
-	workspace.item:set({ drawing = drawing_state })
-	workspace.bracket:set({ drawing = drawing_state })
-	sbar.set(padding_items[ws], { drawing = drawing_state })
-end
-
--- Updates the visual appearance of a workspace based on its state and contents
-local function update_workspace_appearance(ws, focused_workspace)
-	local workspace = workspace_items[ws]
-	if not workspace then
-		return
-	end
-
-	local is_focused = (ws == focused_workspace)
-
-	-- Get list of applications running in this workspace
-	sbar.exec(string.format('aerospace list-windows --workspace %s --format "%%{app-name}"', ws), function(output)
-		local seen_apps = {}
-		local app_icons_string = ""
-
-		-- Parse application names and build icon string
-		for app_name in string.gmatch(output or "", "[^\r\n]+") do
-			app_name = app_name:gsub("^%s+", ""):gsub("%s+$", "") -- Trim whitespace
-
-			-- Only add unique apps to avoid duplicate icons
-			if app_name ~= "" and not seen_apps[app_name] then
-				seen_apps[app_name] = true
-				local icon = app_icons[app_name] or app_icons["Default"] or "·"
-				app_icons_string = app_icons_string .. icon
-			end
-		end
-
-		-- Show placeholder when workspace is empty
-		if app_icons_string == "" then
-			app_icons_string = " —"
-		end
-
-		-- Update workspace visual state with proper highlighting
-		workspace.item:set({
-			icon = { highlight = is_focused },
-			label = { string = app_icons_string, highlight = is_focused },
-			background = {
-				border_color = is_focused and STYLE.chip_border or STYLE.bracket_border,
-			},
-		})
-
-		-- Update bracket styling with focus indication
-		workspace.bracket:set({
-			background = {
-				border_color = is_focused and colors.grey or STYLE.bracket_border,
-			},
-		})
-	end)
-end
-
--- ============================================================================
--- SEPARATOR MANAGEMENT
--- ============================================================================
-
--- Updates visibility of separators between workspace groups
-local function update_separators()
-	-- Check each pair of adjacent monitor groups
-	for i = 1, (#WORKSPACE_LAYOUT - 1) do
-		local left_workspaces = WORKSPACE_LAYOUT[i].workspaces
-		local right_workspaces = WORKSPACE_LAYOUT[i + 1].workspaces
-
-		local left_has_visible = false
-		local right_has_visible = false
-
-		-- Check if left group has any visible workspaces
-		for _, ws in ipairs(left_workspaces) do
-			if workspace_items[ws] and workspace_items[ws].item:query().geometry.drawing == "on" then
-				left_has_visible = true
-				break
-			end
-		end
-
-		-- Check if right group has any visible workspaces
-		for _, ws in ipairs(right_workspaces) do
-			if workspace_items[ws] and workspace_items[ws].item:query().geometry.drawing == "on" then
-				right_has_visible = true
-				break
-			end
-		end
-
-		-- Show separator only if both adjacent groups have visible workspaces
-		local sep_name = separator_items[i]
-		if sep_name then
-			sbar.set(sep_name, {
-				drawing = (left_has_visible and right_has_visible) and "on" or "off",
-			})
-		end
-	end
-end
-
--- ============================================================================
--- MAIN UPDATE LOGIC
--- ============================================================================
-
--- Main function that updates all workspace visibility and styling
-local function update_all_workspaces()
-	-- Get the currently focused workspace from AeroSpace
-	sbar.exec("aerospace list-workspaces --focused", function(focused_output)
-		local focused_workspace = (focused_output or ""):gsub("%s+", "")
-
-		-- Track async operations to know when all updates are complete
-		local pending_groups = #WORKSPACE_LAYOUT
-
-		-- Function called when all workspace updates are complete
-		local function finalize_update()
-			update_separators()
-		end
-
-		-- Process each monitor group
-		for _, group in ipairs(WORKSPACE_LAYOUT) do
-			local workspaces_list = group.workspaces
-			local pending_workspaces = #workspaces_list
-
-			-- Handle empty groups
-			if pending_workspaces == 0 then
-				pending_groups = pending_groups - 1
-				if pending_groups == 0 then
-					finalize_update()
+-- Two bulk exec calls per refresh:
+--   1) list-workspaces gives us monitor-id + focused/visible flags for every
+--      workspace (including empty ones).
+--   2) list-windows gives us the app icons. Empty workspaces don't appear
+--      here, which is why (1) is needed too.
+-- Nested so we have a single coherent snapshot when we paint.
+local function refresh()
+	sbar.exec(
+		[[aerospace list-workspaces --all --format '%{workspace}	%{monitor-id}	%{workspace-is-focused}	%{workspace-is-visible}' 2>/dev/null]],
+		function(ws_out)
+			local meta = {}
+			for line in (ws_out or ""):gmatch("[^\r\n]+") do
+				local ws, mon, focused, visible = line:match("^(%S+)\t(%S+)\t(%S+)\t(%S+)$")
+				if ws then
+					meta[ws] = {
+						display = tonumber(mon) or 1,
+						focused = focused == "true",
+						visible = visible == "true",
+					}
 				end
-			else
-				-- Process each workspace in the group
-				for _, ws in ipairs(workspaces_list) do
-					ensure_workspace_exists(ws)
+			end
 
-					-- Check if workspace has any windows
-					sbar.exec("aerospace list-windows --workspace " .. ws, function(windows_output)
-						local has_windows = (windows_output and windows_output:match("%S")) ~= nil
-						local should_show = (ws == focused_workspace) or has_windows
-
-						-- Update workspace visibility
-						set_workspace_visibility(ws, should_show)
-
-						-- Update workspace appearance if it's visible
-						if should_show then
-							update_workspace_appearance(ws, focused_workspace)
-						end
-
-						-- Track completion of async operations
-						pending_workspaces = pending_workspaces - 1
-						if pending_workspaces == 0 then
-							pending_groups = pending_groups - 1
-							if pending_groups == 0 then
-								finalize_update()
+			sbar.exec(
+				[[aerospace list-windows --all --format '%{workspace}	%{app-name}' 2>/dev/null]],
+				function(win_out)
+					local apps_by_ws = {}
+					for line in (win_out or ""):gmatch("[^\r\n]+") do
+						local ws, app = line:match("^(%S+)\t(.+)$")
+						if ws and app then
+							local bucket = apps_by_ws[ws]
+							if not bucket then
+								bucket = { seen = {}, list = {} }
+								apps_by_ws[ws] = bucket
+							end
+							app = app:gsub("^%s+", ""):gsub("%s+$", "")
+							if app ~= "" and not bucket.seen[app] then
+								bucket.seen[app] = true
+								bucket.list[#bucket.list + 1] = app
 							end
 						end
-					end)
+					end
+
+					for ws, item in pairs(items) do
+						local m = meta[ws] or { display = 1, focused = false, visible = false }
+						local bucket = apps_by_ws[ws]
+						local apps = bucket and bucket.list or {}
+						local icons_str = ""
+						for _, app in ipairs(apps) do
+							icons_str = icons_str .. (app_icons[app] or app_icons["Default"] or "·")
+						end
+
+						local selected = m.focused
+						local has_apps = #apps > 0
+						local show = m.visible or has_apps
+						if icons_str == "" then
+							icons_str = " —"
+						end
+
+						-- Only re-set display when it actually changed; sketchybar
+						-- treats display changes as expensive layout events.
+						if pinned_display[ws] ~= m.display then
+							pinned_display[ws] = m.display
+							item:set({ display = m.display })
+							brackets[ws]:set({ display = m.display })
+						end
+
+						local drawing = show and "on" or "off"
+						item:set({
+							drawing = drawing,
+							icon = { highlight = selected },
+							label = { string = icons_str, highlight = selected },
+							background = {
+								border_color = selected and STYLE.active_bracket_border
+									or STYLE.chip_border,
+							},
+						})
+						brackets[ws]:set({
+							drawing = drawing,
+							background = {
+								border_color = selected and STYLE.active_bracket_border
+									or STYLE.bracket_border,
+							},
+						})
+					end
 				end
-			end
+			)
 		end
-	end)
+	)
 end
 
--- Reinitializes the entire workspace system with new layout
-local function reinitialize_workspaces(new_layout)
-	WORKSPACE_LAYOUT = new_layout
+local observer = sbar.add("item", "aws.observer", { drawing = "off", updates = true })
 
-	workspace_items = {}
-	padding_items = {}
-	separator_items = {}
+observer:subscribe("aerospace_workspace_change", refresh)
+observer:subscribe("front_app_switched", refresh)
+observer:subscribe("display_change", refresh)
+observer:subscribe("system_woke", refresh)
 
-	workspace_to_display = {}
-	for _, group in ipairs(WORKSPACE_LAYOUT) do
-		for _, ws in ipairs(group.workspaces) do
-			workspace_to_display[ws] = group.display
-		end
-	end
-
-	for _, group in ipairs(WORKSPACE_LAYOUT) do
-		for _, ws in ipairs(group.workspaces) do
-			ensure_workspace_exists(ws)
-		end
-	end
-
-	create_separators()
-	update_all_workspaces()
-end
-
-local function check_display_changes()
-	local new_count = get_display_count()
-	if new_count ~= current_display_count then
-		current_display_count = new_count
-		local new_layout = build_workspace_layout(new_count)
-		reinitialize_workspaces(new_layout)
-	end
-end
-
--- ============================================================================
--- INITIALIZATION
--- ============================================================================
-
--- Initialize with display detection
-current_display_count = get_display_count()
-WORKSPACE_LAYOUT = build_workspace_layout(current_display_count)
-
--- Build workspace -> display mapping for fast lookups
-workspace_to_display = {}
-for _, group in ipairs(WORKSPACE_LAYOUT) do
-	for _, ws in ipairs(group.workspaces) do
-		workspace_to_display[ws] = group.display
-	end
-end
-
--- Create all workspace items upfront
-for _, group in ipairs(WORKSPACE_LAYOUT) do
-	for _, ws in ipairs(group.workspaces) do
-		ensure_workspace_exists(ws)
-	end
-end
-
--- Create separator items
-create_separators()
-
--- Set up event observer for AeroSpace workspace changes
-sbar.add("item", "aws.observer", { drawing = "off", updates = true })
-	:subscribe("aerospace_workspace_change", function(_)
-		update_all_workspaces()
-	end)
-
-local refresh_in_flight = false
-
-local function periodic_refresh()
-	if refresh_in_flight then
-		sbar.delay(5, periodic_refresh)
-		return
-	end
-	refresh_in_flight = true
-	check_display_changes()
-	update_all_workspaces()
-	sbar.delay(0.5, function()
-		refresh_in_flight = false
-	end)
-	sbar.delay(5, periodic_refresh)
-end
-
--- Perform initial update and start periodic refresh
-update_all_workspaces()
-periodic_refresh()
+refresh()
