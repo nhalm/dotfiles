@@ -150,8 +150,7 @@ function _mac() {
 		php \
 		composer \
 		libyaml \
-		readline \
-    restic
+		readline
 
   # --adopt: prevent errors when app already exists but brew lost track of it (e.g. after OS upgrades)
   brew install --adopt --cask corelocationcli

@@ -150,21 +150,7 @@ colima start --vm-type vz --disk 10 --mount ~:w --mount /Volumes/nfs/dev-storage
 
 Volume backups are stored at `/Volumes/nfs/dev-storage/colima/volume-backups/`.
 
-## Restic Backups
+## Machine-specific / private setup
 
-Encrypted backups of selected home-directory paths to an SFTP target (TrueNAS). Lives in `restic/`.
-
-### One-time setup
-
-```bash
-./restic/setup.sh
-```
-
-Prompts for SFTP user/host/path, stores the repo encryption password in the macOS Keychain (with `/usr/bin/security` on the ACL so reads don't require a UI prompt), optionally runs `restic init`, and optionally schedules a daily launchd job by delegating to `install_scheduled.sh`.
-
-### Scripts
-
-- `restic/backup.sh` — main entry point, deployed to `~/.config/restic/backup.sh`. Subcommands: `backup` (default), `snapshots`, `snapshots-all`, `restore <id> [target]`, `mount [path]`, `init`. Any other arg is passed through to `restic`.
-- `restic/restore.sh` — interactive restore helper.
-- `restic/install_scheduled.sh` — installs/refreshes the `com.restic.backup` launchd agent. Run standalone to (re)schedule without re-running the full setup: `./restic/install_scheduled.sh 10` for 10:00, or no arg to be prompted.
-- `restic/includes.txt` / `restic/excludes.txt` — backup path lists.
+Host-specific and sensitive setup (backups, sync, vault) lives in the private
+`host-setup` repo, not here.
