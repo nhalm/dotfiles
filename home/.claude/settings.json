@@ -29,6 +29,7 @@
       "Write(/Users/nhalm/.claude/**)"
     ]
   },
+  "model": "claude-opus-4-8",
   "statusLine": {
     "type": "command",
     "command": "npx -y ccstatusline@latest",
@@ -38,6 +39,7 @@
     "gopls-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true
   },
+  "effortLevel": "xhigh",
   "autoUpdatesChannel": "latest",
   "minimumVersion": "2.1.42",
   "skipDangerousModePermissionPrompt": true,

@@ -75,7 +75,7 @@ run = 'move-node-to-workspace Q'
 
 [[on-window-detected]]
 if.app-id = 'com.apple.ScreenSharing'
-run = 'move-node-to-workspace R'
+run = ['layout floating', 'move-node-to-workspace R']
 
 [[on-window-detected]]
 if.app-id = 'notion.id'
