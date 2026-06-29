@@ -145,7 +145,6 @@ function _mac() {
 		yarn \
 		openjdk \
 		uv \
-		docker \
 		colima \
 		docker-compose \
 		aws-vault \
@@ -161,7 +160,11 @@ function _mac() {
 		php \
 		composer \
 		libyaml \
-		readline
+		readline \
+		postgresql@17
+
+  # Docker CLI client only (no Desktop/Engine); the daemon comes from Colima.
+  brew install --formula docker
 
   # --adopt: prevent errors when app already exists but brew lost track of it (e.g. after OS upgrades)
   brew install --adopt --cask corelocationcli
