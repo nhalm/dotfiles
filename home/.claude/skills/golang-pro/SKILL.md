@@ -1,6 +1,7 @@
 ---
 name: golang-pro
 description: Rules for writing and testing Go the way this user wants — any over interface{}, consumer-defined interfaces, gomock with mocks beside the interface, table-driven tests, error categories with detail, context discipline, and testing only critical paths. Triggers whenever writing, structuring, reviewing, or testing Go (.go) code, including building command-line apps (cobra command structure, human-vs-machine output, exit codes, designing for AI agents — see cli.md).
+model: sonnet
 ---
 
 # golang-pro
