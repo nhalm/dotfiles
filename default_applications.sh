@@ -88,6 +88,16 @@ function _activate_mise_tools() {
 	mise use -g zoxide@latest
 }
 
+# Import GitHub's web-flow public key so commits made via the GitHub UI verify
+# locally. Idempotent: re-importing reports "unchanged"; ownertrust is upserted.
+function _setup_github_gpg() {
+	echo "Importing GitHub web-flow GPG key..."
+	curl -fsSL https://github.com/web-flow.gpg | gpg --import
+
+	echo "Trusting GitHub web-flow GPG key..."
+	echo "5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23:6:" | gpg --import-ownertrust
+}
+
 function _mac() {
   _install_nix
   _install_brew
@@ -103,6 +113,7 @@ function _mac() {
 		git-lfs \
 		openssh \
 		openssl \
+		gnupg \
 		moreutils \
 		gnu-sed \
 		coreutils \
@@ -172,7 +183,9 @@ function _mac() {
 	#	tree-sitter \    # Tree-sitter CLI for grammar compilation
 	#	julia            # Julia language
 
-	# GUI applications moved to gui_applications.sh to avoid password prompts 
+	# GUI applications moved to gui_applications.sh to avoid password prompts
+
+	_setup_github_gpg
 
 	_install_mise
 
