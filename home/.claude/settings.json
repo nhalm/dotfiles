@@ -32,7 +32,7 @@
   "model": "claude-opus-4-8",
   "statusLine": {
     "type": "command",
-    "command": "npx -y ccstatusline@latest",
+    "command": "ccstatusline",
     "padding": 0
   },
   "enabledPlugins": {
