@@ -1,0 +1,2 @@
+# cua-driver skill is a symlink into ~/.cua-driver managed by hermes, not part of dotfiles
+/cua-driver
