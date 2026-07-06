@@ -58,6 +58,18 @@ function _install_brew() {
 }
 
 
+# Homebrew 6.0+ requires third-party (non-official) taps to be explicitly trusted;
+# untrusted taps are ignored and every `brew update`/`install` prints trust warnings.
+# `brew trust --tap` only records the reference in trust.json (no disk/install check),
+# so it is idempotent and safe to run before the taps are installed by gui_applications.sh.
+function _trust_taps() {
+	echo "Trusting third-party Homebrew taps..."
+	brew trust --tap \
+		felixkratz/formulae \
+		nikitabobko/tap \
+		hashicorp/tap
+}
+
 # Fish setup moved to initial_setup.sh to run after stow creates symlinks
 
 function _install_mise() {
@@ -101,6 +113,8 @@ function _setup_github_gpg() {
 function _mac() {
   _install_nix
   _install_brew
+
+  _trust_taps
 
 #	chsh -s /bin/zsh
 
