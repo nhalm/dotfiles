@@ -1,5 +1,5 @@
 [tools]
-lua = "5.4"
+lua = "5.5"
 node = "lts"
 python = "3.13"
 ruby = "3.4.1"
