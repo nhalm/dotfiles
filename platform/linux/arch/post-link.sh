@@ -18,9 +18,10 @@ if command -v docker >/dev/null 2>&1; then
 	fi
 fi
 
-# brightnessctl ships a udev rule that chgrps /sys/class/backlight/*/brightness
-# to the video group; without membership the XF86MonBrightness keys silently
-# fail on a root-owned, 644 file.
+# brightnessctl normally sets brightness through logind (it links libsystemd),
+# which needs no special permissions for the active session -- so this group is
+# only a fallback for a build without logind support, or a non-systemd setup.
+# Harmless either way; video is standard for DRM access on a desktop.
 if command -v brightnessctl >/dev/null 2>&1; then
 	if id -nG "$USER" | tr ' ' '\n' | grep -qx video; then
 		echo "already in the video group"

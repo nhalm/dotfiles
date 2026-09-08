@@ -152,11 +152,14 @@ one.
 
 ### Brightness keys
 
-`XF86MonBrightness*` needs two things, both handled by setup: the
-`brightnessctl` package, and membership of the `video` group. The udev rule
-brightnessctl ships `chgrp`s `/sys/class/backlight/*/brightness` to `video`;
-without the group the file stays `root:root 644` and the keys silently do
-nothing. Group membership applies at next login.
+`XF86MonBrightness*` needs the `brightnessctl` package, which the stock Arch
+install does not include -- that alone is why the keys do nothing on a fresh
+system.
+
+Setup also adds you to the `video` group, but that is only a fallback:
+brightnessctl links `libsystemd` and goes through logind, which needs no
+permissions on `/sys/class/backlight/*/brightness` for the active session. The
+file stays `root:root 644` and the keys work anyway.
 
 ## Shells
 
