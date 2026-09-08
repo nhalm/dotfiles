@@ -13,6 +13,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstra
 `bootstrap.sh` installs just enough to proceed (git, stow, a compiler
 toolchain), clones this repo to `~/dotfiles`, and hands off to `setup.sh`.
 
+That URL tracks `main`, so it is whatever is on the branch at the moment you
+run it — convenient, and a single point of trust. To pin what you execute to a
+reviewed commit instead, swap `main` for a full SHA:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/<sha>/bootstrap.sh)
+```
+
 Process substitution rather than `curl … | bash` is deliberate: piping ties up
 stdin, which breaks the `sudo` prompt the package installs need.
 
@@ -232,6 +240,40 @@ switches the remote to SSH at the end, once the 1Password agent is available.
 ## Keybindings
 
 See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
+
+## Security
+
+The repo carries its own hardening rather than leaving it to be redone by hand
+on each machine. What that gets you, and what it deliberately does not:
+
+### In the repo
+
+| Where | What |
+|---|---|
+| `system/` | Root-owned config copied into `/etc` — kernel sysctls, an sshd drop-in, docker's default publish address. See [system/README.md](system/README.md). |
+| `platform/linux/arch/post-link.sh` | Enables ufw default-deny, installs the `system/` tree, warns if sshd is enabled without any authorized key. |
+| `shared/.config/git/hooks/pre-commit` | gitleaks scan of staged content, wired globally via `core.hooksPath`, so it runs in every repo and not only where someone installed it. Chains to a repo's own hook first. |
+| `shared/.gitignore_global` | Credential paths that must never be committed anywhere. |
+| `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys served only by the 1Password agent. |
+| `shared/.claude/settings.json` | Deny rules keeping agents out of `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gh` and away from destructive and exfiltrating commands. |
+| `lib/pkg.sh` | AUR installs are **not** `--noconfirm`: a PKGBUILD is arbitrary shell from a repo anyone can upload to, and the diff prompt is the only checkpoint. Official repos stay `--noconfirm` — they are signed. |
+
+Preview anything that would be written outside `$HOME`:
+
+```bash
+./setup.sh --diff-system
+```
+
+### Not in the repo, because it cannot be
+
+- **Full-disk encryption.** Encrypting an installed root is a backup, reinstall
+  and restore — not a config change. Until then, physical access to the machine
+  is total access, regardless of everything above.
+- **Secure Boot** (`sbctl`), and TPM2-backed unlock. One-time, per-machine, and
+  it enrolls keys in firmware.
+- **Disabling sshd.** `post-link.sh` warns rather than acting, because whether
+  a machine wants inbound SSH is a judgement about how it is used.
+- Anything requiring a password at a prompt: sudoers changes, `faillock`.
 
 ## Machine-specific / private setup
 

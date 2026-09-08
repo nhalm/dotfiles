@@ -56,3 +56,50 @@ if command -v blueman-applet >/dev/null 2>&1; then
 		gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"
 	fi
 fi
+
+# ------------------------------------------------------------ hardening ----
+
+# Kernel sysctls and other root-owned config. Copied rather than symlinked --
+# see lib/system.sh for why.
+echo "==> system config"
+install_system_files
+
+# Default-deny inbound. Nothing on a laptop should be reachable from the
+# network; anything that genuinely needs to be gets an explicit `ufw allow`.
+if command -v ufw >/dev/null 2>&1; then
+	if sudo ufw status 2>/dev/null | grep -q "Status: active"; then
+		echo "ufw already active"
+	else
+		echo "enabling ufw (default deny inbound, allow outbound)..."
+		sudo ufw --force default deny incoming
+		sudo ufw --force default allow outgoing
+		sudo ufw --force enable
+	fi
+	sudo systemctl enable --now ufw.service >/dev/null 2>&1 || true
+fi
+
+# sshd on a laptop is almost always an accident. This machine has no
+# ~/.ssh/authorized_keys, so the only way in is the password prompt -- and
+# OpenSSH ships PasswordAuthentication on by default. ufw drops inbound 22, so
+# this is defence in depth rather than an open door, but the service should not
+# be running at all unless it is wanted.
+#
+# Not disabled automatically: that is a judgement call about how the machine is
+# used, and setup.sh should not silently turn off a service you rely on.
+if systemctl is-enabled --quiet sshd.service 2>/dev/null; then
+	if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
+		cat <<-'WARN'
+
+			  WARNING: sshd is enabled but ~/.ssh/authorized_keys is empty or missing.
+			  Nothing can log in by key, so the only path is password auth.
+
+			  If you do not need inbound SSH (you almost certainly do not on a laptop):
+			      sudo systemctl disable --now sshd.service
+
+			  If you do need it, add your public key to ~/.ssh/authorized_keys first,
+			  then the drop-in this repo installs at
+			  /etc/ssh/sshd_config.d/99-hardening.conf will turn password auth off.
+
+		WARN
+	fi
+fi

@@ -64,10 +64,21 @@ pkg_install() {
 
 # Install from the AUR (or the family equivalent). A no-op where there isn't one,
 # so callers don't have to guard.
+#
+# Deliberately NOT --noconfirm, unlike the official-repo path above. An AUR
+# PKGBUILD is arbitrary shell that runs as you at build time, from a repo any
+# user can upload to; the diff prompt yay shows is the only checkpoint against
+# a hijacked or typosquatted package. Official repos are signed and reviewed,
+# so --noconfirm is fine there and not here.
+#
+# Set DOTFILES_AUR_NOCONFIRM=1 for an unattended rebuild of a machine you
+# already trust the package set on.
 pkg_install_aur() {
 	[ $# -gt 0 ] || return 0
+	local confirm=()
+	[ "${DOTFILES_AUR_NOCONFIRM:-0}" = "1" ] && confirm=(--noconfirm)
 	case "$PKG_BACKEND" in
-	pacman) yay -S --needed --noconfirm "$@" ;;
+	pacman) yay -S --needed "${confirm[@]}" "$@" ;;
 	*) echo "  no AUR equivalent on $PKG_BACKEND, skipping: $*" ;;
 	esac
 }

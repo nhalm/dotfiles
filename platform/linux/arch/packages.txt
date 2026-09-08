@@ -38,6 +38,14 @@ yq
 # system
 htop
 
+# security
+# ufw: host firewall, default-deny inbound (see post-link.sh)
+ufw
+# gitleaks: staged-secret scan, wired in as a global pre-commit hook
+gitleaks
+# arch-audit: reports installed packages with known CVEs
+arch-audit
+
 # git
 github-cli
 

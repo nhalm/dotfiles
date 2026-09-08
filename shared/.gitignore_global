@@ -50,3 +50,32 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 **/.claude/settings.local.json
+
+# Credentials -- defense in depth. Nothing here should ever be committed to any
+# repo; these patterns are global so they apply to every clone, not just this one.
+.netrc
+.npmrc
+.pypirc
+.pgpass
+.my.cnf
+.terraformrc
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+*.env
+.env.*
+!.env.example
+!.env.sample
+.aws/credentials
+.config/gh/hosts.yml
+.config/gcloud/
+.kube/config
+credentials.json
+service-account*.json

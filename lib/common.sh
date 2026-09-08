@@ -12,7 +12,7 @@
 # it pulls the machine's version *into* the repo, silently overwriting the
 # config you were trying to install.
 stow_package() {
-	local pkg="$1" rel target tdir
+	local pkg="$1" rel target tdir backup
 	[ -d "$DOTFILES/$pkg" ] || return 0
 	echo "linking $pkg..."
 
@@ -33,8 +33,15 @@ stow_package() {
 		"$DOTFILES"/*) continue ;;
 		esac
 
-		mv "$target" "$target.dotfiles-backup"
-		echo "  backed up $target -> $target.dotfiles-backup"
+		# Don't clobber an earlier backup: a second run would otherwise
+		# overwrite the original file captured by the first. Timestamp goes
+		# before the suffix so `*.dotfiles-backup` in .gitignore still matches.
+		backup="$target.dotfiles-backup"
+		if [ -e "$backup" ]; then
+			backup="$target.$(date +%Y%m%d-%H%M%S).dotfiles-backup"
+		fi
+		mv "$target" "$backup"
+		echo "  backed up $target -> $backup"
 	done < <(cd "$DOTFILES/$pkg" && find . \( -type f -o -type l \) | sed 's|^\./||')
 
 	stow -d "$DOTFILES" -t "$HOME" -R "$pkg"
