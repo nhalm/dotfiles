@@ -45,14 +45,28 @@ lid_state() {
 	echo "unknown"
 }
 
+# Re-pack enabled monitors left-to-right from x=0, so disabling the internal
+# panel does not leave a dead region the cursor can strand in.
+repack_monitors() {
+	local x=0 desc lw
+	while IFS=$'\t' read -r desc lw; do
+		[ -n "$desc" ] || continue
+		hypr_eval "hl.monitor({ output = \"desc:$desc\", position = \"${x}x0\" })"
+		x=$((x + lw))
+	done < <(hyprctl monitors -j 2>/dev/null |
+		jq -r 'sort_by(.x)[] | "\(.description)\t\((.width / .scale) | floor)"' 2>/dev/null)
+}
+
 # Monitors Hyprland currently has enabled, excluding the internal panel.
 external_count() {
 	hyprctl monitors -j 2>/dev/null |
 		jq --arg m "$INTERNAL" '[.[] | select(.name != $m)] | length' 2>/dev/null || echo 0
 }
 
+LOG="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid.log"
 state="$(lid_state)"
 [ "$state" = "unknown" ] && state="${1:-}"
+printf '%s invoked arg=%s state=%s externals=%s\n' "$(date +%T)" "${1:-none}" "$state" "$(external_count)" >>"$LOG"
 
 case "$state" in
 closed)
@@ -66,6 +80,8 @@ closed)
 
 		# Hyprland migrates the workspace to a remaining monitor but leaves that
 		# monitor showing its own, so the windows arrive hidden.
+		repack_monitors
+
 		if [ -n "$ws" ] && [ "${windows:-0}" -gt 0 ] 2>/dev/null; then
 			hyprctl dispatch "hl.dsp.focus({ workspace = $ws })" >/dev/null 2>&1
 		fi
