@@ -59,6 +59,7 @@ qt5-wayland
 qt6-wayland
 qt5ct
 qt6ct
+papirus-icon-theme
 swaync
 # Toolkit for building a custom shell in QML -- see arch/.config/quickshell
 quickshell

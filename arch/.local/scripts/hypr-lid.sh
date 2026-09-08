@@ -49,16 +49,8 @@ lid_state() {
 	echo "unknown"
 }
 
-# Re-pack enabled monitors left-to-right from x=0, so disabling the internal
-# panel does not leave a dead region the cursor can strand in.
 repack_monitors() {
-	local x=0 desc lw
-	while IFS=$'\t' read -r desc lw; do
-		[ -n "$desc" ] || continue
-		hypr_eval "hl.monitor({ output = \"desc:$desc\", position = \"${x}x0\" })"
-		x=$((x + lw))
-	done < <(hyprctl monitors -j 2>/dev/null |
-		jq -r 'sort_by(.x)[] | "\(.description)\t\((.width / .scale) | floor)"' 2>/dev/null)
+	"$(dirname "$0")/hypr-monitors.sh"
 }
 
 # Monitors Hyprland currently has enabled, excluding the internal panel.
