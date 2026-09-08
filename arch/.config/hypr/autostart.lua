@@ -5,7 +5,8 @@
 -- the polkit agent never came up on their own.
 
 hl.on("hyprland.start", function()
-	hl.exec_cmd("swww-daemon")
+	-- wallpaper.sh starts the daemon itself, resolving awww-daemon or
+	-- swww-daemon; the AUR package installs the former.
 	hl.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh --restore")
 	hl.exec_cmd("qs -d")
 	hl.exec_cmd("swaync")
