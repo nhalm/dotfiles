@@ -48,6 +48,23 @@ Singleton {
     readonly property int islandHeight: 32
     readonly property int fontSize: 12
 
+    // The committed palette, kept so a preview can be rolled back.
+    property var baseColors: ({})
+
+    function applyColors(colors) {
+        for (const key in colors)
+            if (root.hasOwnProperty(key) && key !== "objectName")
+                root[key] = colors[key];
+    }
+
+    function applyPreview(colors) {
+        applyColors(colors);
+    }
+
+    function clearPreview() {
+        applyColors(root.baseColors);
+    }
+
     property var reader: Process {
         id: proc
         command: ["cat", Quickshell.env("HOME") + "/.local/state/matugen/colors.json"]
@@ -58,9 +75,8 @@ Singleton {
                     return;
                 try {
                     const colors = JSON.parse(out);
-                    for (const key in colors)
-                        if (root.hasOwnProperty(key) && key !== "objectName")
-                            root[key] = colors[key];
+                    root.baseColors = colors;
+                    root.applyColors(colors);
                 } catch (e) {
                     console.log("Theme: bad colors.json: " + e);
                 }

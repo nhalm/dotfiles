@@ -15,6 +15,7 @@ ShellRoot {
 
     Sidebar { id: sidebar }
     Overview { id: overview }
+    WallpaperPicker { id: wallpaperPicker }
 
     Variants {
         model: Quickshell.screens
