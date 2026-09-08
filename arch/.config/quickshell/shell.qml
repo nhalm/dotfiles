@@ -1,7 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Services.SystemTray
-import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
@@ -14,108 +11,56 @@ ShellRoot {
             required property var modelData
             screen: modelData
 
+            readonly property bool centered: Config.layout === "centered"
+
             anchors { top: true; left: true; right: true }
-            implicitHeight: 42
-            exclusiveZone: 38
+            implicitHeight: Theme.islandHeight + 10
+            exclusiveZone: Theme.islandHeight + 6
             color: "transparent"
 
-            readonly property color island: "#24283b"
-            readonly property color fg: "#c0caf5"
-            readonly property color dim: "#565f89"
-            readonly property color accent: "#7aa2f7"
+            component Island: Rectangle {
+                default property alias content: inner.data
+                radius: bar.centered ? Theme.radius : 10
+                color: Theme.island
+                border.width: 1
+                border.color: Theme.islandBorder
+                implicitWidth: inner.implicitWidth + 28
+                implicitHeight: Theme.islandHeight
 
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                radius: 14
-                color: bar.island
-                implicitWidth: content.implicitWidth + 24
-                implicitHeight: 30
+                Behavior on implicitWidth {
+                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                }
 
                 RowLayout {
-                    id: content
+                    id: inner
                     anchors.centerIn: parent
                     spacing: 12
+                }
+            }
 
-                    RowLayout {
-                        spacing: 4
-                        Repeater {
-                            model: Hyprland.workspaces
+            Item {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.topMargin: 5
 
-                            Rectangle {
-                                required property var modelData
-                                visible: modelData.monitor?.name === bar.modelData.name
-                                         && (modelData.focused || modelData.lastIpcObject?.windows > 0)
-                                implicitWidth: visible ? 22 : 0
-                                implicitHeight: 20
-                                radius: 7
-                                color: modelData.focused ? bar.accent : "transparent"
+                Island {
+                    id: leftIsland
+                    anchors.left: parent.left
+                    Workspaces { screenName: bar.modelData.name }
+                }
 
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: modelData.id
-                                    font.pixelSize: 11
-                                    color: modelData.focused ? "#1f2335" : bar.dim
-                                }
+                Island {
+                    anchors.horizontalCenter: bar.centered ? parent.horizontalCenter : undefined
+                    anchors.left: bar.centered ? undefined : leftIsland.right
+                    anchors.leftMargin: bar.centered ? 0 : 8
+                    Status {}
+                }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: Hyprland.dispatch("hl.dsp.focus({ workspace = " + modelData.id + " })")
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 14
-                        color: bar.dim
-                        opacity: 0.5
-                    }
-
-                    Text {
-                        color: bar.fg
-                        font.pixelSize: 12
-                        text: Qt.formatDateTime(clock.date, "ddd dd MMM  HH:mm")
-                        SystemClock { id: clock; precision: SystemClock.Minutes }
-                    }
-
-                    Text {
-                        visible: UPower.displayDevice.isLaptopBattery && UPower.onBattery
-                        color: UPower.displayDevice.percentage < 0.2 ? "#f7768e" : bar.fg
-                        font.pixelSize: 12
-                        text: Math.round(UPower.displayDevice.percentage * 100) + "%"
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 14
-                        color: bar.dim
-                        opacity: 0.5
-                        visible: SystemTray.items.values.length > 0
-                    }
-
-                    RowLayout {
-                        spacing: 8
-                        Repeater {
-                            model: SystemTray.items
-                            Image {
-                                required property var modelData
-                                source: modelData.icon
-                                width: 16
-                                height: 16
-                                sourceSize.width: 16
-                                sourceSize.height: 16
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                    onClicked: mouse => mouse.button === Qt.LeftButton
-                                        ? modelData.activate()
-                                        : modelData.display()
-                                }
-                            }
-                        }
-                    }
+                Island {
+                    anchors.right: parent.right
+                    visible: tray.implicitWidth > 0
+                    Tray { id: tray }
                 }
             }
         }

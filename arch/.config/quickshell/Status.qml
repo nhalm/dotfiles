@@ -1,0 +1,22 @@
+import Quickshell
+import Quickshell.Services.UPower
+import QtQuick
+import QtQuick.Layouts
+
+RowLayout {
+    spacing: 10
+
+    Text {
+        visible: UPower.displayDevice.isLaptopBattery && UPower.onBattery
+        color: UPower.displayDevice.percentage < 0.2 ? Theme.warn : Theme.fg
+        font.pixelSize: Theme.fontSize
+        text: Math.round(UPower.displayDevice.percentage * 100) + "%"
+    }
+
+    Text {
+        color: Theme.fg
+        font.pixelSize: Theme.fontSize
+        text: Qt.formatDateTime(clock.date, "ddd dd MMM  HH:mm")
+        SystemClock { id: clock; precision: SystemClock.Minutes }
+    }
+}
