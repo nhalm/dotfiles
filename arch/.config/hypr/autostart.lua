@@ -9,6 +9,12 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("swaync")
 	hl.exec_cmd("hypridle")
 
+	-- Clipboard history, plus keeping the selection alive after the source
+	-- window closes.
+	hl.exec_cmd("wl-paste --type text --watch cliphist store")
+	hl.exec_cmd("wl-paste --type image --watch cliphist store")
+	hl.exec_cmd("wl-clip-persist --clipboard regular")
+
 	-- Ships a systemd user unit rather than a plain binary.
 	hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
 

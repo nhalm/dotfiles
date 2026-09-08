@@ -88,5 +88,11 @@ hl.bind(
 )
 hl.bind("CTRL + SHIFT + 6", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/screenrec.sh"))
 
+-- --- clipboard ----------------------------------------------------------
+hl.bind(
+	mod .. " + SHIFT + V",
+	hl.dsp.exec_cmd("cliphist list | fuzzel --dmenu --width 80 | cliphist decode | wl-copy")
+)
+
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))

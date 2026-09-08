@@ -70,6 +70,9 @@ grim
 slurp
 satty
 wf-recorder
+cliphist
+wl-clip-persist
+fuzzel
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl
