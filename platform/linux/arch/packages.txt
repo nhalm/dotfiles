@@ -74,6 +74,8 @@ wl-clip-persist
 fuzzel
 matugen
 btop
+pacman-contrib
+hyprsunset
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl

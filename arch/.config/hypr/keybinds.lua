@@ -101,3 +101,5 @@ hl.bind(
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mod .. " + A", hl.dsp.exec_cmd("qs ipc call sidebar toggle"))
+hl.bind(mod .. " + SHIFT + F", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/toggle-float.sh"))
+hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 4000"))

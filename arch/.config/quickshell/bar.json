@@ -1,8 +1,8 @@
 {
   "layout": "centered",
   "modules": {
-    "left": ["Workspaces"],
-    "center": ["Volume", "Battery", "Clock"],
-    "right": ["Tray", "Notifications", "PowerMenu"]
+    "left": ["Launcher", "Workspaces"],
+    "center": ["NowPlaying", "Volume", "Battery", "Clock"],
+    "right": ["Updates", "PowerProfile", "Tray", "Notifications", "PowerMenu"]
   }
 }
