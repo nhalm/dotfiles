@@ -386,7 +386,9 @@ PanelWindow {
                     ToggleRow {
                         id: btRow
                         label: "Bluetooth"
-                        onToggled: on => root.run("bluetoothctl power " + (on ? "on" : "off"))
+                        onToggled: on => root.run(on
+                            ? "rfkill unblock bluetooth && bluetoothctl power on"
+                            : "bluetoothctl power off")
 
                         Process {
                             id: btProc

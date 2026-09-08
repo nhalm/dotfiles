@@ -59,8 +59,8 @@
           "label": "\uf294",
           "type": "toggle",
           "active": true,
-          "command": "sh -c '[[ $SWAYNC_TOGGLE_STATE == true ]] && bluetoothctl power on || bluetoothctl power off'",
-          "update-command": "sh -c 'bluetoothctl show | grep -q \"Powered: yes\" && echo true || echo false'"
+          "command": "sh -c '[[ $SWAYNC_TOGGLE_STATE == true ]] && { rfkill unblock bluetooth; bluetoothctl power on; } || bluetoothctl power off'",
+          "update-command": "sh -c 'rfkill list bluetooth | grep -q \"Soft blocked: yes\" && echo false || { bluetoothctl show | grep -q \"Powered: yes\" && echo true || echo false; }'"
         },
         {
           "label": "\udb81\udd7e",
