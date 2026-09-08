@@ -12,16 +12,29 @@
 # it pulls the machine's version *into* the repo, silently overwriting the
 # config you were trying to install.
 stow_package() {
-	local pkg="$1" rel target
+	local pkg="$1" rel target tdir
 	[ -d "$DOTFILES/$pkg" ] || return 0
 	echo "linking $pkg..."
 
 	while IFS= read -r rel; do
 		target="$HOME/$rel"
-		if [ -e "$target" ] && [ ! -L "$target" ]; then
-			mv "$target" "$target.dotfiles-backup"
-			echo "  backed up $target -> $target.dotfiles-backup"
-		fi
+		[ -e "$target" ] || continue
+		[ -L "$target" ] && continue
+
+		# Once stow folds a directory -- ~/.config/nvim becoming a symlink to
+		# the package rather than a directory of per-file links -- the files
+		# inside it are real files reached *through* that symlink, so the
+		# -L test above does not catch them. Backing one up would rename the
+		# repo's own file out from under git, so skip any target whose
+		# physical directory is already inside the repo.
+		# pwd -P rather than readlink -f: POSIX, and works on BSD/macOS.
+		tdir=$(cd "$(dirname "$target")" 2>/dev/null && pwd -P) || tdir=""
+		case "$tdir/" in
+		"$DOTFILES"/*) continue ;;
+		esac
+
+		mv "$target" "$target.dotfiles-backup"
+		echo "  backed up $target -> $target.dotfiles-backup"
 	done < <(cd "$DOTFILES/$pkg" && find . \( -type f -o -type l \) | sed 's|^\./||')
 
 	stow -d "$DOTFILES" -t "$HOME" -R "$pkg"
