@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 RowLayout {
     id: root
-    required property string screenName
+    property string screenName: ""
     spacing: 4
 
     Repeater {

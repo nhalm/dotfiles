@@ -1,9 +1,9 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import QtQuick.Layouts
 import qs.theme
 import qs.modules
-import QtQuick.Layouts
 
 ShellRoot {
     IpcHandler {
@@ -29,12 +29,13 @@ ShellRoot {
             color: "transparent"
 
             component Island: Rectangle {
-                default property alias content: inner.data
+                required property var names
+                visible: names.length > 0
                 radius: bar.centered ? Theme.radius : 10
                 color: Theme.island
                 border.width: 1
                 border.color: Theme.islandBorder
-                implicitWidth: inner.implicitWidth + 28
+                implicitWidth: row.implicitWidth + 28
                 implicitHeight: Theme.islandHeight
 
                 Behavior on implicitWidth {
@@ -42,9 +43,22 @@ ShellRoot {
                 }
 
                 RowLayout {
-                    id: inner
+                    id: row
                     anchors.centerIn: parent
                     spacing: 12
+
+                    Repeater {
+                        model: parent.parent.names
+
+                        Loader {
+                            required property var modelData
+                            source: "modules/" + modelData + ".qml"
+                            onLoaded: {
+                                if (item && item.screenName !== undefined)
+                                    item.screenName = bar.modelData.name;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -57,20 +71,19 @@ ShellRoot {
                 Island {
                     id: leftIsland
                     anchors.left: parent.left
-                    Workspaces { screenName: bar.modelData.name }
+                    names: Config.modules.left ?? []
                 }
 
                 Island {
                     anchors.horizontalCenter: bar.centered ? parent.horizontalCenter : undefined
                     anchors.left: bar.centered ? undefined : leftIsland.right
                     anchors.leftMargin: bar.centered ? 0 : 8
-                    Status {}
+                    names: Config.modules.center ?? []
                 }
 
                 Island {
                     anchors.right: parent.right
-                                        Tray { id: tray }
-                    PowerMenu {}
+                    names: Config.modules.right ?? []
                 }
             }
         }

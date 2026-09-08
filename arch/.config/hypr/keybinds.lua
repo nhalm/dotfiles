@@ -90,6 +90,7 @@ hl.bind("CTRL + SHIFT + 6", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/script
 
 -- --- wallpaper / theme --------------------------------------------------
 hl.bind(mod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh"))
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/theme-mode.sh"))
 
 -- --- clipboard ----------------------------------------------------------
 hl.bind(

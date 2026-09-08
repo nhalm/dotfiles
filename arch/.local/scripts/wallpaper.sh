@@ -13,7 +13,7 @@ set -uo pipefail
 
 DIR="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
-MODE="${MATUGEN_MODE:-dark}"
+MODE="${MATUGEN_MODE:-$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/matugen/mode" 2>/dev/null || echo dark)}"
 
 pick() {
 	find -L "$DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null
