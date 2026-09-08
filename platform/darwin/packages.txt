@@ -45,7 +45,7 @@ htop
 gh
 
 # languages and build
-golang
+# go comes from mise, not brew
 yarn
 openjdk
 uv

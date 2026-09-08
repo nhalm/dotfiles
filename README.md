@@ -174,9 +174,9 @@ Tide prompt, with fisher plugins for fzf, autopair, and nvm.
 ## Runtimes
 
 [mise](https://mise.jdx.dev/) manages language runtimes on both machines.
-Shared: Node LTS, Python 3.13, Rust, plus zoxide, lazygit, and herdr. macOS adds
-Lua 5.5 (SbarLua builds against it), Ruby, and Bun; Linux adds Go, which comes
-from Homebrew on the Mac.
+Shared: Node LTS, Python 3.13, Go, Rust, plus zoxide, lazygit, herdr, and
+ccstatusline. macOS adds Lua 5.5 (SbarLua builds against it), Ruby, and Bun
+through `conf.d`.
 
 Configs are trusted during setup so shims resolve for processes that never
 source a shell rc — systemd units, GUI launchers, sketchybar.

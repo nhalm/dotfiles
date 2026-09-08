@@ -1,6 +1,7 @@
 [tools]
 node = "lts"
 python = "3.13"
+go = "latest"
 rust = "latest"
 zoxide = "latest"
 lazygit = "latest"
