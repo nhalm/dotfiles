@@ -57,7 +57,18 @@ state="$(lid_state)"
 case "$state" in
 closed)
 	if [ "$(external_count)" -gt 0 ]; then
-		hypr_eval "hl.monitor({ output = \"$INTERNAL\", disabled = true })"
+		ws="$(hyprctl monitors -j 2>/dev/null |
+			jq -r --arg m "$INTERNAL" '.[] | select(.name == $m) | select(.activeWorkspace.id != null) | .activeWorkspace.id' 2>/dev/null)"
+		windows="$(hyprctl workspaces -j 2>/dev/null |
+			jq -r --arg w "${ws:-0}" '.[] | select(.id == ($w | tonumber)) | .windows' 2>/dev/null)"
+
+		hypr_eval "hl.monitor({ output = \"$INTERNAL\", disabled = true })" || exit 1
+
+		# Hyprland migrates the workspace to a remaining monitor but leaves that
+		# monitor showing its own, so the windows arrive hidden.
+		if [ -n "$ws" ] && [ "${windows:-0}" -gt 0 ] 2>/dev/null; then
+			hyprctl dispatch "hl.dsp.focus({ workspace = $ws })" >/dev/null 2>&1
+		fi
 	fi
 	;;
 open)
