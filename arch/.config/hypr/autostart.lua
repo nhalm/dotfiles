@@ -21,7 +21,12 @@ hl.on("hyprland.start", function()
 	-- Ships a systemd user unit rather than a plain binary.
 	hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
 
-	-- Network and bluetooth are driven from the sidebar, not tray applets.
+	-- Network and bluetooth are driven from the sidebar, not tray applets, but
+	-- blueman-applet still has to run: it provides the pairing agent that answers
+	-- BlueZ's confirmation prompts. Without it, pairing a new device fails with
+	-- AuthenticationFailed. Its tray icon is disabled via
+	-- `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"`.
+	hl.exec_cmd("blueman-applet")
 
 	-- Starts to the tray; the SSH agent needs it running to answer git.
 	hl.exec_cmd("1password --silent")
