@@ -28,6 +28,17 @@ The tree mirrors the destination:
 | `etc/sysctl.d/99-hardening.conf` | Kernel hardening. Only the settings Arch does *not* already get right, and an explicit list of what is deliberately left alone. |
 | `etc/ssh/sshd_config.d/99-hardening.conf` | Key-only auth, no root login, modern KEX/cipher/MAC. Inert unless sshd is enabled. |
 | `etc/docker/daemon.json` | Publishes container ports to loopback by default — see below. |
+| `etc/security/faillock.conf` | Explicit lockout policy for failed logins, including the lock screen. |
+
+### One caveat: package-owned files
+
+`sysctl.d/`, `sshd_config.d/` and `docker/daemon.json` are drop-ins or files no
+package owns, so nothing ever fights us for them. `security/faillock.conf` is
+different — the `pam` package ships it and there is no drop-in directory. When
+`pam` upgrades, pacman notices the file changed and writes a `.pacnew` beside
+it rather than reverting it. Reconcile those with `pacdiff` (pacman-contrib,
+already installed). Prefer a drop-in wherever the tool offers one; this is the
+only file here that cannot use one.
 
 ## Docker does not go through ufw
 

@@ -24,6 +24,14 @@ else
 	scan=(gitleaks protect --staged)
 fi
 
+# A repo's own .gitleaks.toml wins; otherwise fall back to the global config,
+# which allowlists placeholder strings and test fixtures.
+cfg="$(git rev-parse --show-toplevel 2>/dev/null)/.gitleaks.toml"
+if [ ! -f "$cfg" ]; then
+	cfg="${XDG_CONFIG_HOME:-$HOME/.config}/gitleaks/config.toml"
+fi
+[ -f "$cfg" ] && scan+=(--config "$cfg")
+
 if ! "${scan[@]}" --redact --no-banner --verbose; then
 	cat >&2 <<'MSG'
 

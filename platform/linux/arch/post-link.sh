@@ -78,6 +78,18 @@ if command -v ufw >/dev/null 2>&1; then
 	sudo systemctl enable --now ufw.service >/dev/null 2>&1 || true
 fi
 
+# Weekly prune of the package cache, keeping the last 3 versions. Not security
+# in itself -- but a full /var stops upgrades, and an unupgradable machine is
+# an unpatched one. paccache ships with pacman-contrib, already installed.
+if systemctl list-unit-files paccache.timer >/dev/null 2>&1; then
+	if systemctl is-enabled --quiet paccache.timer 2>/dev/null; then
+		echo "paccache.timer already enabled"
+	else
+		echo "enabling paccache.timer..."
+		sudo systemctl enable --now paccache.timer
+	fi
+fi
+
 # sshd on a laptop is almost always an accident. This machine has no
 # ~/.ssh/authorized_keys, so the only way in is the password prompt -- and
 # OpenSSH ships PasswordAuthentication on by default. ufw drops inbound 22, so
