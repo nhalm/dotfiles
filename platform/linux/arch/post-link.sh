@@ -42,4 +42,4 @@ if command -v bluetoothctl >/dev/null 2>&1; then
 	fi
 fi
 
-mkdir -p "$HOME/Pictures/Screenshots"
+mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Videos/Recordings"

@@ -69,6 +69,7 @@ hyprshot
 grim
 slurp
 satty
+wf-recorder
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl

@@ -75,16 +75,18 @@ for _, b in ipairs(hardware) do
 end
 
 -- --- screenshots --------------------------------------------------------
--- hyprshot copies to the clipboard and writes a file. satty is the annotator.
+-- CleanShot X digits. CTRL+SHIFT rather than SUPER+SHIFT, which is taken by
+-- move-to-workspace.
 local shots = os.getenv("HOME") .. "/Pictures/Screenshots"
 
-hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region -o " .. shots))
-hl.bind("SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m window -o " .. shots))
-hl.bind("CTRL + Print", hl.dsp.exec_cmd("hyprshot -m output -o " .. shots))
+hl.bind("CTRL + SHIFT + 4", hl.dsp.exec_cmd("hyprshot -m region -o " .. shots))
+hl.bind("CTRL + SHIFT + 3", hl.dsp.exec_cmd("hyprshot -m output -o " .. shots))
+hl.bind("CTRL + SHIFT + 5", hl.dsp.exec_cmd("hyprshot -m window -o " .. shots))
 hl.bind(
-	mod .. " + SHIFT + S",
+	"CTRL + SHIFT + 2",
 	hl.dsp.exec_cmd("hyprshot -m region --raw | satty --filename - --output-filename " .. shots .. "/annotated-$(date +%s).png")
 )
+hl.bind("CTRL + SHIFT + 6", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/screenrec.sh"))
 
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
