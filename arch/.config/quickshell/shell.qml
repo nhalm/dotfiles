@@ -14,6 +14,7 @@ ShellRoot {
     }
 
     Sidebar { id: sidebar }
+    Overview { id: overview }
 
     Variants {
         model: Quickshell.screens

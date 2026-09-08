@@ -31,3 +31,7 @@ output_path = '~/.local/state/matugen/gtk-colors.css'
 [templates.hyprlock]
 input_path = '~/.config/matugen/templates/hyprlock-colors.conf'
 output_path = '~/.local/state/matugen/hyprlock-colors.conf'
+
+[templates.qtct]
+input_path = '~/.config/matugen/templates/qtct-colors.conf'
+output_path = '~/.local/state/matugen/qtct-colors.conf'

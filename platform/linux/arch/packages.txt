@@ -57,6 +57,8 @@ hyprshutdown
 xdg-desktop-portal-hyprland
 qt5-wayland
 qt6-wayland
+qt5ct
+qt6ct
 swaync
 # Toolkit for building a custom shell in QML -- see arch/.config/quickshell
 quickshell

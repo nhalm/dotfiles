@@ -44,7 +44,8 @@ for i = 1, 10 do
 	hl.bind(mod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
 end
 
-hl.bind(mod .. " + Tab", hl.dsp.focus({ workspace = "previous" }))
+hl.bind(mod .. " + Tab", hl.dsp.exec_cmd("qs ipc call overview toggle"))
+hl.bind(mod .. " + grave", hl.dsp.focus({ workspace = "previous" }))
 hl.bind(mod .. " + S", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
