@@ -90,7 +90,8 @@ hl.bind(
 hl.bind("CTRL + SHIFT + 6", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/screenrec.sh"))
 
 -- --- wallpaper / theme --------------------------------------------------
-hl.bind(mod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh"))
+hl.bind(mod .. " + W", hl.dsp.exec_cmd("qs ipc call wallpaper toggle"))
+hl.bind(mod .. " + CTRL + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh --random"))
 hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/theme-mode.sh"))
 
 -- --- clipboard ----------------------------------------------------------
