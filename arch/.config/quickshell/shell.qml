@@ -56,6 +56,13 @@ ShellRoot {
                         Loader {
                             required property var modelData
                             source: "modules/" + modelData + ".qml"
+
+                            // A module that hides itself must not leave a gap:
+                            // the Loader keeps the item's implicitWidth
+                            // otherwise, and the row still spaces around it.
+                            visible: item ? item.visible : false
+                            Layout.preferredWidth: visible ? implicitWidth : 0
+
                             onLoaded: {
                                 if (item && item.screenName !== undefined)
                                     item.screenName = bar.modelData.name;
