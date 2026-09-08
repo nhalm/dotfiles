@@ -1,0 +1,108 @@
+/* TokyoNight Storm. Same palette as arch/.config/hypr/colors.lua. */
+
+@define-color bg           #24283b;
+@define-color bg_dark      #1f2335;
+@define-color bg_highlight #292e42;
+@define-color fg           #c0caf5;
+@define-color fg_dark      #a9b1d6;
+@define-color comment      #565f89;
+@define-color blue         #7aa2f7;
+@define-color cyan         #7dcfff;
+@define-color green        #9ece6a;
+@define-color magenta      #bb9af7;
+@define-color orange       #ff9e64;
+@define-color red          #f7768e;
+@define-color yellow       #e0af68;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "Monaspace Neon Var", sans-serif;
+  font-size: 13px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: @bg_dark;
+  color: @fg;
+  border-bottom: 2px solid @bg_highlight;
+}
+
+/* Shared chip shape for every right-hand module. */
+#cpu,
+#memory,
+#pulseaudio,
+#network,
+#battery,
+#clock,
+#mpris,
+#custom-notification,
+#tray {
+  padding: 0 10px;
+  margin: 4px 2px;
+  border-radius: 8px;
+  background: @bg;
+}
+
+#workspaces {
+  margin: 4px 4px;
+}
+
+#workspaces button {
+  padding: 0 8px;
+  margin: 0 2px;
+  color: @comment;
+  background: @bg;
+  border-radius: 8px;
+}
+
+#workspaces button.active {
+  color: @bg_dark;
+  background: @blue;
+  font-weight: bold;
+}
+
+#workspaces button.urgent {
+  color: @bg_dark;
+  background: @red;
+}
+
+#workspaces button:hover {
+  color: @fg;
+  background: @bg_highlight;
+}
+
+#window {
+  color: @fg_dark;
+}
+
+/* An empty title would otherwise leave a floating chip behind. */
+window#waybar.empty #window {
+  background: transparent;
+}
+
+#cpu     { color: @green; }
+#memory  { color: @magenta; }
+#network { color: @cyan; }
+#mpris   { color: @magenta; }
+#clock   { color: @fg; }
+
+#pulseaudio          { color: @yellow; }
+#pulseaudio.muted    { color: @comment; }
+
+#battery             { color: @green; }
+#battery.charging    { color: @cyan; }
+#battery.warning:not(.charging)  { color: @yellow; }
+#battery.critical:not(.charging) {
+  color: @red;
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to { background: @red; color: @bg_dark; }
+}
+
+#custom-notification { color: @fg; }
+
+#tray > .passive          { -gtk-icon-effect: dim; }
+#tray > .needs-attention  { -gtk-icon-effect: highlight; }

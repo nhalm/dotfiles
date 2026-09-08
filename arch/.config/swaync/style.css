@@ -1,0 +1,83 @@
+/* TokyoNight Storm, matching waybar/style.css. */
+
+@define-color bg           #24283b;
+@define-color bg_dark      #1f2335;
+@define-color bg_highlight #292e42;
+@define-color fg           #c0caf5;
+@define-color fg_dark      #a9b1d6;
+@define-color comment      #565f89;
+@define-color blue         #7aa2f7;
+@define-color red          #f7768e;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", sans-serif;
+  font-size: 13px;
+}
+
+.notification-row { outline: none; }
+
+.notification {
+  border-radius: 10px;
+  margin: 6px 8px;
+  padding: 0;
+  background: @bg;
+  border: 1px solid @bg_highlight;
+}
+
+.notification-content {
+  padding: 10px;
+  color: @fg;
+}
+
+.notification.critical { border: 1px solid @red; }
+
+.summary { font-weight: bold; color: @fg; }
+.body    { color: @fg_dark; }
+.time    { color: @comment; font-size: 11px; }
+
+.close-button {
+  background: transparent;
+  color: @comment;
+  border-radius: 8px;
+  margin: 6px;
+  padding: 2px;
+}
+.close-button:hover { background: @red; color: @bg_dark; }
+
+.notification-action, .inline-reply-button {
+  background: @bg_highlight;
+  color: @fg;
+  border-radius: 8px;
+  margin: 4px;
+}
+.notification-action:hover { background: @blue; color: @bg_dark; }
+
+.control-center {
+  background: @bg_dark;
+  border: 1px solid @bg_highlight;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.widget-title { color: @fg; font-size: 15px; padding: 6px 10px; }
+.widget-title > button {
+  background: @bg_highlight;
+  color: @fg;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+.widget-title > button:hover { background: @blue; color: @bg_dark; }
+
+.widget-dnd { color: @fg; padding: 6px 10px; }
+.widget-dnd > switch { background: @bg_highlight; border-radius: 12px; }
+.widget-dnd > switch:checked { background: @blue; }
+
+.widget-mpris {
+  background: @bg;
+  border-radius: 10px;
+  padding: 8px;
+  margin: 6px 8px;
+  color: @fg;
+}
+
+.floating-notifications.background .notification { box-shadow: 0 2px 8px rgba(0,0,0,0.45); }
