@@ -21,10 +21,7 @@ hl.on("hyprland.start", function()
 	-- Ships a systemd user unit rather than a plain binary.
 	hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
 
-	-- Network and bluetooth are driven from the tray. Both are plain GTK apps,
-	-- so whatever bar is running just needs a tray module.
-	hl.exec_cmd("nm-applet --indicator")
-	hl.exec_cmd("blueman-applet")
+	-- Network and bluetooth are driven from the sidebar, not tray applets.
 
 	-- Starts to the tray; the SSH agent needs it running to answer git.
 	hl.exec_cmd("1password --silent")
