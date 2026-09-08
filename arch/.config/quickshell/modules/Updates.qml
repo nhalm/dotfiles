@@ -4,12 +4,18 @@ import QtQuick
 import QtQuick.Layouts
 import qs.theme
 
-RowLayout {
+Item {
     id: root
-    spacing: 5
-    visible: count > 0
 
     property int count: 0
+
+    // Kept independent of the effective `visible` property: visible is
+    // inherited, so binding layout size to it latches false and never recovers.
+    readonly property bool collapsed: count <= 0
+
+    visible: !collapsed
+    implicitWidth: collapsed ? 0 : row.implicitWidth
+    implicitHeight: row.implicitHeight
 
     Process {
         id: check
@@ -27,16 +33,24 @@ RowLayout {
         onTriggered: { check.running = false; check.running = true; }
     }
 
-    Text {
-        font.pixelSize: Theme.fontSize
-        color: Theme.accent
-        text: "󰚰"
-    }
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: 5
 
-    Text {
-        font.pixelSize: Theme.fontSize
-        color: Theme.fg
-        text: root.count
+        Text {
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            color: Theme.accent
+            text: "󰚰"
+        }
+
+        Text {
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            color: Theme.fg
+            text: root.count
+        }
     }
 
     MouseArea {

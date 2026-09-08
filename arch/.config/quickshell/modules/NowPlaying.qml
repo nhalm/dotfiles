@@ -3,16 +3,25 @@ import Quickshell.Services.Mpris
 import QtQuick
 import qs.theme
 
-Text {
+Item {
     id: root
-    readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
 
-    visible: player !== null && text !== ""
-    color: Theme.fg
-    font.pixelSize: Theme.fontSize
-    elide: Text.ElideRight
-    maximumLineCount: 1
-    text: player ? (player.isPlaying ? "󰎇 " : "󰏤 ") + (player.trackTitle ?? "") : ""
+    readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
+    readonly property bool collapsed: player === null || (player.trackTitle ?? "") === ""
+
+    visible: !collapsed
+    implicitWidth: collapsed ? 0 : label.implicitWidth
+    implicitHeight: label.implicitHeight
+
+    Text {
+        id: label
+        anchors.centerIn: parent
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        color: Theme.fg
+        elide: Text.ElideRight
+        text: root.player ? (root.player.isPlaying ? "󰎇 " : "󰏤 ") + (root.player.trackTitle ?? "") : ""
+    }
 
     MouseArea {
         anchors.fill: parent
