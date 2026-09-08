@@ -1,0 +1,31 @@
+@import url("file:///home/nick/.local/state/matugen/gtk-colors.css");
+
+window, .background {
+  background-color: @surface;
+  color: @on_surface;
+}
+
+headerbar, .titlebar {
+  background-color: @surface_container;
+  color: @on_surface;
+}
+
+button {
+  background-color: @surface_container_high;
+  color: @on_surface;
+}
+
+button:hover {
+  background-color: @primary;
+  color: @on_primary;
+}
+
+entry, textview {
+  background-color: @surface_container_low;
+  color: @on_surface;
+}
+
+selection, ::selection {
+  background-color: @primary;
+  color: @on_primary;
+}

@@ -24,10 +24,10 @@ output_path = '~/.local/state/matugen/swaync-colors.css'
 input_path = '~/.config/matugen/templates/btop.theme'
 output_path = '~/.config/btop/themes/matugen.theme'
 
-[templates.gtk3]
+[templates.gtk]
 input_path = '~/.config/matugen/templates/gtk-colors.css'
-output_path = '~/.config/gtk-3.0/colors.css'
+output_path = '~/.local/state/matugen/gtk-colors.css'
 
-[templates.gtk4]
-input_path = '~/.config/matugen/templates/gtk-colors.css'
-output_path = '~/.config/gtk-4.0/colors.css'
+[templates.hyprlock]
+input_path = '~/.config/matugen/templates/hyprlock-colors.conf'
+output_path = '~/.local/state/matugen/hyprlock-colors.conf'
