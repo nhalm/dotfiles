@@ -59,6 +59,10 @@ qt5-wayland
 qt6-wayland
 waybar
 swaync
+# Toolkit for building a custom shell in QML -- see arch/.config/quickshell
+quickshell
+# Interactive display layout editor; writes ~/.config/hypr/monitors.lua
+nwg-displays
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl
@@ -66,6 +70,10 @@ playerctl
 pavucontrol
 network-manager-applet
 nm-connection-editor
+# Bluetooth: bluez is in the base install, this is the GTK manager + tray applet
+bluez
+bluez-utils
+blueman
 
 # desktop apps
 nemo

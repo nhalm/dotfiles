@@ -5,9 +5,14 @@
 --
 -- Docs: https://wiki.hypr.land/Configuring/
 
-require("monitors")
+require("monitors_default")
+
+-- Machine-local display layout written by nwg-displays, if one exists. Loaded
+-- after the defaults so it overrides them; absent on a fresh machine.
+pcall(require, "monitors")
 require("looks")
 require("input")
 require("keybinds")
 require("rules")
+require("lid")
 require("autostart")

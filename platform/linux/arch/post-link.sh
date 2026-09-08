@@ -30,3 +30,14 @@ if command -v brightnessctl >/dev/null 2>&1; then
 		sudo usermod -aG video "$USER"
 	fi
 fi
+
+# bluez ships bluetooth.service disabled; blueman needs it running to see the
+# adapter at all.
+if command -v bluetoothctl >/dev/null 2>&1; then
+	if systemctl is-enabled --quiet bluetooth.service 2>/dev/null; then
+		echo "bluetooth.service already enabled"
+	else
+		echo "enabling bluetooth.service..."
+		sudo systemctl enable --now bluetooth.service
+	fi
+fi

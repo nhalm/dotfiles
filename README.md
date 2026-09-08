@@ -108,7 +108,9 @@ the repo, silently overwriting the config you were installing.
 | Multiplexer | tmux + TPM | [herdr](https://herdr.dev) |
 | Window manager | AeroSpace | Hyprland |
 | Status bar | sketchybar | waybar |
-| Notifications | — | swaync |
+| Notifications | — | swaync *(under review)* |
+| Network / Bluetooth | — | nm-applet + blueman (tray) |
+| Display layout | — | nwg-displays |
 | Key remapping | Karabiner | *(not set up)* |
 | Containers | Colima + docker CLI | native docker |
 | Terminal | Ghostty, Kitty | Ghostty |
@@ -145,6 +147,34 @@ to the stock generated config:
   moved to `SUPER+V`.
 - Focus directions had `j`→right and `l`→down. Now `h/j/k/l` is
   left/down/up/right.
+
+### Display layout
+
+The layout is deliberately **not** in this repo -- it is machine-specific, and
+identical monitors differ only by serial, so connector names like `DP-1`/`DP-2`
+can swap between boots.
+
+Arrange displays by dragging them in `nwg-displays`, which writes
+`~/.config/hypr/monitors.lua`. That file is untracked and unstowed;
+`hyprland.lua` loads `monitors_default.lua` first and then `pcall`s it, so it
+overrides the defaults when present and is simply absent on a fresh machine.
+
+Tick **"use monitor descriptions"** in nwg-displays so its rules match on
+description/serial rather than connector name.
+
+### Lid / clamshell
+
+Closing the lid disables the internal panel and leaves the externals running.
+The suspend half needs no configuration: `logind` selects
+`HandleLidSwitchDocked` -- which defaults to `ignore` -- whenever more than one
+display is connected, so the machine stays awake while docked and still
+suspends when the lid is closed on its own.
+
+`~/.local/scripts/hypr-lid.sh` reads the kernel lid state rather than trusting
+which switch edge fired, since `switch:on`/`switch:off` has been unreliable for
+lids in the Lua config. It uses `hyprctl eval`, not `hyprctl keyword` -- a
+Lua-configured Hyprland rejects `keyword` outright while still exiting 0, which
+is why most clamshell recipes found online silently do nothing here.
 
 Nothing draws a wallpaper — `force_default_wallpaper = 0` disables the mascot
 and no wallpaper daemon is installed. Add `hyprpaper` or `swaybg` if you want
