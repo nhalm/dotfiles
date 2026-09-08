@@ -1,5 +1,7 @@
 import Quickshell
 import QtQuick
+import qs.theme
+import qs.modules
 import QtQuick.Layouts
 
 ShellRoot {

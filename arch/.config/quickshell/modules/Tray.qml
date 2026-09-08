@@ -1,3 +1,4 @@
+import qs.theme
 import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
