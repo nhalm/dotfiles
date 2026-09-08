@@ -3,6 +3,6 @@
   "modules": {
     "left": ["Launcher", "Workspaces"],
     "center": ["NowPlaying", "Volume", "Battery", "Clock"],
-    "right": ["Updates", "PowerProfile", "Tray", "Notifications", "PowerMenu"]
+    "right": ["Updates", "PowerProfile", "Network", "Bluetooth", "Tray", "Notifications", "PowerMenu"]
   }
 }
