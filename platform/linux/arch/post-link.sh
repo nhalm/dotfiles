@@ -41,3 +41,5 @@ if command -v bluetoothctl >/dev/null 2>&1; then
 		sudo systemctl enable --now bluetooth.service
 	fi
 fi
+
+mkdir -p "$HOME/Pictures/Screenshots"

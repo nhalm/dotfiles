@@ -65,6 +65,10 @@ quickshell
 nwg-displays
 hyprlock
 hypridle
+hyprshot
+grim
+slurp
+satty
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl

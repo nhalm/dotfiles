@@ -17,7 +17,11 @@
 # no handling: logind only uses HandleLidSwitchDocked=ignore when more than one
 # display is connected, so an undocked lid close still suspends normally.
 #
-# Usage: hypr-lid.sh [closed|open]
+# Usage: hypr-lid.sh [closed|open|sync]
+#
+# "sync" re-asserts the closed state only, and is run on every config load.
+# A config reload re-applies monitors.lua, which re-enables the internal panel
+# regardless of the lid, so windows jump back to a screen that is shut.
 
 set -uo pipefail
 
@@ -67,6 +71,12 @@ LOG="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid.log"
 state="$(lid_state)"
 [ "$state" = "unknown" ] && state="${1:-}"
 printf '%s invoked arg=%s state=%s externals=%s\n' "$(date +%T)" "${1:-none}" "$state" "$(external_count)" >>"$LOG"
+
+# sync never reloads: lid.lua invokes it at config load, and the open path
+# reloads, which would recurse.
+if [ "${1:-}" = "sync" ] && [ "$state" != "closed" ]; then
+	exit 0
+fi
 
 case "$state" in
 closed)

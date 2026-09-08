@@ -74,5 +74,17 @@ for _, b in ipairs(hardware) do
 	hl.bind(b[1], hl.dsp.exec_cmd(b[2]), { locked = true, repeating = b[3] })
 end
 
+-- --- screenshots --------------------------------------------------------
+-- hyprshot copies to the clipboard and writes a file. satty is the annotator.
+local shots = os.getenv("HOME") .. "/Pictures/Screenshots"
+
+hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region -o " .. shots))
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m window -o " .. shots))
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("hyprshot -m output -o " .. shots))
+hl.bind(
+	mod .. " + SHIFT + S",
+	hl.dsp.exec_cmd("hyprshot -m region --raw | satty --filename - --output-filename " .. shots .. "/annotated-$(date +%s).png")
+)
+
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
