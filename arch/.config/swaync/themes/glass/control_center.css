@@ -22,9 +22,8 @@
 .control-center {
   background-color: @surface;
   border-radius: 12px;
-  background: radial-gradient(circle at 50% 250%, @surface, @surface_dim) padding-box,
-    linear-gradient(#ffffff, @on_primary) border-box;
-  border: 1px solid transparent;
+  background: linear-gradient(to bottom, @surface, @surface_dim) padding-box;
+  border: 1px solid @outline_variant;
   opacity: 0.95;
   margin: 10px;
   margin-right: 18px;
@@ -135,9 +134,8 @@
 .notification {
   background-color: @surface;
   border-radius: 12px;
-  background: radial-gradient(circle at 50% 250%, @primary, @surface) padding-box,
-    linear-gradient(#ffffff, @on_primary) border-box;
-  border: 1px solid transparent;
+  background: @surface_container;
+  border: 1px solid @outline_variant;
   padding: 10px;
   margin: 10px 0px 0px 0px;
 }

@@ -22,18 +22,16 @@
 .floating-notifications.background .notification-row .notification-background .notification {
   background-color: @surface;
   border-radius: 12px;
-  background: radial-gradient(circle at 55% -80%, alpha(@primary, 1), alpha(black, 0.6)) padding-box,
-    linear-gradient(transparent, alpha(white, 0.5)) padding-box;
-  border: 1px solid @on_surface;
+  background: linear-gradient(to bottom, @surface_container_high, @surface_container) padding-box;
+  border: 1px solid @outline_variant;
   margin: 10px;
   margin-right: 18px;
   box-shadow: 0 1px 8px 1px alpha(@shadow, 0.6);
 }
 
 .floating-notifications.background .notification-row .notification-background .notification.critical {
-  background: radial-gradient(circle at 55% -80%, alpha(@error, 1), alpha(black, 0.6)) padding-box,
-    linear-gradient(transparent, alpha(red, 0.5)) padding-box;
-  border: 1px solid @on_surface;
+  background: linear-gradient(to bottom, @error_container, @surface_container) padding-box;
+  border: 1px solid @error;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification .notification-content {
@@ -78,7 +76,7 @@
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button {
-  background: alpha(#fff, 0.4);
+  background: alpha(@on_surface, 0.12);
   border-radius: 7px;
   color: @text;
   margin: 6px;
