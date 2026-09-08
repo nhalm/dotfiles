@@ -1,0 +1,32 @@
+# herdr — the agent runtime that replaces tmux here.
+# Full default with every option documented: `herdr --default-config`
+# Validate after editing:                    `herdr config check`
+#
+# Only deviations from the defaults belong in this file. herdr's defaults
+# already match the old tmux bindings closely: prefix+h/j/k/l focuses panes,
+# prefix+minus splits horizontally, prefix+z zooms.
+
+onboarding = false
+
+[theme]
+name = "tokyo-night"
+
+[terminal]
+# Login shells so ~/.zprofile runs in every pane. The default ("auto") only
+# does this on macOS, which would leave Linux panes without GOPATH, EDITOR and
+# the mise shims when the server outlives the session that started it.
+shell_mode = "login"
+
+# New panes and tabs inherit the cwd of whatever they were opened from.
+new_cwd = "follow"
+
+[keys]
+# Matches the old tmux prefix rather than herdr's ctrl+b.
+prefix = "ctrl+space"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+width = "90%"
+height = "90%"

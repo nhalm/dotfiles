@@ -1,0 +1,103 @@
+# Arch official repos (core/extra). Installed with `pacman -S --needed`, so
+# entries already present are skipped -- the list describes a fresh machine.
+
+# core
+base-devel
+git
+git-lfs
+openssh
+gnupg
+stow
+wget
+unzip
+man-db
+
+# shell
+zsh
+starship
+mise
+
+# editor
+neovim
+python-pynvim
+tree-sitter-cli
+wl-clipboard
+
+# search and files
+ripgrep
+fd
+fzf
+bat
+glow
+tree
+
+# data
+jq
+yq
+
+# system
+htop
+
+# git
+github-cli
+
+# containers -- native docker; no Colima VM needed on Linux
+docker
+docker-compose
+docker-buildx
+
+# terminal
+ghostty
+
+# desktop -- Hyprland session
+hyprland
+hyprlauncher
+hyprpicker
+hyprpolkitagent
+hyprshutdown
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt6-wayland
+qt5ct
+qt6ct
+papirus-icon-theme
+swaync
+# Toolkit for building a custom shell in QML -- see arch/.config/quickshell
+quickshell
+# Interactive display layout editor; writes ~/.config/hypr/monitors.lua
+nwg-displays
+hyprlock
+hypridle
+hyprshot
+grim
+slurp
+satty
+wf-recorder
+cliphist
+wl-clip-persist
+fuzzel
+matugen
+btop
+pacman-contrib
+hyprsunset
+
+# hardware keys -- brightnessctl needs the video group, see post-link.sh
+brightnessctl
+playerctl
+alsa-utils
+pavucontrol
+network-manager-applet
+nm-connection-editor
+# Bluetooth: bluez is in the base install, this is the GTK manager + tray applet
+bluez
+bluez-utils
+blueman
+
+# desktop apps
+nemo
+imv
+mpv
+
+# fonts -- Monaspace Neon Var is what the ghostty config asks for
+ttf-monaspace-variable
+otf-monaspace-nerd

@@ -1,0 +1,7 @@
+# macOS-only runtimes, merged on top of the shared ~/.config/mise/config.toml.
+# mise loads conf.d/*.toml first, then config.toml, merging tools additively.
+[tools]
+# SbarLua, which the sketchybar config is written against, builds against 5.5.
+lua = "5.5"
+ruby = "3.4.1"
+bun = "latest"

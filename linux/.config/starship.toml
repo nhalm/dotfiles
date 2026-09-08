@@ -1,0 +1,121 @@
+# Two-line prompt, tokyonight-storm palette. Roughly the information tide showed
+# on the Mac: where you are, git state, how long the last command took, and the
+# exit code when it wasn't zero.
+
+format = """
+[](blue)\
+$directory\
+${custom.git_root}\
+$git_branch\
+$git_state\
+$git_status\
+$fill\
+$golang$rust$nodejs$python$ruby$lua\
+$docker_context\
+$cmd_duration\
+$line_break\
+$character"""
+
+add_newline = true
+
+[palettes.tokyonight]
+bg = "#24283b"
+fg = "#c0caf5"
+blue = "#7aa2f7"
+cyan = "#7dcfff"
+green = "#9ece6a"
+magenta = "#bb9af7"
+red = "#f7768e"
+yellow = "#e0af68"
+orange = "#ff9e64"
+grey = "#565f89"
+
+palette = "tokyonight"
+
+[fill]
+symbol = " "
+
+[directory]
+style = "bold blue"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "
+read_only_style = "red"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+symbol = " "
+style = "magenta"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "yellow"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "= "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+untracked = "?${count} "
+stashed = " ${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+
+[git_state]
+style = "red"
+format = "\\([$state( $progress_current/$progress_total)]($style)\\) "
+
+# Exit code only shows when it is non-zero -- the character below carries it.
+[character]
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](magenta)"
+
+[cmd_duration]
+min_time = 2000
+style = "grey"
+format = "[ $duration]($style) "
+
+[golang]
+symbol = " "
+style = "cyan"
+format = "[$symbol($version)]($style) "
+
+[rust]
+symbol = " "
+style = "orange"
+format = "[$symbol($version)]($style) "
+
+[nodejs]
+symbol = " "
+style = "green"
+format = "[$symbol($version)]($style) "
+
+[python]
+symbol = " "
+style = "yellow"
+format = "[$symbol($version)]($style) "
+
+[ruby]
+symbol = " "
+style = "red"
+format = "[$symbol($version)]($style) "
+
+[lua]
+symbol = " "
+style = "blue"
+format = "[$symbol($version)]($style) "
+
+[docker_context]
+symbol = " "
+style = "blue"
+format = "[$symbol$context]($style) "
+only_with_files = true
+
+[custom.git_root]
+description = "Repo name when inside a git repo but not at its root"
+command = "basename $(git rev-parse --show-toplevel)"
+when = "git rev-parse --is-inside-work-tree 2>/dev/null | grep -q true && [ \"$(git rev-parse --show-toplevel)\" != \"$PWD\" ]"
+style = "grey"
+format = "[in $output]($style) "

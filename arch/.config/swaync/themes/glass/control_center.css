@@ -1,0 +1,166 @@
+@import 'file:///home/nick/.local/state/matugen/swaync-colors.css';
+
+@define-color surface_custom alpha(@surface_container_high, 1);
+@define-color hovercolor alpha(@surface_container_high, 1);
+@define-color buttoncolor alpha(@inverse_primary, 0.5);
+@define-color hoverbutton alpha(@inverse_primary, 0.7);
+@define-color activebutton @inverse_primary;
+@define-color bordercolor @primary;
+@define-color text @on_surface;
+
+* {
+  color: @text;
+  font-size: 1rem;
+  font-family: "JetBrainsMono Nerd Font", sans-serif;
+  transition: 250ms;
+}
+
+#window {
+  padding: 40px;
+}
+
+.control-center {
+  background-color: @surface;
+  border-radius: 12px;
+  background: linear-gradient(to bottom, @surface, @surface_dim) padding-box;
+  border: 1px solid @outline_variant;
+  opacity: 0.95;
+  margin: 10px;
+  margin-right: 18px;
+  box-shadow: 0 1px 10px 1px alpha(@shadow, 0.5);
+}
+
+.widget-buttons-grid {
+  margin: 6px;
+  border-radius: 0px;
+}
+
+.widget-buttons-grid button {
+  margin: 7px;
+  padding: 0.8rem 1.6rem;
+  background: @buttoncolor;
+  color: @on_primary_fixed;
+  border-radius: 8px;
+  border: 2px solid @bordercolor;
+  transition: all 0.2s ease-in-out;
+}
+
+.widget-buttons-grid button:hover {
+  background: @hoverbutton;
+  color: @text;
+  border-radius: 20px;
+}
+
+.widget-buttons-grid button.toggle:checked {
+  background: @activebutton;
+  color: @on_primary;
+  border-radius: 15px;
+}
+
+.widget-buttons-grid label {
+  font-size: 19px;
+}
+
+.widget-title {
+  font-size: 1.3rem;
+  margin: 0 12px 5px 12px;
+}
+
+.widget-title button {
+  background: @surface_custom;
+  border-radius: 8px;
+  padding: 4px 16px;
+}
+
+.widget-title button:hover {
+  background: alpha(@primary, 0.3);
+  border-radius: 15px;
+}
+
+.widget-dnd {
+  margin: 15px 15px 5px 12px;
+}
+
+.widget-dnd > switch {
+  color: @text;
+  background: @hovercolor;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.widget-dnd > switch:hover {
+  background: @buttoncolor;
+  border-radius: 10px;
+}
+
+.widget-dnd > switch:checked {
+  background: @buttoncolor;
+  color: @on_primary;
+  border-radius: 7px;
+}
+
+.widget-dnd > switch slider {
+  background: @bordercolor;
+  border-radius: 5px;
+  border: 2px solid @buttoncolor;
+}
+
+.widget-dnd > switch:checked slider {
+  background: @inverse_primary;
+  border-radius: 7px;
+}
+
+.notification-group {
+  margin: 4px 12px;
+}
+
+.notification-group-headers {
+  font-weight: 900;
+  font-size: 0;
+}
+
+.notification-group-collapse-button,
+.notification-group-close-all-button {
+  background: @surface_container;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.notification-group-collapse-button:hover,
+.notification-group-close-all-button:hover {
+  background: @hovercolor;
+}
+
+.notification {
+  background-color: @surface;
+  border-radius: 12px;
+  background: @surface_container;
+  border: 1px solid @outline_variant;
+  padding: 10px;
+  margin: 10px 0px 0px 0px;
+}
+
+.control-center .notification-row .notification-background .notification.critical {
+  background-color: @surface_container;
+  border-radius: 10px;
+  margin: 5px 0px;
+  padding: 10px;
+  border: 2px solid @error;
+}
+
+.control-center .notification-row .notification-background .close-button {
+  background-color: alpha(@hoverbutton, 0.5);
+  border-radius: 8px;
+  color: @text;
+  padding: 3px;
+}
+
+.control-center .notification-row .notification-background .close-button:hover {
+  border-radius: 12px;
+}
+
+trough highlight {
+  background: @primary;
+  border: 2px solid @primary_fixed;
+  border-radius: 20px;
+}

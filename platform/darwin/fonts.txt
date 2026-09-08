@@ -1,0 +1,10 @@
+# Font casks.
+font-monaspace
+font-hack-nerd-font
+
+# sketchybar
+sf-symbols
+font-sf-mono
+font-sf-pro
+font-victor-mono-nerd-font
+font-sketchybar-app-font

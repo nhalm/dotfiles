@@ -1,0 +1,4 @@
+# Packages that only exist in the AUR. Installed with yay.
+1password
+1password-cli
+swww
