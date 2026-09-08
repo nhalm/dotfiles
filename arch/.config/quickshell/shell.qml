@@ -69,8 +69,8 @@ ShellRoot {
 
                 Island {
                     anchors.right: parent.right
-                    visible: tray.implicitWidth > 0
-                    Tray { id: tray }
+                                        Tray { id: tray }
+                    PowerMenu {}
                 }
             }
         }

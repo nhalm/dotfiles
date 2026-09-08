@@ -5,7 +5,9 @@ import QtQuick
 import QtQuick.Layouts
 
 RowLayout {
-    spacing: 10
+    spacing: 12
+
+    Volume {}
 
     Text {
         visible: UPower.displayDevice.isLaptopBattery && UPower.onBattery
