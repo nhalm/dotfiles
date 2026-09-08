@@ -43,3 +43,16 @@ if command -v bluetoothctl >/dev/null 2>&1; then
 fi
 
 mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Pictures/Wallpapers" "$HOME/Videos/Recordings"
+
+# blueman-applet runs for its pairing agent, not its tray icon: without an
+# agent, BlueZ has nothing to answer pairing confirmations and bonding fails
+# with AuthenticationFailed. Network and bluetooth status live in the sidebar.
+if command -v blueman-applet >/dev/null 2>&1; then
+	current="$(gsettings get org.blueman.general plugin-list 2>/dev/null)"
+	if [ "$current" = "['!StatusNotifierItem']" ]; then
+		echo "blueman tray icon already disabled"
+	else
+		echo "disabling the blueman tray icon..."
+		gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"
+	fi
+fi
