@@ -1,0 +1,19 @@
+[tools]
+node = "lts"
+python = "3.13"
+rust = "latest"
+zoxide = "latest"
+lazygit = "latest"
+# Agent runtime: persistent agent sessions, panes, git worktrees. Replaces tmux.
+herdr = "latest"
+
+# Claude Code's status line. Installed through mise's npm backend rather than
+# `npm install -g`, which drops binaries into the *active* node's global prefix
+# -- so a node = "lts" rollover would silently orphan it. The npm backend gives
+# it its own tool directory and shim, and mise orders node before npm: tools.
+"npm:ccstatusline" = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
+auto_install = true
+not_found_auto_install = true

@@ -1,5 +1,9 @@
 # Keybinding Cheatsheet
 
+> **macOS reference.** aerospace and tmux are macOS-only; the Arch machine uses
+> Hyprland and [herdr](https://herdr.dev) instead. Neovim bindings apply to both.
+> Arch/herdr bindings get documented once the herdr config is written.
+
 Single-source reference for tmux, aerospace, and nvim. For Go-60-specific
 ergonomics (HRMs, thumb cluster, layers), see
 [`zmk-config/KEYMAP.md`](https://github.com/nhalm/zmk-config/blob/main/KEYMAP.md).

@@ -1,0 +1,15 @@
+theme = TokyoNight Storm
+term = xterm-256color
+font-family = Monaspace Neon Var
+font-size = 12
+background-opacity = 0.93
+keybind = shift+enter=text:\x1b\r
+
+# gtk-tabs-location = hidden
+macos-titlebar-style = hidden
+clipboard-read = allow
+# Linux runs zsh, macOS runs fish -- let ghostty work it out.
+shell-integration = detect
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true

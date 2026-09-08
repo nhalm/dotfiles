@@ -1,0 +1,78 @@
+# Homebrew formulae. Installed with `brew install`.
+
+# core
+bash
+git
+git-lfs
+openssh
+openssl
+gnupg
+moreutils
+gnu-sed
+coreutils
+grep
+wget
+stow
+p7zip
+dos2unix
+autoconf
+
+# shell
+fish
+mise
+
+# editor
+neovim
+tree-sitter-cli
+
+# search and files
+ack
+ripgrep
+fd
+fzf
+tree
+bat
+glow
+
+# data
+jq
+yq
+
+# system
+htop
+
+# git
+gh
+
+# languages and build
+golang
+yarn
+openjdk
+uv
+php
+composer
+libyaml
+readline
+
+# cloud and infra
+awscli
+aws-vault
+helm
+kubernetes-cli
+terraform
+
+# containers -- Colima provides the daemon; docker here is the CLI client only
+colima
+docker-compose
+
+# databases
+postgresql@17
+
+# documents
+imagemagick
+ghostscript
+tectonic
+
+# macOS integration
+1password-cli
+karabiner-elements

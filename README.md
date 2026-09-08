@@ -1,154 +1,204 @@
 # dotfiles
 
-Personal dotfiles configuration for macOS development environment.
+Personal configuration for macOS and Arch Linux, linked with GNU stow.
 
-## Setup
+## Install
 
-```bash
-./initial_setup.sh
-```
-
-This will:
-1. Install all required applications via Homebrew and mise
-2. Create symbolic links for all configurations via stow
-3. Install Tmux Plugin Manager (TPM)
-4. Configure Docker Compose CLI plugin
-5. Configure Fish shell with Fisher plugins and Tide prompt
-6. Set Fish as the default shell
-
-## Shell Configuration
-
-### Fish (Default Shell)
-- **Tide prompt**: Informative two-line prompt with git status, command duration, exit codes
-- **Fisher plugins**:
-  - `PatrickF1/fzf.fish` - Fuzzy search for history (Ctrl+R), files (Ctrl+Alt+F), directories
-  - `jorgebucaran/autopair.fish` - Auto-close brackets, quotes, parentheses
-  - `jorgebucaran/nvm.fish` - Node version management integrated with fish
-- **Key bindings**: 
-  - Ctrl+R for fuzzy history search
-  - Auto-suggestions from command history
-  - Syntax highlighting as you type
-
-### Zsh (Secondary)
-- Simplified oh-my-zsh configuration
-- Minimal plugins for quick fallback shell
-
-## Development Environment
-
-### Neovim
-- **Package Manager**: Lazy.nvim for fast plugin loading
-- **LSP Support**: Full language server protocol with Mason for auto-installation
-- **Key Features**:
-  - Telescope for fuzzy finding files, grep, and more
-  - Treesitter for advanced syntax highlighting and text objects
-  - Gitsigns for inline git blame and changes
-  - Auto-session for workspace persistence
-  - Which-key for discoverable keybindings
-  - Conform for formatting, nvim-lint for linting
-- **Custom Keymaps**: Leader key (space) based navigation
-
-### Tmux
-- **TPM (Tmux Plugin Manager)**: Auto-installed for plugin management
-- **Focus Events**: Enabled for proper Neovim file change detection
-- **Optimized Escape Time**: Set to 10ms for better Neovim responsiveness
-- **Sessionizer** (`Ctrl+b f`): Quick project switching using fzf
-  - Searches ~/dev, ~/personal, ~/work, ~/Downloads, ~/Documents
-  - Creates/attaches to tmux sessions per project
-  - Accessible via `tmux-sessionizer` command
-- **Custom Keybindings**:
-  - Vim-style pane navigation
-  - Easy window/pane creation and management
-
-### Git Configuration
-- **SSH Commit Signing**: Integrated with 1Password for secure signing
-- **SSH URL Rewriting**: Automatically uses SSH for GitHub
-- **Global Gitignore**: Excludes macOS system files, IDE configs, logs, env files
-- **Useful Aliases**:
-  - `git co` - checkout
-  - `git cob` - checkout new branch
-  - `git amend` - amend last commit
-  - `git ll` - pretty log with file changes
-  - `git bclean` - clean merged branches
-  - `git fpush` - force push
-- **Auto-rebase on pull**: Keeps history linear
-
-## Package Management
-
-### Homebrew
-Primary package manager for macOS — CLI tools, Go, and GUI apps via brew/cask
-
-### mise (Runtime Manager)
-Language runtimes are managed by [mise](https://mise.jdx.dev/):
-- **Node.js**: LTS
-- **Python**: 3.13 (uv for package management)
-- **Ruby**: 3.4.x
-- **Lua**: 5.4 (includes luarocks)
-- **Rust**: Latest
-
-## Command Line Tools
-- **Search**: ripgrep (rg), fd, fzf for fast file/text searching
-- **File Management**: bat (better cat), glow (markdown viewer), tree
-- **System Monitoring**: htop
-- **JSON/YAML**: jq, yq for processing
-- **Git Enhancement**: gh for GitHub CLI operations
-
-## Cloud & DevOps
-- **AWS**: AWS CLI v2, aws-vault for credential management
-- **Kubernetes**: kubectl, helm
-- **Infrastructure**: Terraform
-- **Containers**: Docker via Colima (lightweight VM, NFS-backed storage)
-
-## Claude AI Integration
-- **Custom Commands** (`~/.claude/commands/`)
-- **Custom Scripts** (`~/.claude/scripts/`)
-- **Custom Skills** (`~/.claude/skills/`)
-- **Personal Configuration**: CLAUDE.md with role context and preferences
-
-## GUI Applications
-- **Terminals**: Kitty, Ghostty
-- **Editor**: Cursor (AI-enhanced)
-- **Browser**: Brave
-- **Productivity**: Raycast (launcher), CleanShot (screenshots)
-- **Window Management**: AeroSpace (tiling WM), sketchybar (status bar), borders
-- **AI Tools**: Claude desktop, ChatGPT, Claude Code CLI
-
-## Directory Structure
-
-```
-~/dotfiles/
-├── home/              # Symlinked to ~/
-│   ├── .config/       # App configs (fish, nvim, etc)
-│   ├── .claude/       # Claude AI configuration
-│   ├── .gitconfig     # Git configuration
-│   ├── .tmux.conf     # Tmux configuration
-│   └── tmux/          # TPM plugins
-├── bin/               # Scripts in ~/.local/scripts/
-└── *.sh              # Setup scripts
-```
-
-## SSH Configuration
-- ED25519 keys for authentication
-- 1Password SSH agent integration
-- GitHub SSH URL auto-rewriting
-
-## Health Checks
-
-After setup, run `:checkhealth` in Neovim to verify everything is configured correctly.
-
-## Colima (Docker)
-
-Docker runs via Colima with a lightweight vz VM. Docker's data-root is on the NFS share to keep the local disk small.
+On a new machine:
 
 ```bash
-colima start --vm-type vz --disk 10 --mount ~:w --mount /Volumes/nfs/dev-storage:w
+bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
 ```
 
-- **VM disk**: 10 GB (minimal — only for OS/runtime)
-- **Docker data-root**: `/Volumes/nfs/dev-storage/colima/docker` (images, volumes, build cache all on NFS)
-- **Mounts**: Home directory (read/write) + NFS share (read/write)
-- **Config**: `~/.colima/default/colima.yaml` — sets `docker.data-root` to the NFS path
+`bootstrap.sh` installs just enough to proceed (git, stow, a compiler
+toolchain), clones this repo to `~/dotfiles`, and hands off to `setup.sh`.
 
-Volume backups are stored at `/Volumes/nfs/dev-storage/colima/volume-backups/`.
+Process substitution rather than `curl … | bash` is deliberate: piping ties up
+stdin, which breaks the `sudo` prompt the package installs need.
+
+If the repo is already cloned:
+
+```bash
+./setup.sh              # packages, links, tools
+./setup.sh --link-only  # re-link configs only (same as ./make_links.sh)
+```
+
+Everything is idempotent — re-run it whenever.
+
+On macOS, GUI applications are a separate manual step, because several casks
+prompt for a password:
+
+```bash
+./platform/darwin/gui.sh
+```
+
+## How the platform split works
+
+Differences fall on two axes, and keeping them separate is what stops a third
+distro from being a rewrite:
+
+- **OS family** (`darwin` / `linux`) — launchd vs systemd, `/Applications` vs
+  `/opt`, BSD vs GNU coreutils.
+- **Distro** (`macos` / `arch` / …) — which package manager speaks, and what
+  the packages are called.
+
+`lib/detect.sh` resolves both from `uname` and `/etc/os-release`. A derivative
+with no entry of its own falls back to what its `ID_LIKE` names, so EndeavourOS
+or CachyOS reuse the Arch package list and stow package with no new files.
+
+### Layout
+
+```
+bootstrap.sh          curl target for a fresh machine
+setup.sh              entrypoint: detect → packages → link → tools
+make_links.sh         re-link only
+
+lib/
+  detect.sh           OS_FAMILY / DISTRO / DISTRO_LIKE, and which dirs apply
+  pkg.sh              pkg_install() → brew | pacman+yay | apt | dnf
+  common.sh           stow, mise, zsh plugins, claude, github gpg
+
+platform/
+  darwin/             setup.sh, post-link.sh, gui.sh, packages.txt, casks.txt, fonts.txt
+  linux/              setup.sh (any distro)
+    arch/             setup.sh, post-link.sh, packages.txt, aur.txt
+
+shared/               stow package: everything portable
+darwin/               stow package: macOS only
+linux/                stow package: any Linux
+arch/                 stow package: Arch only (hypr, waybar, swaync)
+```
+
+Stow packages are linked nearest-last: `shared`, then the OS family, then the
+distro. Only the ones that exist are used.
+
+### Per-file differences
+
+When a config is *mostly* shared but needs one OS-specific line, the shared file
+includes a fragment that each OS package provides, rather than the whole file
+being duplicated:
+
+| Shared file | Includes | Provided by |
+|---|---|---|
+| `.gitconfig` | `~/.config/git/os.conf` | 1Password signing binary path |
+| `.zshrc` | `~/.config/zsh/os.zsh` | SSH agent socket, GNU vs BSD `ls` |
+| `mise/config.toml` | `mise/conf.d/*.toml` | per-OS runtimes (mise merges additively) |
+
+`.zshrc` also sources `~/.config/zsh/local.zsh` if present — per-machine
+overrides, gitignored.
+
+### Adding a distro
+
+1. Add a case to `_resolve_backend` in `lib/pkg.sh` if no existing backend fits.
+2. Create `platform/linux/<distro>/packages.txt` and a `setup.sh`.
+3. Create a `<distro>/` stow package only if a config genuinely differs.
+
+### Linking safety
+
+`stow_package` moves any *real* file already at a target path aside to
+`<path>.dotfiles-backup` before linking. This replaces `stow --adopt`, which
+resolves conflicts the wrong way round — it pulls the machine's version *into*
+the repo, silently overwriting the config you were installing.
+
+## What's on each machine
+
+|  | macOS | Arch |
+|---|---|---|
+| Shell | fish + tide | zsh + starship |
+| Multiplexer | tmux + TPM | [herdr](https://herdr.dev) |
+| Window manager | AeroSpace | Hyprland |
+| Status bar | sketchybar | waybar |
+| Notifications | — | swaync |
+| Key remapping | Karabiner | *(not set up)* |
+| Containers | Colima + docker CLI | native docker |
+| Terminal | Ghostty, Kitty | Ghostty |
+| Editor | Neovim | Neovim |
+
+The Arch package set is deliberately smaller than the Mac's — the cloud and
+infra tooling (awscli, kubectl, helm, terraform), the JVM/PHP stack, and the
+document toolchain are macOS-only. Add them to
+`platform/linux/arch/packages.txt` if that changes.
+
+## Hyprland (Arch)
+
+Config is Lua, split into modules under `arch/.config/hypr/`, with
+`hyprland.lua` as a table of contents:
+
+| Module | Holds |
+|---|---|
+| `monitors.lua` | outputs and scaling |
+| `programs.lua` | terminal/launcher/browser, referenced by keybinds and rules |
+| `colors.lua` | TokyoNight Storm palette, shared with the waybar CSS |
+| `looks.lua` | gaps, borders, decoration, animations |
+| `input.lua` | keyboard, touchpad, gestures |
+| `keybinds.lua` | all bindings |
+| `rules.lua` | window rules |
+| `autostart.lua` | waybar, swaync, polkit agent, nm-applet, 1Password |
+
+Bindings follow the conventional Hyprland scheme — `SUPER` plus `h/j/k/l` to
+focus, `SUPER+SHIFT` to move, `SUPER+1..0` for workspaces. Three fixes relative
+to the stock generated config:
+
+- `SUPER+P` was bound twice (file manager, then pseudo), so it never opened the
+  file manager. That's on `SUPER+E` now.
+- `SUPER+J` (togglesplit) collided with `SUPER+j` (focus down). Togglesplit
+  moved to `SUPER+V`.
+- Focus directions had `j`→right and `l`→down. Now `h/j/k/l` is
+  left/down/up/right.
+
+Nothing draws a wallpaper — `force_default_wallpaper = 0` disables the mascot
+and no wallpaper daemon is installed. Add `hyprpaper` or `swaybg` if you want
+one.
+
+### Brightness keys
+
+`XF86MonBrightness*` needs two things, both handled by setup: the
+`brightnessctl` package, and membership of the `video` group. The udev rule
+brightnessctl ships `chgrp`s `/sys/class/backlight/*/brightness` to `video`;
+without the group the file stays `root:root 644` and the keys silently do
+nothing. Group membership applies at next login.
+
+## Shells
+
+### zsh (Arch)
+
+`starship` prompt from a single `starship.toml`, plus three plugins cloned by
+`lib/common.sh` rather than packaged, so the set is identical everywhere:
+`zsh-autosuggestions`, `zsh-completions`, `fast-syntax-highlighting`. fzf's own
+zsh integration provides `Ctrl+R` / `Ctrl+T`, so no plugin manager is involved.
+
+### fish (macOS)
+
+Tide prompt, with fisher plugins for fzf, autopair, and nvm.
+
+## Runtimes
+
+[mise](https://mise.jdx.dev/) manages language runtimes on both machines.
+Shared: Node LTS, Python 3.13, Rust, plus zoxide, lazygit, and herdr. macOS adds
+Lua 5.5 (SbarLua builds against it), Ruby, and Bun; Linux adds Go, which comes
+from Homebrew on the Mac.
+
+Configs are trusted during setup so shims resolve for processes that never
+source a shell rc — systemd units, GUI launchers, sketchybar.
+
+## Neovim
+
+Lazy.nvim, LSP via Mason, Telescope/snacks for navigation, Treesitter,
+Gitsigns, auto-session, which-key, conform + nvim-lint. Shared between both
+machines. Run `:checkhealth` after setup.
+
+## Git
+
+SSH commit signing through 1Password, `https://github.com/` rewritten to SSH,
+per-directory identity (`~/work` and `~/dev` are work, `~/personal` and
+`~/dotfiles` are personal), and rebase-on-pull.
+
+`bootstrap.sh` clones over https because no SSH key exists yet; `setup.sh`
+switches the remote to SSH at the end, once the 1Password agent is available.
+
+## Keybindings
+
+See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
 
 ## Machine-specific / private setup
 

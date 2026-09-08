@@ -1,0 +1,4 @@
+# Linux-only runtimes, merged on top of the shared ~/.config/mise/config.toml.
+[tools]
+# macOS gets Go from Homebrew instead, so it is scoped here rather than shared.
+go = "latest"

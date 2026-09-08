@@ -1,0 +1,77 @@
+# Arch official repos (core/extra). Installed with `pacman -S --needed`, so
+# entries already present are skipped -- the list describes a fresh machine.
+
+# core
+base-devel
+git
+git-lfs
+openssh
+gnupg
+stow
+wget
+unzip
+man-db
+
+# shell
+zsh
+starship
+mise
+
+# editor
+neovim
+python-pynvim
+wl-clipboard
+
+# search and files
+ripgrep
+fd
+fzf
+bat
+glow
+tree
+
+# data
+jq
+yq
+
+# system
+htop
+
+# git
+github-cli
+
+# containers -- native docker; no Colima VM needed on Linux
+docker
+docker-compose
+docker-buildx
+
+# terminal
+ghostty
+
+# desktop -- Hyprland session
+hyprland
+hyprlauncher
+hyprpicker
+hyprpolkitagent
+hyprshutdown
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt6-wayland
+waybar
+swaync
+
+# hardware keys -- brightnessctl needs the video group, see post-link.sh
+brightnessctl
+playerctl
+pavucontrol
+network-manager-applet
+nm-connection-editor
+
+# desktop apps
+nemo
+imv
+mpv
+
+# fonts -- Monaspace Neon Var is what the ghostty config asks for
+ttf-monaspace-variable
+otf-monaspace-nerd

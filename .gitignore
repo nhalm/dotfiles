@@ -1,14 +1,18 @@
 .netrwhist
-/vim/*
-!vim/autoload
-/tmux/*
-!/tmux/plugins/tpm
-/nvim/.config/nvim/lua/packer_compiled.lua
-# Backup files created by make_links.sh
+.ruby-version
+
+# Files moved aside by stow_package when a real file already occupied a target
 *.dotfiles-backup
 
-# Fish shell - ignore entire directory except config.fish
-home/.config/fish/*
-!home/.config/fish/config.fish
-home/.config/sketchybar/helpers/git_toolkit/.git_cache
-.ruby-version
+# Vendored TPM: track the plugin manager, nothing else tmux drops in there
+darwin/tmux/*
+!darwin/tmux/plugins
+
+# Fish: config.fish is ours, the rest of the directory is fisher's
+darwin/.config/fish/*
+!darwin/.config/fish/config.fish
+
+darwin/.config/sketchybar/helpers/git_toolkit/.git_cache
+
+# Per-machine shell overrides, sourced by .zshrc if present
+.config/zsh/local.zsh
