@@ -63,6 +63,8 @@ swaync
 quickshell
 # Interactive display layout editor; writes ~/.config/hypr/monitors.lua
 nwg-displays
+hyprlock
+hypridle
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl

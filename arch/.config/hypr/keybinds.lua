@@ -23,6 +23,7 @@ hl.bind(mod .. " + F", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mod .. " + V", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mod .. " + M", hl.dsp.exec_cmd("hyprshutdown"))
+hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("loginctl lock-session"))
 
 -- --- focus --------------------------------------------------------------
 -- h/j/k/l = left/down/up/right. The stock sample had j and l transposed.

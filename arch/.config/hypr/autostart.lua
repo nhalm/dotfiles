@@ -7,6 +7,7 @@
 hl.on("hyprland.start", function()
 	hl.exec_cmd("waybar")
 	hl.exec_cmd("swaync")
+	hl.exec_cmd("hypridle")
 
 	-- Ships a systemd user unit rather than a plain binary.
 	hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
