@@ -9,6 +9,7 @@ hl.config({
 		kb_options = "",
 		kb_rules = "",
 
+		natural_scroll = true,
 		follow_mouse = 1,
 		sensitivity = -0.1, -- -1.0 to 1.0; 0 is unmodified
 

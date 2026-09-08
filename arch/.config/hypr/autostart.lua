@@ -1,11 +1,11 @@
 -- Processes started with the session.
 -- https://wiki.hypr.land/Configuring/Basics/Autostart/
 --
--- The stock sample autostarts nothing, which is why waybar, notifications and
+-- The stock sample autostarts nothing, which is why the bar, notifications and
 -- the polkit agent never came up on their own.
 
 hl.on("hyprland.start", function()
-	hl.exec_cmd("waybar")
+	hl.exec_cmd("qs -d")
 	hl.exec_cmd("swaync")
 	hl.exec_cmd("hypridle")
 
