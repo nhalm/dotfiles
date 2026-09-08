@@ -1,5 +1,5 @@
-background = {{colors.background.default.hex}}
-foreground = {{colors.on_background.default.hex}}
-cursor-color = {{colors.primary.default.hex}}
-selection-background = {{colors.primary_container.default.hex}}
-selection-foreground = {{colors.on_primary_container.default.hex}}
+background = {{colors.background.dark.hex}}
+foreground = {{colors.on_background.dark.hex}}
+cursor-color = {{colors.primary.dark.hex}}
+selection-background = {{colors.primary_container.dark.hex}}
+selection-foreground = {{colors.on_primary_container.dark.hex}}
