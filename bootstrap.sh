@@ -51,7 +51,7 @@ install_prereqs() {
 	case "${d:-}" in
 	pacman)
 		echo "==> installing prerequisites (pacman)"
-		sudo pacman -Sy --needed --noconfirm git stow base-devel
+		sudo pacman -Syu --needed --noconfirm git stow base-devel
 		;;
 	apt)
 		echo "==> installing prerequisites (apt)"

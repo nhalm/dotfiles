@@ -43,7 +43,9 @@ read_package_list() {
 pkg_refresh() {
 	case "$PKG_BACKEND" in
 	brew) brew update ;;
-	pacman) sudo pacman -Sy --noconfirm ;;
+	# -Syu, never a bare -Sy: syncing the db then installing without an
+	# upgrade is a partial upgrade, which breaks a rolling release.
+	pacman) sudo pacman -Syu --noconfirm ;;
 	apt) sudo apt-get update ;;
 	dnf) sudo dnf -y makecache ;;
 	esac
