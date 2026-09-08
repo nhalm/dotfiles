@@ -16,7 +16,6 @@ hl.config({
 
 		touchpad = {
 			natural_scroll = true,
-		numlock_by_default = true,
 			disable_while_typing = true,
 			tap_button_map = "lrm",
 		},
