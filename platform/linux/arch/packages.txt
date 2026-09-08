@@ -20,6 +20,7 @@ mise
 # editor
 neovim
 python-pynvim
+tree-sitter-cli
 wl-clipboard
 
 # search and files
@@ -83,6 +84,7 @@ hyprsunset
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl
 playerctl
+alsa-utils
 pavucontrol
 network-manager-applet
 nm-connection-editor
