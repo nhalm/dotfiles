@@ -13,6 +13,8 @@ ShellRoot {
         }
     }
 
+    Sidebar { id: sidebar }
+
     Variants {
         model: Quickshell.screens
 

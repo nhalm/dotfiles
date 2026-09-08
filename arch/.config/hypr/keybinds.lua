@@ -100,3 +100,4 @@ hl.bind(
 
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
+hl.bind(mod .. " + A", hl.dsp.exec_cmd("qs ipc call sidebar toggle"))
