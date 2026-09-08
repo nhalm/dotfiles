@@ -5,6 +5,8 @@
 -- the polkit agent never came up on their own.
 
 hl.on("hyprland.start", function()
+	hl.exec_cmd("swww-daemon")
+	hl.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh --restore")
 	hl.exec_cmd("qs -d")
 	hl.exec_cmd("swaync")
 	hl.exec_cmd("hypridle")

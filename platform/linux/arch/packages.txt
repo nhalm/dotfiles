@@ -72,6 +72,8 @@ wf-recorder
 cliphist
 wl-clip-persist
 fuzzel
+matugen
+btop
 
 # hardware keys -- brightnessctl needs the video group, see post-link.sh
 brightnessctl

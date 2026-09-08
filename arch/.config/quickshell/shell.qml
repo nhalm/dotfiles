@@ -1,10 +1,18 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import qs.theme
 import qs.modules
 import QtQuick.Layouts
 
 ShellRoot {
+    IpcHandler {
+        target: "theme-manager"
+        function reload(): void {
+            Theme.reloadTheme();
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 

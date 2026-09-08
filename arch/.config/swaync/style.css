@@ -1,3 +1,5 @@
+@import url("file:///home/nick/.local/state/matugen/swaync-colors.css");
+
 /* TokyoNight Storm, matching waybar/style.css. */
 
 @define-color bg           #24283b;

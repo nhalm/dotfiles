@@ -1,7 +1,10 @@
 -- Gaps, borders, decoration, animations.
 -- https://wiki.hypr.land/Configuring/Variables/
 
-local c = require("colors")
+-- matugen regenerates matugen-colors.lua from the wallpaper; colors.lua is the
+-- fallback before any wallpaper has been set.
+local ok, generated = pcall(require, "matugen-colors")
+local c = ok and generated or require("colors")
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
@@ -12,8 +15,8 @@ hl.config({
 		gaps_out = 10,
 		border_size = 2,
 		col = {
-			active_border = { colors = { c.blue, c.magenta }, angle = 45 },
-			inactive_border = c.inactive,
+			active_border = { colors = { c.primary, c.secondary }, angle = 45 },
+			inactive_border = c.outline_variant,
 		},
 		resize_on_border = true,
 		allow_tearing = false,

@@ -88,6 +88,9 @@ hl.bind(
 )
 hl.bind("CTRL + SHIFT + 6", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/screenrec.sh"))
 
+-- --- wallpaper / theme --------------------------------------------------
+hl.bind(mod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh"))
+
 -- --- clipboard ----------------------------------------------------------
 hl.bind(
 	mod .. " + SHIFT + V",
