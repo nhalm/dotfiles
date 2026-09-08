@@ -16,10 +16,5 @@ RowLayout {
         text: Math.round(UPower.displayDevice.percentage * 100) + "%"
     }
 
-    Text {
-        color: Theme.fg
-        font.pixelSize: Theme.fontSize
-        text: Qt.formatDateTime(clock.date, "ddd dd MMM  HH:mm")
-        SystemClock { id: clock; precision: SystemClock.Minutes }
-    }
+    Clock {}
 }
