@@ -43,6 +43,19 @@ matugen image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null || echo "wal
 mkdir -p "$(dirname "$STATE")"
 printf '%s\n' "$IMAGE" >"$STATE"
 
+# Apply the new border colours directly rather than reloading the config:
+# a reload re-applies the monitor rules too, which makes every display flicker
+# and shuffle on each theme change.
+apply_hypr_colors() {
+	local f="$HOME/.config/hypr/matugen-colors.lua" primary secondary outline
+	[ -r "$f" ] || return 0
+	primary="$(grep -oP '^\tprimary = "\K[^"]+' "$f" | head -1)"
+	secondary="$(grep -oP '^\tsecondary = "\K[^"]+' "$f" | head -1)"
+	outline="$(grep -oP '^\toutline_variant = "\K[^"]+' "$f" | head -1)"
+	[ -n "$primary" ] || return 0
+	hyprctl eval "hl.config({ general = { col = { active_border = { colors = {\"$primary\", \"$secondary\"}, angle = 45 }, inactive_border = \"$outline\" } } })" >/dev/null 2>&1
+}
+
 qs ipc call theme-manager reload >/dev/null 2>&1
 swaync-client --reload-css >/dev/null 2>&1
-hyprctl reload >/dev/null 2>&1
+apply_hypr_colors
