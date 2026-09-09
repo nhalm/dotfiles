@@ -251,7 +251,7 @@ See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
 
 ## Rebuilding this machine
 
-See [INSTALL.md](INSTALL.md) for the LUKS + btrfs + snapper install. After it:
+Install Arch with LUKS + btrfs + snapper, then:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
