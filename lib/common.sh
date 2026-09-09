@@ -2,6 +2,18 @@
 # Steps that are the same everywhere: linking configs, runtimes, shell plugins,
 # and the tools we install from their own installers rather than a package manager.
 
+# ----------------------------------------------------------------- git ------
+
+# Clone/pull a public repo without the global config, whose https -> ssh rewrite
+# would demand a key that a first install does not have yet. The integrity
+# checks that config carries are re-passed here.
+git_public() {
+	GIT_CONFIG_GLOBAL=/dev/null git \
+		-c transfer.fsckobjects=true \
+		-c fetch.fsckobjects=true \
+		"$@"
+}
+
 # ---------------------------------------------------------------- stow ------
 
 # Link one stow package into $HOME.
@@ -92,10 +104,10 @@ install_zsh_plugins() {
 		name="${repo##*/}"
 		if [ -d "$dir/$name/.git" ]; then
 			echo "  updating $name..."
-			git -C "$dir/$name" pull --quiet --ff-only || echo "  $name: pull failed, leaving as-is"
+			git_public -C "$dir/$name" pull --quiet --ff-only || echo "  $name: pull failed, leaving as-is"
 		else
 			echo "  cloning $name..."
-			git clone --quiet --depth 1 "https://github.com/$repo" "$dir/$name"
+			git_public clone --quiet --depth 1 "https://github.com/$repo" "$dir/$name"
 		fi
 	done
 }
@@ -163,7 +175,7 @@ install_wallpapers() {
 
 	if [ -d "$dir/.git" ]; then
 		echo "updating wallpapers..."
-		git -C "$dir" pull --quiet --ff-only || echo "  pull failed, leaving as-is"
+		git_public -C "$dir" pull --quiet --ff-only || echo "  pull failed, leaving as-is"
 		return 0
 	fi
 
@@ -175,7 +187,7 @@ install_wallpapers() {
 
 	echo "cloning wallpapers..."
 	mkdir -p "$(dirname "$dir")"
-	git clone --quiet --depth 1 "$WALLPAPER_REPO" "$dir" ||
+	git_public clone --quiet --depth 1 "$WALLPAPER_REPO" "$dir" ||
 		echo "  clone failed; the picker will be empty until this succeeds"
 }
 
