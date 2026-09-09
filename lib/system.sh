@@ -14,6 +14,34 @@
 # ship (sysctl.d, sshd_config.d, modprobe.d, udev rules). If something ever
 # needs a different mode, it does not belong in this mechanism.
 
+# Some files are unsafe to install until a precondition holds. Returns non-zero
+# to skip a file, having explained why.
+#
+# The sshd drop-in turns off password authentication. Installing it before any
+# key is authorised would lock this account out of SSH entirely -- and on a
+# machine reached over the network, that is not recoverable remotely.
+_system_file_allowed() {
+	case "$1" in
+	/etc/ssh/sshd_config.d/*)
+		if [ -s "$HOME/.ssh/authorized_keys" ]; then
+			return 0
+		fi
+		cat >&2 <<-'MSG'
+			  SKIPPING /etc/ssh/sshd_config.d/99-hardening.conf
+			    It sets PasswordAuthentication no, and ~/.ssh/authorized_keys is
+			    empty or missing -- installing it would lock you out of SSH.
+
+			    Authorise a key first, then re-run ./setup.sh:
+			      ssh-add -L > ~/.ssh/authorized_keys     # keys from the 1Password agent
+			      chmod 600 ~/.ssh/authorized_keys
+			    Verify you can log in with it from another machine BEFORE re-running.
+		MSG
+		return 1
+		;;
+	esac
+	return 0
+}
+
 # Echo "src<TAB>dest" for every system file that applies to this platform.
 _system_file_pairs() {
 	local root="$DOTFILES/system/$OS_FAMILY" src dest
@@ -31,7 +59,9 @@ diff_system_files() {
 	local src dest changed=0
 	while IFS=$'\t' read -r src dest; do
 		[ -n "$src" ] || continue
-		if [ ! -e "$dest" ]; then
+		if ! _system_file_allowed "$dest" 2>/dev/null; then
+			echo "  - $dest (skipped -- precondition not met)"
+		elif [ ! -e "$dest" ]; then
 			echo "  + $dest (new)"
 			changed=1
 		elif ! cmp -s "$src" "$dest" 2>/dev/null; then
@@ -54,6 +84,7 @@ install_system_files() {
 	while IFS=$'\t' read -r src dest; do
 		[ -n "$src" ] || continue
 		cmp -s "$src" "$dest" 2>/dev/null && continue
+		_system_file_allowed "$dest" || continue
 		srcs+=("$src")
 		dests+=("$dest")
 	done < <(_system_file_pairs)

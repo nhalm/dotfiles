@@ -90,28 +90,48 @@ if systemctl list-unit-files paccache.timer >/dev/null 2>&1; then
 	fi
 fi
 
-# sshd on a laptop is almost always an accident. This machine has no
-# ~/.ssh/authorized_keys, so the only way in is the password prompt -- and
-# OpenSSH ships PasswordAuthentication on by default. ufw drops inbound 22, so
-# this is defence in depth rather than an open door, but the service should not
-# be running at all unless it is wanted.
+# Inbound SSH is wanted on this machine, so 22 stays open -- but rate-limited
+# rather than wide open. ufw's `limit` drops a source IP that opens more than
+# 6 connections in 30s, which makes password/key brute-forcing impractical
+# without affecting a human logging in.
 #
-# Not disabled automatically: that is a judgement call about how the machine is
-# used, and setup.sh should not silently turn off a service you rely on.
-if systemctl is-enabled --quiet sshd.service 2>/dev/null; then
-	if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
-		cat <<-'WARN'
-
-			  WARNING: sshd is enabled but ~/.ssh/authorized_keys is empty or missing.
-			  Nothing can log in by key, so the only path is password auth.
-
-			  If you do not need inbound SSH (you almost certainly do not on a laptop):
-			      sudo systemctl disable --now sshd.service
-
-			  If you do need it, add your public key to ~/.ssh/authorized_keys first,
-			  then the drop-in this repo installs at
-			  /etc/ssh/sshd_config.d/99-hardening.conf will turn password auth off.
-
-		WARN
+# To go further and restrict SSH to the local network:
+#   sudo ufw delete limit 22/tcp
+#   sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
+if command -v ufw >/dev/null 2>&1; then
+	if sudo ufw status | grep -q '^22.*LIMIT'; then
+		echo "ssh already rate-limited"
+	elif sudo ufw status | grep -q '^22.*ALLOW'; then
+		echo "replacing the open ssh rule with a rate-limited one..."
+		sudo ufw delete allow 22 >/dev/null 2>&1 || true
+		sudo ufw delete allow 22/tcp >/dev/null 2>&1 || true
+		sudo ufw limit 22/tcp
+	else
+		echo "adding a rate-limited ssh rule..."
+		sudo ufw limit 22/tcp
 	fi
+fi
+
+# The sshd hardening drop-in disables password authentication, and
+# install_system_files refuses to install it until a key is authorised (see
+# _system_file_allowed in lib/system.sh). Say so here too, because a machine
+# that accepts passwords from the whole network is the single biggest exposure
+# on this host until it is fixed.
+if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
+	cat <<-'WARN'
+
+		  ACTION NEEDED: sshd accepts password authentication from any source.
+
+		  ~/.ssh/authorized_keys is empty, so the ssh hardening drop-in was
+		  skipped -- installing it would have locked you out.
+
+		  Fix, in this order:
+		    1. ssh-add -L > ~/.ssh/authorized_keys
+		       chmod 600 ~/.ssh/authorized_keys
+		    2. Verify key login works from another machine, in a session you
+		       keep open.
+		    3. Re-run ./setup.sh -- the drop-in installs and passwords stop
+		       being accepted.
+
+	WARN
 fi

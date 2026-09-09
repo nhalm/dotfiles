@@ -251,7 +251,7 @@ on each machine. What that gets you, and what it deliberately does not:
 | Where | What |
 |---|---|
 | `system/` | Root-owned config copied into `/etc` — kernel sysctls, an sshd drop-in, docker's default publish address. See [system/README.md](system/README.md). |
-| `platform/linux/arch/post-link.sh` | Enables ufw default-deny, installs the `system/` tree, warns if sshd is enabled without any authorized key. |
+| `platform/linux/arch/post-link.sh` | Enables ufw default-deny, rate-limits inbound SSH, installs the `system/` tree, enables `paccache.timer`. |
 | `shared/.config/git/hooks/pre-commit` | gitleaks scan of staged content, wired globally via `core.hooksPath`, so it runs in every repo and not only where someone installed it. Chains to a repo's own hook first. |
 | `shared/.gitignore_global` | Credential paths that must never be committed anywhere. |
 | `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys served only by the 1Password agent. |
@@ -264,16 +264,46 @@ Preview anything that would be written outside `$HOME`:
 ./setup.sh --diff-system
 ```
 
-### Not in the repo, because it cannot be
+### Inbound SSH
 
-- **Full-disk encryption.** Encrypting an installed root is a backup, reinstall
-  and restore — not a config change. Until then, physical access to the machine
-  is total access, regardless of everything above.
-- **Secure Boot** (`sbctl`), and TPM2-backed unlock. One-time, per-machine, and
-  it enrolls keys in firmware.
-- **Disabling sshd.** `post-link.sh` warns rather than acting, because whether
-  a machine wants inbound SSH is a judgement about how it is used.
-- Anything requiring a password at a prompt: sudoers changes, `faillock`.
+This machine accepts SSH, so the goal is a locked-down sshd rather than no
+sshd. `system/linux/etc/ssh/sshd_config.d/99-hardening.conf` sets key-only
+auth, `PermitRootLogin no`, `AllowUsers nick`, and modern KEX/cipher/MAC lists.
+
+**It will not install until `~/.ssh/authorized_keys` has a key in it.**
+`_system_file_allowed` in `lib/system.sh` refuses, because the drop-in turns
+off password authentication and applying it with no authorised key locks this
+account out of SSH — irrecoverably, if you are not physically at the machine.
+
+Order matters:
+
+```bash
+ssh-add -L > ~/.ssh/authorized_keys     # public keys from the 1Password agent
+chmod 600 ~/.ssh/authorized_keys
+# log in from another machine and confirm it works, keeping that session open
+./setup.sh                              # now the drop-in installs
+```
+
+ufw rate-limits 22 rather than leaving it wide open. To restrict it to the LAN
+as well:
+
+```bash
+sudo ufw delete limit 22/tcp
+sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
+```
+
+Note `AllowTcpForwarding no` — loosen it if you ever need this box as a jump
+host or want `ssh -L` tunnels *through* it.
+
+### Deferred, deliberately
+
+- **Full-disk encryption.** Planned for the next reinstall rather than
+  retrofitted. Until then, physical access to this machine is total access,
+  regardless of everything above — that is the single largest remaining gap.
+- **Secure Boot** (`sbctl`) and TPM2-backed unlock. Worth doing at the same
+  reinstall; it needs firmware key enrolment, not a config change.
+- **Locking the root account.** `sudo` works through `/etc/sudoers.d/00_nick`,
+  so root's password is redundant: `sudo passwd -l root`.
 
 ## Machine-specific / private setup
 

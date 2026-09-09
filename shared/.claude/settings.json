@@ -172,7 +172,6 @@
   "effortLevel": "high",
   "autoUpdatesChannel": "latest",
   "minimumVersion": "2.1.42",
-  "skipDangerousModePermissionPrompt": true,
   "autoCompactEnabled": false,
   "tui": "fullscreen"
 }
