@@ -1,83 +1,59 @@
-# Arch official repos (core/extra). Installed with `pacman -S --needed`, so
-# entries already present are skipped.
+# Arch official repos. Installed with `pacman -S --needed`.
 #
-# The deliberate choices only. Anything another entry already pulls in as a
-# dependency, and anything the Arch installer lays down, is left to them -- a
-# fresh install plus ./setup.sh still lands in the same place.
+# Scope: what this machine needs *beyond* a base archinstall. Anything the
+# installer lays down, and anything another entry here already pulls in as a
+# dependency, is left out -- the closure of this list still reproduces the
+# machine.
+#
+# Step 1 of the rebuild (see README) must select the same archinstall options:
+# btrfs + snapper, pipewire audio, NetworkManager, bluetooth, printing.
 
-# ---------------------------------------------------------------- base ------
-base-devel
+# --------------------------------------------------------------- kernel -----
 linux-lts
 linux-headers
-snapper
-zram-generator
 
-# ------------------------------------------------------------ hardware ------
-# Intel: microcode, video acceleration, low-power daemon, thermal management
+# ------------------------------------------------------------- hardware -----
 intel-ucode
 intel-media-driver
 intel-lpmd
 vulkan-intel
 libva-utils
 thermald
-power-profiles-daemon
-sof-firmware
-# Firmware updates -- `fwupdmgr refresh && fwupdmgr get-updates`
 fwupd
-# Virtual camera for OBS; builds against linux-headers above
 v4l2loopback-dkms
 
-# ------------------------------------------------------------- network ------
-networkmanager
-network-manager-applet
-nm-connection-editor
-bluez
-bluez-utils
-blueman
+# ------------------------------------------------------------- security -----
+ufw
+gitleaks
+arch-audit
 
-# --------------------------------------------------------------- audio ------
-pipewire-alsa
-pipewire-jack
-pipewire-pulse
-wireplumber
-gst-plugin-pipewire
-alsa-utils
-pavucontrol
-playerctl
-
-# ---------------------------------------------------------------- core ------
+# ----------------------------------------------------------------- core -----
+base-devel
 git
 git-lfs
 openssh
-gnupg
 stow
 wget
 unzip
 man-db
 clang
 7zip
+jq
+yq
 
-# -------------------------------------------------------------- security ----
-# ufw: host firewall, default-deny inbound, ssh rate-limited (post-link.sh)
-ufw
-# gitleaks: staged-secret scan, wired in as a global pre-commit hook
-gitleaks
-# arch-audit: lists installed packages with open CVEs
-arch-audit
-
-# --------------------------------------------------------------- shell ------
+# ---------------------------------------------------------------- shell -----
 zsh
 starship
 mise
 
-# -------------------------------------------------------------- editor ------
+# --------------------------------------------------------------- editor -----
 neovim
 python-pynvim
 tree-sitter-cli
 wl-clipboard
 xclip
 
-# ----------------------------------------------------- search and files -----
+# ------------------------------------------------------ search and files ----
 ripgrep
 fd
 fzf
@@ -85,28 +61,36 @@ bat
 glow
 tree
 
-# ---------------------------------------------------------------- data ------
-jq
-yq
-
-# -------------------------------------------------------------- system ------
+# --------------------------------------------------------------- system -----
 htop
 btop
 pacman-contrib
 
-# ----------------------------------------------------------------- git ------
+# ------------------------------------------------------------------ git -----
 github-cli
 
-# ---------------------------------------------------------- containers ------
-# native docker; no Colima VM needed on Linux
+# ----------------------------------------------------------- containers -----
 docker
 docker-compose
 docker-buildx
 
-# ------------------------------------------------------------ terminal ------
+# ------------------------------------------------------------- terminal -----
 ghostty
 
-# --------------------------------------------- desktop: Hyprland session ----
+# ---------------------------------------------------------------- audio -----
+pipewire-alsa
+pipewire-jack
+pipewire-pulse
+wireplumber
+alsa-utils
+pavucontrol
+playerctl
+
+# -------------------------------------------------------------- network -----
+network-manager-applet
+blueman
+
+# ---------------------------------------------- desktop: Hyprland session ---
 hyprland
 hyprlauncher
 hyprpicker
@@ -124,13 +108,10 @@ qt6-multimedia-ffmpeg
 qt6-virtualkeyboard
 papirus-icon-theme
 swaync
-# Toolkit for building a custom shell in QML -- see arch/.config/quickshell
 quickshell
-# Interactive display layout editor; writes ~/.config/hypr/monitors.lua
 nwg-displays
 # Wallpaper daemon; wallpaper.sh resolves either the awww or swww binary name.
 awww
-slurp
 satty
 wf-recorder
 cliphist
@@ -139,17 +120,9 @@ fuzzel
 matugen
 # TUI display manager; post-link.sh enables ly@tty2.service.
 ly
-
-# ------------------------------------------------------- hardware keys ------
-# brightnessctl needs the video group, see post-link.sh
 brightnessctl
 
-# ------------------------------------------------------------ printing ------
-cups
-cups-pk-helper
-system-config-printer
-
-# -------------------------------------------------------- desktop apps ------
+# --------------------------------------------------------- desktop apps -----
 firefox
 nemo
 imv
@@ -158,16 +131,9 @@ obs-studio
 telegram-desktop
 imagemagick
 
-# --------------------------------------------------------------- fonts ------
-# ghostty asks for Monaspace Neon Var; hyprlock.conf asks for JetBrains Mono Nerd.
+# ---------------------------------------------------------------- fonts -----
+# ghostty asks for Monaspace Neon Var; everything else -- fuzzel, gtk, swaync,
+# quickshell, hyprlock -- asks for JetBrainsMono Nerd Font.
 ttf-monaspace-variable
-otf-monaspace-nerd
 ttf-jetbrains-mono-nerd
-ttf-firacode-nerd
-ttf-dejavu
-ttf-dejavu-nerd
-ttf-nerd-fonts-symbols
-noto-fonts
 noto-fonts-emoji
-otf-font-awesome
-woff2-font-awesome
