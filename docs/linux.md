@@ -480,6 +480,7 @@ itself is never started.
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
 | wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
 | theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
+| hypridle | restarted if running — it reads its config only at startup, so a re-link alone leaves the old timeouts in place |
 | ssh | authorise agent keys, then install `system/` |
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |

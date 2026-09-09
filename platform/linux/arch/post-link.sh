@@ -66,6 +66,14 @@ fi
 echo "applying the theme mode..."
 "$HOME/.local/scripts/theme-mode.sh" --apply >/dev/null || echo "  theme mode not applied"
 
+# hypridle reads hypridle.conf once, at startup. Re-linking the config leaves
+# the running daemon on its old timeouts, silently, until the next login.
+if pgrep -x hypridle >/dev/null 2>&1; then
+	echo "restarting hypridle to pick up its config..."
+	pkill -x hypridle
+	setsid -f hypridle >/dev/null 2>&1
+fi
+
 # blueman-applet runs for its pairing agent, not its tray icon: without an
 # agent, BlueZ has nothing to answer pairing confirmations and bonding fails
 # with AuthenticationFailed. Network and bluetooth status live in the sidebar.
