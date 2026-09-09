@@ -173,7 +173,7 @@ The Linux one sources `~/.config/zsh/os.zsh` from the same package, then
 | Editor | Neovim | Neovim |
 | Theming | static TokyoNight Storm | matugen, derived from the wallpaper |
 
-Package counts: 50 formulae, 11 casks and 7 font casks on macOS; 106 repo
+Package counts: 50 formulae, 11 casks and 7 font casks on macOS; 107 repo
 packages and 2 AUR packages on Arch. macOS-only: the cloud and infra tooling
 (awscli, aws-vault, helm, kubernetes-cli, terraform), the JVM/PHP stack, and
 ghostscript + tectonic. Arch-only: the whole Hyprland session, the kernel and

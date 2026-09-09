@@ -128,6 +128,7 @@ fuzzel
 matugen
 ly
 brightnessctl
+wlopm
 
 # ------------------------------------------------------------- printing -----
 cups

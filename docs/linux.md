@@ -369,11 +369,15 @@ One line per invocation is logged to `$XDG_RUNTIME_DIR/hypr-lid.log`.
 |---|---|
 | 300s | dim to 10% (`brightnessctl -s`, restored on resume) |
 | 600s | `loginctl lock-session` |
+| 900s | screens off — `wlopm --off '*'`, back on with any activity |
 | 1800s | `suspend-if-on-battery.sh` — suspends only on battery; on AC the machine is docked and stays up |
 
-There is no dpms listener: `hl.dsp.dpms` toggles every monitor and ignores its
-arguments, so a monitor that changes state independently — as happens during
-lock — desyncs permanently with no way back. hyprlock blanks the screen instead.
+Powering the outputs down goes through `wlopm` rather than Hyprland's own
+dispatcher. `hl.dsp.dpms` ignores its argument and toggles every monitor, so a
+monitor that changed state on its own — as happens during lock — desyncs
+permanently with no way back, and `hyprctl dispatch dpms off` is rejected
+outright by the Lua parser. `wlopm` speaks `zwlr_output_power_manager_v1`, which
+Hyprland advertises, and takes an explicit `--off` / `--on`.
 
 hyprlock draws a centred input field over the matugen palette, with a large clock
 and date, and sources its colours from
@@ -449,7 +453,7 @@ provide, and omits anything another entry pulls in as a dependency.
 | Containers | docker, docker-compose, docker-buildx |
 | Audio | pipewire-alsa/jack/pulse, gst-plugin-pipewire, wireplumber, alsa-utils, pavucontrol, playerctl |
 | Network | network-manager-applet, blueman, bluez-utils |
-| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, upower, power-profiles-daemon, ly, qt5/qt6 support, papirus-icon-theme |
+| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, upower, power-profiles-daemon, ly, qt5/qt6 support, papirus-icon-theme |
 | Printing | cups, cups-pk-helper, system-config-printer |
 | Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
