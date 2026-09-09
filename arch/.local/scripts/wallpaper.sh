@@ -79,6 +79,7 @@ reload_gtk() {
 }
 
 qs ipc call theme-manager reload >/dev/null 2>&1
+sleep 0.1 # let matugen's write land before swaync re-reads it
 swaync-client --reload-css >/dev/null 2>&1
 apply_hypr_colors
 reload_gtk

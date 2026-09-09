@@ -1,4 +1,4 @@
-@import 'file:///home/nick/.local/state/matugen/swaync-colors.css';
+@import '../../colors.css';
 
 @define-color base alpha(@surface, 0.8);
 @define-color surface_custom alpha(@surface_container_high, 0.8);

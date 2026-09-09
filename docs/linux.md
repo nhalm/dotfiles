@@ -261,8 +261,8 @@ path in `~/.local/state/wallpaper`, then reloads each consumer:
 | `colors.json` | `~/.local/state/matugen/colors.json` | quickshell `Theme.qml` | `qs ipc call theme-manager reload` |
 | `hyprland-colors.lua` | `~/.config/hypr/matugen-colors.lua` | `looks.lua` | borders applied live by `hyprctl eval` |
 | `ghostty-colors` | `~/.config/ghostty/colors` | `config-file = ?colors` | new windows |
-| `colors.css` | `~/.local/state/matugen/swaync-colors.css` | swaync glass theme | `swaync-client --reload-css` |
-| `gtk-colors.css` | `~/.local/state/matugen/gtk-colors.css` | gtk-3.0 and gtk-4.0 `gtk.css` | app restart |
+| `colors.css` | `~/.config/swaync/colors.css` | swaync glass theme | `swaync-client --reload-css` |
+| `gtk-colors.css` | `~/.config/gtk-3.0/colors.css` and `gtk-4.0/colors.css` | both `gtk.css` files | `color-scheme` bounce |
 | `hyprlock-colors.conf` | `~/.local/state/matugen/hyprlock-colors.conf` | `hyprlock.conf` | next lock |
 | `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt5ct, qt6ct | app restart |
 | `fuzzel-colors.ini` | `~/.config/fuzzel/colors.ini` | `fuzzel.ini` | next launch |
@@ -496,7 +496,7 @@ Present in the config and not what a reader would guess:
 - **The palette is not file-watched.** `Theme.qml` reads `colors.json` with a
   `cat` process at startup and on IPC only, so editing that file by hand changes
   nothing until `qs ipc call theme-manager reload`. quickshell, swaync and
-  hyprland are each reloaded explicitly; gtk and Qt apps only pick up a new
+  hyprland and gtk are each reloaded explicitly; Qt apps only pick up a new
   palette when they restart.
 - **Light mode is only half-wired.** `theme-mode.sh` sets the GTK theme through
   gsettings, but the stowed `gtk-3.0/settings.ini` and `gtk-4.0/settings.ini`
@@ -506,9 +506,11 @@ Present in the config and not what a reader would guess:
 - **`QT_QPA_PLATFORMTHEME=qt6ct`** is set globally in `looks.lua`, so the tracked
   `qt5ct.conf` is only consulted by Qt5 apps that locate a qt5ct plugin
   themselves.
-- **Hardcoded `/home/nick` paths** in `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css`,
-  `qt5ct.conf`, `qt6ct.conf` and both swaync glass CSS files, plus `AllowUsers nick`
-  in the sshd drop-in. These are the files to change first if the repo is reused.
+- **Hardcoded `/home/nick` paths** remain in `qt5ct.conf` and `qt6ct.conf`:
+  `color_scheme_path` takes neither `~` nor an env var, so it cannot be made
+  relative the way the gtk and swaync imports were. `AllowUsers nick` in the sshd
+  drop-in is the other one. These are the files to change first if the repo is
+  reused.
 - **`Config.qml`'s built-in defaults are smaller than `bar.json`** — no Launcher,
   NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json`
   therefore yields a visibly reduced bar rather than an error.

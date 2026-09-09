@@ -126,9 +126,14 @@ packages that exist are used.
 `stow_package` moves any *real* file at a target path aside to
 `<path>.dotfiles-backup` before linking, rather than using `stow --adopt`, which
 resolves conflicts the other way round — pulling the machine's version into the
-repo and overwriting the config being installed. Targets whose physical
-directory already sits inside the repo are skipped, so a folded directory is not
-renamed out from under git.
+repo and overwriting the config being installed.
+
+Linking uses `--no-folding`, so every file is linked individually and the
+directories under `~` stay real. A folded directory is a symlink *into* the
+repo, which means anything written next to a linked file — a matugen palette, a
+theme downloaded at setup, a machine-local override — lands in the working tree.
+This is what lets matugen write `colors.css` beside the `gtk.css` that imports
+it.
 
 ### Per-file differences
 
@@ -143,9 +148,7 @@ that each package provides, instead of the whole file being duplicated:
 
 `.zshrc` is not shared — `linux/.zshrc` and `darwin/.zshrc` are separate files.
 The Linux one sources `~/.config/zsh/os.zsh` from the same package, then
-`~/.config/zsh/local.zsh` for per-machine overrides. Stow folds
-`~/.config/zsh` into a symlink to `linux/.config/zsh`, so `local.zsh` is created
-inside the repo; `.gitignore` covers it.
+`~/.config/zsh/local.zsh` for per-machine overrides.
 
 ### Adding a distro
 

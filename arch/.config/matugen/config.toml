@@ -18,7 +18,7 @@ output_path = '~/.config/fuzzel/colors.ini'
 
 [templates.swaync]
 input_path = '~/.config/matugen/templates/colors.css'
-output_path = '~/.local/state/matugen/swaync-colors.css'
+output_path = '~/.config/swaync/colors.css'
 
 [templates.starship]
 input_path = '~/.config/matugen/templates/starship.toml'
@@ -28,9 +28,13 @@ output_path = '~/.local/state/matugen/starship.toml'
 input_path = '~/.config/matugen/templates/btop.theme'
 output_path = '~/.config/btop/themes/matugen.theme'
 
-[templates.gtk]
+[templates.gtk3]
 input_path = '~/.config/matugen/templates/gtk-colors.css'
-output_path = '~/.local/state/matugen/gtk-colors.css'
+output_path = '~/.config/gtk-3.0/colors.css'
+
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk-colors.css'
+output_path = '~/.config/gtk-4.0/colors.css'
 
 [templates.hyprlock]
 input_path = '~/.config/matugen/templates/hyprlock-colors.conf'

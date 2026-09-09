@@ -16,3 +16,8 @@ darwin/.config/sketchybar/helpers/git_toolkit/.git_cache
 
 # Per-machine shell overrides, sourced by .zshrc if present
 .config/zsh/local.zsh
+
+# matugen writes these beside the configs that import them
+.config/gtk-3.0/colors.css
+.config/gtk-4.0/colors.css
+.config/swaync/colors.css
