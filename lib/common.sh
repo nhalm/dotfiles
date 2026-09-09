@@ -103,6 +103,34 @@ install_zsh_plugins() {
 	done
 }
 
+# ---------------------------------------------------------- wallpapers ------
+
+# ML4W's collection, cloned into a subdirectory rather than straight into
+# ~/Pictures/Wallpapers: wallpaper.sh and the quickshell picker both walk that
+# directory recursively, so anything you drop in the top level shows up
+# alongside these without becoming an untracked file inside someone else's
+# git repo.
+#
+# ~1.5G for 219 images even shallow, which makes this the slowest step of a
+# fresh setup. Point WALLPAPER_REPO somewhere smaller to change that.
+WALLPAPER_REPO="${WALLPAPER_REPO:-https://github.com/mylinuxforwork/wallpaper}"
+
+install_wallpapers() {
+	local root="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+	local dir="$root/ml4w"
+
+	mkdir -p "$root"
+
+	if [ -d "$dir/.git" ]; then
+		echo "updating wallpapers..."
+		git -C "$dir" pull --quiet --ff-only || echo "  pull failed, leaving as-is"
+	else
+		echo "cloning wallpapers..."
+		git clone --quiet --depth 1 "$WALLPAPER_REPO" "$dir" ||
+			echo "  clone failed; the picker will be empty until this succeeds"
+	fi
+}
+
 # ------------------------------------------------------- login shell --------
 
 # chsh needs the shell listed in /etc/shells; macOS and Linux agree on that much.

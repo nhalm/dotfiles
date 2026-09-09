@@ -52,7 +52,9 @@ if command -v bluetoothctl >/dev/null 2>&1; then
 	fi
 fi
 
-mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Pictures/Wallpapers" "$HOME/Videos/Recordings"
+mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Videos/Recordings"
+
+install_wallpapers
 
 # blueman-applet runs for its pairing agent, not its tray icon: without an
 # agent, BlueZ has nothing to answer pairing confirmations and bonding fails

@@ -156,6 +156,22 @@ to the stock generated config:
 - Focus directions had `j`→right and `l`→down. Now `h/j/k/l` is
   left/down/up/right.
 
+### Wallpapers
+
+Not tracked here. `setup.sh` clones
+[ML4W's collection](https://github.com/mylinuxforwork/wallpaper) into
+`~/Pictures/Wallpapers/ml4w` — a subdirectory, not the directory itself, so
+your own images can sit in the top level without ending up untracked inside
+someone else's repo. `wallpaper.sh` and the quickshell picker both walk the
+tree recursively and pick up either.
+
+It is ~1.5G for 219 images, the slowest step of a fresh setup. Set
+`WALLPAPER_REPO` to use something else.
+
+The wallpaper is not just decoration: `matugen` derives the whole palette from
+it, so changing it recolours ghostty, hyprlock, fuzzel, gtk, swaync and
+quickshell together.
+
 ### Display layout
 
 The layout is deliberately **not** in this repo -- it is machine-specific, and
