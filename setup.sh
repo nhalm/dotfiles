@@ -120,5 +120,7 @@ if [ -n "$LOGIN_SHELL" ]; then
 	echo
 fi
 
+check_kernel_drift
+
 echo "Setup complete."
 echo "Open a new terminal, then run 'nvim' and ':checkhealth' to verify."
