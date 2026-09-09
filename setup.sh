@@ -103,6 +103,12 @@ install_claude_code
 check_herdr
 echo
 
+if [ "$OS_FAMILY" = "linux" ]; then
+	echo "==> vulnerability check"
+	check_vulnerable_packages
+	echo
+fi
+
 echo "==> git"
 setup_github_gpg
 use_ssh_remote

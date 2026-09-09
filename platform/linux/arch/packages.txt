@@ -1,8 +1,70 @@
 # Arch official repos (core/extra). Installed with `pacman -S --needed`, so
-# entries already present are skipped -- the list describes a fresh machine.
+# entries already present are skipped.
+#
+# This is a full manifest of what this machine runs, not just the interesting
+# parts: the point is that a fresh install plus ./setup.sh lands in the same
+# place. Packages the Arch installer puts down are listed too -- --needed makes
+# them no-ops, and leaving them out means the list quietly stops describing the
+# machine.
 
-# core
+# ---------------------------------------------------------------- base ------
+base
 base-devel
+linux
+linux-lts
+linux-headers
+linux-firmware
+mkinitcpio
+sudo
+# Bootloader: systemd-boot (from systemd) is what actually boots this machine.
+# `limine` is also installed and unused -- a leftover from the installer.
+# Remove it rather than carrying it, unless you deliberately switch.
+efibootmgr
+# btrfs root with snapshots
+btrfs-progs
+snapper
+# swap is zram, not a disk partition
+zram-generator
+
+# ------------------------------------------------------------ hardware ------
+# Intel: microcode, video acceleration, low-power daemon, thermal management
+intel-ucode
+intel-media-driver
+intel-lpmd
+vulkan-intel
+libva-utils
+thermald
+power-profiles-daemon
+sof-firmware
+# Firmware updates -- `fwupdmgr refresh && fwupdmgr get-updates`
+fwupd
+# Virtual camera for OBS; needs dkms + matching headers
+dkms
+v4l2loopback-dkms
+
+# ------------------------------------------------------------- network ------
+networkmanager
+network-manager-applet
+nm-connection-editor
+wpa_supplicant
+# Bluetooth: bluez is in the base install, this is the manager + applet
+bluez
+bluez-utils
+blueman
+
+# --------------------------------------------------------------- audio ------
+pipewire
+pipewire-alsa
+pipewire-jack
+pipewire-pulse
+wireplumber
+gst-plugin-pipewire
+libpulse
+alsa-utils
+pavucontrol
+playerctl
+
+# ---------------------------------------------------------------- core ------
 git
 git-lfs
 openssh
@@ -11,19 +73,30 @@ stow
 wget
 unzip
 man-db
+clang
+7zip
 
-# shell
+# -------------------------------------------------------------- security ----
+# ufw: host firewall, default-deny inbound, ssh rate-limited (post-link.sh)
+ufw
+# gitleaks: staged-secret scan, wired in as a global pre-commit hook
+gitleaks
+# arch-audit: lists installed packages with open CVEs
+arch-audit
+
+# --------------------------------------------------------------- shell ------
 zsh
 starship
 mise
 
-# editor
+# -------------------------------------------------------------- editor ------
 neovim
 python-pynvim
 tree-sitter-cli
 wl-clipboard
+xclip
 
-# search and files
+# ----------------------------------------------------- search and files -----
 ripgrep
 fd
 fzf
@@ -31,52 +104,53 @@ bat
 glow
 tree
 
-# data
+# ---------------------------------------------------------------- data ------
 jq
 yq
 
-# system
+# -------------------------------------------------------------- system ------
 htop
+btop
+pacman-contrib
 
-# security
-# ufw: host firewall, default-deny inbound (see post-link.sh)
-ufw
-# gitleaks: staged-secret scan, wired in as a global pre-commit hook
-gitleaks
-# arch-audit: reports installed packages with known CVEs
-arch-audit
-
-# git
+# ----------------------------------------------------------------- git ------
 github-cli
 
-# containers -- native docker; no Colima VM needed on Linux
+# ---------------------------------------------------------- containers ------
+# native docker; no Colima VM needed on Linux
 docker
 docker-compose
 docker-buildx
 
-# terminal
+# ------------------------------------------------------------ terminal ------
 ghostty
 
-# desktop -- Hyprland session
+# --------------------------------------------- desktop: Hyprland session ----
 hyprland
 hyprlauncher
 hyprpicker
 hyprpolkitagent
 hyprshutdown
+hyprlock
+hypridle
+hyprshot
+hyprsunset
 xdg-desktop-portal-hyprland
 qt5-wayland
 qt6-wayland
 qt5ct
 qt6ct
+qt6-multimedia-ffmpeg
+qt6-virtualkeyboard
 papirus-icon-theme
 swaync
 # Toolkit for building a custom shell in QML -- see arch/.config/quickshell
 quickshell
 # Interactive display layout editor; writes ~/.config/hypr/monitors.lua
 nwg-displays
-hyprlock
-hypridle
-hyprshot
+# Wallpaper daemon. Upstream renamed swww -> awww; the package still
+# Provides/Replaces swww, and wallpaper.sh resolves either binary name.
+awww
 grim
 slurp
 satty
@@ -85,27 +159,39 @@ cliphist
 wl-clip-persist
 fuzzel
 matugen
-btop
-pacman-contrib
-hyprsunset
+# TUI display manager. Installed but its unit (ly@.service) is NOT enabled --
+# login is plain getty. Drop it unless you intend to switch.
+ly
 
-# hardware keys -- brightnessctl needs the video group, see post-link.sh
+# ------------------------------------------------------- hardware keys ------
+# brightnessctl needs the video group, see post-link.sh
 brightnessctl
-playerctl
-alsa-utils
-pavucontrol
-network-manager-applet
-nm-connection-editor
-# Bluetooth: bluez is in the base install, this is the GTK manager + tray applet
-bluez
-bluez-utils
-blueman
 
-# desktop apps
+# ------------------------------------------------------------ printing ------
+cups
+cups-pk-helper
+system-config-printer
+
+# -------------------------------------------------------- desktop apps ------
+firefox
 nemo
 imv
 mpv
+obs-studio
+telegram-desktop
+imagemagick
 
-# fonts -- Monaspace Neon Var is what the ghostty config asks for
+# --------------------------------------------------------------- fonts ------
+# Monaspace Neon Var is what the ghostty config asks for; JetBrains Mono Nerd
+# is what hyprlock.conf asks for.
 ttf-monaspace-variable
 otf-monaspace-nerd
+ttf-jetbrains-mono-nerd
+ttf-firacode-nerd
+ttf-dejavu
+ttf-dejavu-nerd
+ttf-nerd-fonts-symbols
+noto-fonts
+noto-fonts-emoji
+otf-font-awesome
+woff2-font-awesome

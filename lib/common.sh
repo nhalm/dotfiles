@@ -148,6 +148,21 @@ check_herdr() {
 	fi
 }
 
+# Report installed packages with published CVEs. Advisory only -- never fails
+# setup, since an open advisory usually means "wait for the patched build",
+# not "this machine is broken".
+check_vulnerable_packages() {
+	command -v arch-audit >/dev/null 2>&1 || { echo "arch-audit not installed, skipping"; return 0; }
+	local out
+	out="$(arch-audit --upgradable --quiet 2>/dev/null)" || true
+	if [ -z "$out" ]; then
+		echo "no packages with known vulnerabilities and an available fix"
+	else
+		echo "packages with known vulnerabilities that a pacman -Syu would fix:"
+		echo "$out" | sed 's/^/  /'
+	fi
+}
+
 # npm globals, installed against the mise-managed node. `mise exec` is used
 # rather than a bare `npm` because setup runs before any shell has activated
 # mise, so the shims are not on PATH yet.

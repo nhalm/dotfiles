@@ -241,6 +241,53 @@ switches the remote to SSH at the end, once the 1Password agent is available.
 
 See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
 
+## Rebuilding this machine
+
+The runbook is `./setup.sh`. Everything below it is what the script genuinely
+cannot do, kept short on purpose.
+
+1. **Install Arch**, with LUKS on the root partition this time. Choose btrfs,
+   and let the installer set up systemd-boot. Swap is zram (`zram-generator`),
+   so there is no swap partition to encrypt and no hibernation image to leak.
+2. **Bootstrap**, which clones this repo and hands off to `setup.sh`:
+   ```bash
+   bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
+   ```
+3. **Sign in to 1Password** and enable the SSH agent. Nothing else can
+   authenticate to GitHub or sign a commit until this is done — no private key
+   exists on disk by design.
+4. **Authorise your SSH key**, before the sshd hardening will install:
+   ```bash
+   ssh-add -L > ~/.ssh/authorized_keys
+   chmod 600 ~/.ssh/authorized_keys
+   ./setup.sh        # re-run; the drop-in installs and passwords stop working
+   ```
+5. **Bind LUKS to the TPM** so you are not typing a passphrase at every boot:
+   ```bash
+   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p2
+   ```
+   Do this *after* Secure Boot, if you are doing Secure Boot at all — PCR 7
+   measures Secure Boot state, so enabling it later invalidates the enrolment.
+6. **Secure Boot**, optional and last, because it is the only step that
+   touches firmware:
+   ```bash
+   sudo pacman -S sbctl
+   # reboot into firmware, put Secure Boot in Setup Mode, then:
+   sudo sbctl create-keys
+   sudo sbctl enroll-keys -m      # -m keeps Microsoft certs; ASUS option ROMs need them
+   sudo sbctl sign -s /boot/vmlinuz-linux
+   sudo sbctl verify              # nothing should be left unsigned
+   # reboot into firmware, enable Secure Boot
+   ```
+   `sbctl` installs a pacman hook that re-signs on every kernel update, so this
+   is one-time. The keys live in `/var/lib/sbctl` and are machine secrets —
+   they must never end up in this repo.
+
+Anything not on that list should be in the repo. If you install a package by
+hand, add it to `platform/linux/arch/packages.txt` in the same breath —
+`packages.txt` is meant to be a full manifest of the machine, not a highlights
+reel, so that step 2 alone reproduces it.
+
 ## Security
 
 The repo carries its own hardening rather than leaving it to be redone by hand

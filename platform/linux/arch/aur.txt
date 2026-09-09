@@ -1,4 +1,20 @@
-# Packages that only exist in the AUR. Installed with yay.
+# Packages with no official-repo equivalent. Installed with yay WITHOUT
+# --noconfirm (see lib/pkg.sh), so every PKGBUILD gets a diff prompt.
+#
+# Keep this list as short as possible: an AUR PKGBUILD is arbitrary shell from
+# a repo anyone can upload to, and it runs as you at build time.
+#
+# Both entries below are thin wrappers -- they fetch a tarball straight from
+# 1Password's own domain and gpg-verify it against
+#
+#     3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+#
+# so the trust root is 1Password, not the AUR maintainer. When the diff prompt
+# appears, that fingerprint and the downloads.1password.com / agilebits.com
+# source URLs are the things to check. A PKGBUILD that changes either is the
+# signal to stop.
+#
+# There is no official Arch repository for 1Password; AUR is the vendor's
+# documented path. Everything else this machine needs comes from core/extra.
 1password
 1password-cli
-swww
