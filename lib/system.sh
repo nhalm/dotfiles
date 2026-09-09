@@ -99,21 +99,43 @@ install_system_files() {
 		echo "  ${dests[$i]}"
 	done
 
-	local wrote_sysctl=0
+	local wrote_sysctl=0 wrote_sshd=0 wrote_docker=0
 	for i in "${!srcs[@]}"; do
 		if sudo install -D -o root -g root -m 0644 "${srcs[$i]}" "${dests[$i]}"; then
 			echo "  installed ${dests[$i]}"
 			case "${dests[$i]}" in
 			/etc/sysctl.d/*) wrote_sysctl=1 ;;
+			/etc/ssh/sshd_config.d/*) wrote_sshd=1 ;;
+			/etc/docker/*) wrote_docker=1 ;;
 			esac
 		else
 			echo "  failed to install ${dests[$i]}" >&2
 		fi
 	done
 
-	# Apply now rather than only at next boot.
+	# Apply now rather than at next boot. A file installed but not loaded is
+	# worse than one not installed: --diff-system reports it as done.
 	if [ "$wrote_sysctl" = 1 ]; then
 		echo "reloading sysctl..."
 		sudo sysctl --system >/dev/null && echo "  sysctl reloaded"
+	fi
+
+	# Validate before reloading: a config sshd rejects would take the service
+	# down, and this is a machine reached over ssh.
+	if [ "$wrote_sshd" = 1 ] && systemctl is-active --quiet sshd 2>/dev/null; then
+		if sudo sshd -t; then
+			echo "reloading sshd..."
+			sudo systemctl reload sshd && echo "  sshd reloaded (existing sessions keep running)"
+		else
+			echo "  sshd rejected the new config; NOT reloading" >&2
+			echo "  the running daemon keeps its old settings until this is fixed" >&2
+		fi
+	fi
+
+	# Not restarted automatically: it stops every running container, which is
+	# not something a config sync should decide to do.
+	if [ "$wrote_docker" = 1 ] && systemctl is-active --quiet docker 2>/dev/null; then
+		echo "  docker config changed -- restart to apply, when convenient:"
+		echo "      sudo systemctl restart docker"
 	fi
 }
