@@ -1,6 +1,6 @@
-# Two-line prompt, tokyonight-storm palette. Roughly the information tide showed
-# on the Mac: where you are, git state, how long the last command took, and the
-# exit code when it wasn't zero.
+# Rendered by matugen from the wallpaper; edit this template, not the output.
+# Two-line prompt: where you are, git state, how long the last command took, and
+# the exit code when it wasn't zero.
 
 format = """
 [](blue)\
@@ -18,19 +18,20 @@ $character"""
 
 add_newline = true
 
-[palettes.tokyonight]
-bg = "#24283b"
-fg = "#c0caf5"
-blue = "#7aa2f7"
-cyan = "#7dcfff"
-green = "#9ece6a"
-magenta = "#bb9af7"
-red = "#f7768e"
-yellow = "#e0af68"
-orange = "#ff9e64"
-grey = "#565f89"
+[palettes.matugen]
+blue = "{{colors.primary.default.hex}}"
+magenta = "{{colors.secondary.default.hex}}"
+cyan = "{{colors.tertiary.default.hex}}"
+yellow = "{{colors.tertiary_fixed.default.hex}}"
+orange = "{{colors.primary_fixed.default.hex}}"
+green = "{{colors.on_surface_variant.default.hex}}"
+red = "{{colors.error.default.hex}}"
+grey = "{{colors.outline.default.hex}}"
 
-palette = "tokyonight"
+# Success has no Material role, and a wallpaper-derived one could land on red.
+success = "#9ece6a"
+
+palette = "matugen"
 
 [fill]
 symbol = " "
@@ -64,11 +65,11 @@ deleted = "✘${count} "
 
 [git_state]
 style = "red"
-format = "\\([$state( $progress_current/$progress_total)]($style)\\) "
+format = "\\\\([$state( $progress_current/$progress_total)]($style)\\\\) "
 
 # Exit code only shows when it is non-zero -- the character below carries it.
 [character]
-success_symbol = "[❯](green)"
+success_symbol = "[❯](success)"
 error_symbol = "[❯](red)"
 vimcmd_symbol = "[❮](magenta)"
 

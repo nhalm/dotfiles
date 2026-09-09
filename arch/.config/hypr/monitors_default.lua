@@ -25,4 +25,4 @@ if not pcall(require, "monitors." .. variant) then
 	require("monitors.scale-125")
 end
 
-hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.5 })
+hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.25 })

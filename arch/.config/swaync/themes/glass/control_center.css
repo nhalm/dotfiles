@@ -1,4 +1,4 @@
-@import 'file:///home/nick/.local/state/matugen/swaync-colors.css';
+@import '../../colors.css';
 
 @define-color surface_custom alpha(@surface_container_high, 1);
 @define-color hovercolor alpha(@surface_container_high, 1);

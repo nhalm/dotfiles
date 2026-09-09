@@ -259,7 +259,7 @@ PanelWindow {
 
                 PillButton {
                     text: "Wallpaper"
-                    onClicked: { root.isOpen = false; root.run(Quickshell.env("HOME") + "/.local/scripts/wallpaper.sh"); }
+                    onClicked: { root.isOpen = false; root.run("qs ipc call wallpaper toggle"); }
                 }
                 PillButton {
                     text: "Displays"

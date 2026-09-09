@@ -53,7 +53,11 @@ stow_package() {
 		echo "  backed up $target -> $backup"
 	done < <(cd "$DOTFILES/$pkg" && find . \( -type f -o -type l \) | sed 's|^\./||')
 
-	stow -d "$DOTFILES" -t "$HOME" -R "$pkg"
+	# --no-folding: link every file individually and keep real directories.
+	# A folded directory is a symlink into the repo, so anything written
+	# beside a linked file -- a matugen palette, a downloaded theme, a
+	# machine-local override -- lands in the working tree.
+	stow -d "$DOTFILES" -t "$HOME" -R --no-folding "$pkg"
 }
 
 link_configs() {

@@ -16,3 +16,10 @@ darwin/.config/sketchybar/helpers/git_toolkit/.git_cache
 
 # Per-machine shell overrides, sourced by .zshrc if present
 .config/zsh/local.zsh
+
+# Generated beside the configs that consume them, never tracked
+.config/gtk-3.0/colors.css
+.config/gtk-4.0/colors.css
+.config/gtk-3.0/settings.ini
+.config/gtk-4.0/settings.ini
+.config/swaync/colors.css

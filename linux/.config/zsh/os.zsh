@@ -9,6 +9,12 @@ alias ll='ls -lah --color=auto'
 alias grep='grep --color=auto'
 alias diff='diff --color=auto'
 
+# matugen renders the prompt from the wallpaper where it runs; elsewhere
+# starship falls back to its own defaults.
+_starship_generated="${XDG_STATE_HOME:-$HOME/.local/state}/matugen/starship.toml"
+[[ -r $_starship_generated ]] && export STARSHIP_CONFIG="$_starship_generated"
+unset _starship_generated
+
 # Wayland clipboard, so `pbcopy`-style muscle memory keeps working.
 if (( $+commands[wl-copy] )); then
 	alias pbcopy='wl-copy'

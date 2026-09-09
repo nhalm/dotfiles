@@ -28,7 +28,7 @@ set -uo pipefail
 INTERNAL="${HYPR_INTERNAL_MONITOR:-eDP-1}"
 INTERNAL_MODE="${HYPR_INTERNAL_MODE:-preferred}"
 INTERNAL_POSITION="${HYPR_INTERNAL_POSITION:-auto}"
-INTERNAL_SCALE="${HYPR_INTERNAL_SCALE:-1.5}"
+INTERNAL_SCALE="${HYPR_INTERNAL_SCALE:-1.25}"
 
 # HYPR_LID_LOCK=0 to keep working on externals with the lid closed.
 LID_LOCK="${HYPR_LID_LOCK:-1}"
@@ -91,7 +91,9 @@ closed)
 			hyprctl dispatch "hl.dsp.focus({ workspace = $ws })" >/dev/null 2>&1
 		fi
 
-		if [ "$LID_LOCK" = "1" ]; then
+		# sync only re-asserts state after a config reload; locking is for a
+		# real lid close.
+		if [ "$LID_LOCK" = "1" ] && [ "${1:-}" != "sync" ]; then
 			loginctl lock-session
 		fi
 	fi

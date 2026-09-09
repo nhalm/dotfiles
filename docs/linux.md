@@ -66,7 +66,8 @@ any of this.
 | Notification daemon, toasts, control center, DND state | swaync |
 | Notification count and DND glyph in the bar | quickshell, reading `swaync-client -swb` |
 | App launcher | hyprlauncher |
-| dmenu-style pickers (clipboard, `wallpaper.sh` with no args) | fuzzel |
+| Clipboard history picker | fuzzel |
+| Wallpaper picker | quickshell carousel, `SUPER+W` or the sidebar |
 | Wallpaper daemon | `awww-daemon`, started on demand by `wallpaper.sh` |
 | Idle | hypridle |
 | Lock | hyprlock |
@@ -243,11 +244,14 @@ rather than reverting and regenerating them.
 matugen derives a Material palette from the wallpaper. One command drives it:
 
 ```bash
-wallpaper.sh <image>    # a specific image
-wallpaper.sh            # pick with fuzzel
+wallpaper.sh <image>     # a specific image
 wallpaper.sh --random
 wallpaper.sh --restore   # what autostart runs
 ```
+
+Choosing one interactively is the carousel's job — `SUPER+W`, or the sidebar's
+Wallpaper button, both of which are `qs ipc call wallpaper toggle`. The script
+takes no interactive mode; with no argument it prints usage and exits 1.
 
 It sets the wallpaper with `awww`, runs `matugen image … -m <mode>`, records the
 path in `~/.local/state/wallpaper`, then reloads each consumer:
@@ -257,26 +261,33 @@ path in `~/.local/state/wallpaper`, then reloads each consumer:
 | `colors.json` | `~/.local/state/matugen/colors.json` | quickshell `Theme.qml` | `qs ipc call theme-manager reload` |
 | `hyprland-colors.lua` | `~/.config/hypr/matugen-colors.lua` | `looks.lua` | borders applied live by `hyprctl eval` |
 | `ghostty-colors` | `~/.config/ghostty/colors` | `config-file = ?colors` | new windows |
-| `colors.css` | `~/.local/state/matugen/swaync-colors.css` | swaync glass theme | `swaync-client --reload-css` |
-| `gtk-colors.css` | `~/.local/state/matugen/gtk-colors.css` | gtk-3.0 and gtk-4.0 `gtk.css` | app restart |
+| `colors.css` | `~/.config/swaync/colors.css` | swaync glass theme | `swaync-client --reload-css` |
+| `gtk-colors.css` | `~/.config/gtk-3.0/colors.css` and `gtk-4.0/colors.css` | both `gtk.css` files | `color-scheme` bounce |
 | `hyprlock-colors.conf` | `~/.local/state/matugen/hyprlock-colors.conf` | `hyprlock.conf` | next lock |
-| `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt5ct, qt6ct | app restart |
+| `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt6ct | app restart |
 | `fuzzel-colors.ini` | `~/.config/fuzzel/colors.ini` | `fuzzel.ini` | next launch |
+| `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
 
 Borders are applied with a single `hyprctl eval` rather than a config reload,
 because a reload re-applies the monitor rules and makes every display flicker.
 
 Light/dark lives in `~/.local/state/matugen/mode`, written only by
-`theme-mode.sh` (`SUPER+SHIFT+W`), which also sets the GTK colour-scheme
-gsettings keys and then re-runs `wallpaper.sh --restore`.
+`theme-mode.sh` (`SUPER+SHIFT+W`). It also writes both `gtk-3.0/settings.ini`
+and `gtk-4.0/settings.ini` — those carry the mode, so a stowed copy would be
+wrong in one of them, and matugen cannot render them because templates see
+colours but not the mode. `gtk-theme-name` stays `Adwaita` in both modes: the
+generated `colors.css` overrides every libadwaita named colour, so the stock
+theme's own palette never shows. Then it re-runs `wallpaper.sh --restore`.
 
-**TokyoNight Storm is still the fallback**, hardcoded in four places: the
-property defaults in `Theme.qml` (what the bar shows before `colors.json`
-exists), `hypr/colors.lua` (border colours before any wallpaper is set),
-`starship.toml`, and ghostty's base `theme =` under the matugen include.
-`hypr/colors.lua` supplies only `primary`, `secondary` and `outline_variant`;
-its other two keys are unused.
+Two hardcoded TokyoNight fallbacks remain, and both exist because something must
+render before matugen has ever run: the property defaults in `Theme.qml`, and
+`hypr/colors.lua` for the border colours. Neither is normally reached — Arch
+post-link seeds a wallpaper, so the generated palette exists from setup onward.
+
+Ghostty's `theme = TokyoNight Storm` is not a fallback: `config-file = ?colors`
+is optional and that file only exists on Arch, so the base theme is what macOS
+actually uses.
 
 Wallpapers come from [nhalm/wallpapers](https://github.com/nhalm/wallpapers),
 cloned to `~/Pictures/Wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
@@ -301,8 +312,8 @@ unknown name falls back to `scale-125`:
 | `highres` | highest available | auto |
 
 The internal panel is then pinned separately, on the last line and
-unconditionally: `eDP-1`, preferred mode, scale 1.5. So the variant only ever
-affects **external** displays — the panel is always 1.5× unless `monitors.lua`
+unconditionally: `eDP-1`, preferred mode, scale 1.25. So the variant only ever
+affects **external** displays — the panel is always 1.25× unless `monitors.lua`
 overrides it. The same value is repeated as `HYPR_INTERNAL_SCALE` in
 `hypr-lid.sh`.
 
@@ -348,7 +359,7 @@ nwg-displays layout exactly instead of fighting it with `position = auto`.
 | Variable | Default | Effect |
 |---|---|---|
 | `HYPR_INTERNAL_MONITOR` | `eDP-1` | which output is the panel |
-| `HYPR_INTERNAL_MODE` / `_POSITION` / `_SCALE` | preferred / auto / 1.5 | re-enable fallback if reload fails |
+| `HYPR_INTERNAL_MODE` / `_POSITION` / `_SCALE` | preferred / auto / 1.25 | re-enable fallback if reload fails |
 | `HYPR_LID_LOCK` | `1` | `0` keeps working on externals with the lid closed |
 | `HYPR_MONITORS_DELAY` | `0.4` | settle time before re-packing after a hotplug |
 
@@ -362,11 +373,15 @@ One line per invocation is logged to `$XDG_RUNTIME_DIR/hypr-lid.log`.
 |---|---|
 | 300s | dim to 10% (`brightnessctl -s`, restored on resume) |
 | 600s | `loginctl lock-session` |
+| 900s | screens off — `wlopm --off '*'`, back on with any activity |
 | 1800s | `suspend-if-on-battery.sh` — suspends only on battery; on AC the machine is docked and stays up |
 
-There is no dpms listener: `hl.dsp.dpms` toggles every monitor and ignores its
-arguments, so a monitor that changes state independently — as happens during
-lock — desyncs permanently with no way back. hyprlock blanks the screen instead.
+Powering the outputs down goes through `wlopm` rather than Hyprland's own
+dispatcher. `hl.dsp.dpms` ignores its argument and toggles every monitor, so a
+monitor that changed state on its own — as happens during lock — desyncs
+permanently with no way back, and `hyprctl dispatch dpms off` is rejected
+outright by the Lua parser. `wlopm` speaks `zwlr_output_power_manager_v1`, which
+Hyprland advertises, and takes an explicit `--off` / `--on`.
 
 hyprlock draws a centred input field over the matugen palette, with a large clock
 and date, and sources its colours from
@@ -378,8 +393,8 @@ and date, and sources its colours from
 
 | Script | Arguments | Invoked by |
 |---|---|---|
-| `wallpaper.sh` | image, none, `--random`, `--restore` | autostart, `SUPER+CTRL+W`, sidebar, picker, `theme-mode.sh` |
-| `theme-mode.sh` | none (toggle), `dark`, `light`, `--current` | `SUPER+SHIFT+W`, sidebar |
+| `wallpaper.sh` | image, `--random`, `--restore` | autostart, `SUPER+CTRL+W`, the carousel, `theme-mode.sh` |
+| `theme-mode.sh` | none (toggle), `dark`, `light`, `--apply`, `--current` | `SUPER+SHIFT+W`, sidebar, arch post-link |
 | `hypr-lid.sh` | `closed`, `open`, `sync` | lid switch binds, config load |
 | `hypr-monitors.sh` | — | `hypr-lid.sh` on close |
 | `toggle-float.sh` | — | `SUPER+SHIFT+F` |
@@ -413,7 +428,14 @@ aliases, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`.
 The starship prompt is two lines — directory, repo name when below the repo
 root, branch, git state and status, then right-aligned language versions, docker
 context and command duration over 2s. Exit status shows only through the prompt
-character's colour. Palette is TokyoNight Storm, independent of matugen.
+character's colour.
+
+Its palette comes from the wallpaper: the config lives as a matugen template at
+`arch/.config/matugen/templates/starship.toml`, renders to
+`~/.local/state/matugen/starship.toml`, and `os.zsh` points `STARSHIP_CONFIG`
+at that file when it exists. Edit the template, never the output. The success
+character keeps a fixed green — Material has no success role, and a
+wallpaper-derived one could land on red, which is the failure colour.
 
 ## Packages
 
@@ -435,7 +457,7 @@ provide, and omits anything another entry pulls in as a dependency.
 | Containers | docker, docker-compose, docker-buildx |
 | Audio | pipewire-alsa/jack/pulse, gst-plugin-pipewire, wireplumber, alsa-utils, pavucontrol, playerctl |
 | Network | network-manager-applet, blueman, bluez-utils |
-| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, upower, power-profiles-daemon, ly, qt5/qt6 support, papirus-icon-theme |
+| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, upower, power-profiles-daemon, ly, qt6ct, qt5/qt6 wayland, papirus-icon-theme |
 | Printing | cups, cups-pk-helper, system-config-printer |
 | Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
@@ -456,7 +478,8 @@ itself is never started.
 | bluetooth | enable `bluetooth.service`; bluez ships it disabled and blueman cannot see the adapter without it |
 | blueman | `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"` — pairing agent without a tray icon |
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
-| wallpapers | clone or update `~/Pictures/Wallpapers` |
+| wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
+| theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
 | ssh | authorise agent keys, then install `system/` |
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |
@@ -482,22 +505,14 @@ Present in the config and not what a reader would guess:
 - **The palette is not file-watched.** `Theme.qml` reads `colors.json` with a
   `cat` process at startup and on IPC only, so editing that file by hand changes
   nothing until `qs ipc call theme-manager reload`. quickshell, swaync and
-  hyprland are each reloaded explicitly; gtk and Qt apps only pick up a new
+  hyprland and gtk are each reloaded explicitly; Qt apps only pick up a new
   palette when they restart.
-- **The sidebar's Wallpaper button is not the wallpaper picker.** It runs
-  `wallpaper.sh` with no arguments, which is the fuzzel picker. The QML carousel
-  is only reachable through `SUPER+W`.
-- **Light mode is only half-wired.** `theme-mode.sh` sets the GTK theme through
-  gsettings, but the stowed `gtk-3.0/settings.ini` and `gtk-4.0/settings.ini`
-  hardcode `gtk-theme-name=Adwaita`, `Papirus-Dark` icons and
-  `gtk-application-prefer-dark-theme=1`. The ghostty matugen template reads
-  `.dark.hex` for every colour, so the terminal palette ignores the mode too.
-- **`QT_QPA_PLATFORMTHEME=qt6ct`** is set globally in `looks.lua`, so the tracked
-  `qt5ct.conf` is only consulted by Qt5 apps that locate a qt5ct plugin
-  themselves.
-- **Hardcoded `/home/nick` paths** in `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css`,
-  `qt5ct.conf`, `qt6ct.conf` and both swaync glass CSS files, plus `AllowUsers nick`
-  in the sshd drop-in. These are the files to change first if the repo is reused.
+- **The ghostty palette ignores light mode.** Its matugen template reads
+  `.dark.hex` for every colour, so the terminal stays dark when everything else
+  flips.
+- **Hardcoded `/home/nick` paths** remain in `qt6ct.conf`, whose
+  `color_scheme_path` takes neither `~` nor an env var, and `AllowUsers nick` in
+  the sshd drop-in. These are the files to change first if the repo is reused.
 - **`Config.qml`'s built-in defaults are smaller than `bar.json`** — no Launcher,
   NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json`
   therefore yields a visibly reduced bar rather than an error.

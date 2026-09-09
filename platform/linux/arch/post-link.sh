@@ -55,6 +55,17 @@ mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Videos/Recordings"
 
 install_wallpapers
 
+# Generate the palette now, so nothing renders with the hardcoded fallbacks
+# before a wallpaper has ever been chosen.
+if [ ! -s "${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper" ]; then
+	echo "seeding a wallpaper and its palette..."
+	"$HOME/.local/scripts/wallpaper.sh" --random || echo "  no wallpaper set; the picker will do it"
+fi
+
+# Writes the gtk settings.ini files, which carry the light/dark mode.
+echo "applying the theme mode..."
+"$HOME/.local/scripts/theme-mode.sh" --apply >/dev/null || echo "  theme mode not applied"
+
 # blueman-applet runs for its pairing agent, not its tray icon: without an
 # agent, BlueZ has nothing to answer pairing confirmations and bonding fails
 # with AuthenticationFailed. Network and bluetooth status live in the sidebar.
