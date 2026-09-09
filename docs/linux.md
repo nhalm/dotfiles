@@ -305,8 +305,8 @@ unknown name falls back to `scale-125`:
 | `highres` | highest available | auto |
 
 The internal panel is then pinned separately, on the last line and
-unconditionally: `eDP-1`, preferred mode, scale 1.5. So the variant only ever
-affects **external** displays — the panel is always 1.5× unless `monitors.lua`
+unconditionally: `eDP-1`, preferred mode, scale 1.25. So the variant only ever
+affects **external** displays — the panel is always 1.25× unless `monitors.lua`
 overrides it. The same value is repeated as `HYPR_INTERNAL_SCALE` in
 `hypr-lid.sh`.
 
@@ -352,7 +352,7 @@ nwg-displays layout exactly instead of fighting it with `position = auto`.
 | Variable | Default | Effect |
 |---|---|---|
 | `HYPR_INTERNAL_MONITOR` | `eDP-1` | which output is the panel |
-| `HYPR_INTERNAL_MODE` / `_POSITION` / `_SCALE` | preferred / auto / 1.5 | re-enable fallback if reload fails |
+| `HYPR_INTERNAL_MODE` / `_POSITION` / `_SCALE` | preferred / auto / 1.25 | re-enable fallback if reload fails |
 | `HYPR_LID_LOCK` | `1` | `0` keeps working on externals with the lid closed |
 | `HYPR_MONITORS_DELAY` | `0.4` | settle time before re-packing after a hotplug |
 
