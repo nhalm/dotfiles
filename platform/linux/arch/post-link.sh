@@ -31,6 +31,16 @@ if command -v brightnessctl >/dev/null 2>&1; then
 	fi
 fi
 
+# ly is the display manager; the templated unit is bound to tty2.
+if command -v ly >/dev/null 2>&1; then
+	if systemctl is-enabled --quiet ly@tty2.service 2>/dev/null; then
+		echo "ly@tty2.service already enabled"
+	else
+		echo "enabling ly@tty2.service..."
+		sudo systemctl enable ly@tty2.service
+	fi
+fi
+
 # bluez ships bluetooth.service disabled; blueman needs it running to see the
 # adapter at all.
 if command -v bluetoothctl >/dev/null 2>&1; then

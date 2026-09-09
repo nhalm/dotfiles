@@ -25,20 +25,17 @@ The tree mirrors the destination:
 
 | File | Does |
 |---|---|
-| `etc/sysctl.d/99-hardening.conf` | Kernel hardening. Only the settings Arch does *not* already get right, and an explicit list of what is deliberately left alone. |
+| `etc/sysctl.d/99-hardening.conf` | Kernel hardening: the gaps Arch's own defaults leave. |
 | `etc/ssh/sshd_config.d/99-hardening.conf` | Key-only auth, no root login, modern KEX/cipher/MAC. Inert unless sshd is enabled. |
 | `etc/docker/daemon.json` | Publishes container ports to loopback by default — see below. |
 | `etc/security/faillock.conf` | Explicit lockout policy for failed logins, including the lock screen. |
 
-### One caveat: package-owned files
+### Package-owned files
 
-`sysctl.d/`, `sshd_config.d/` and `docker/daemon.json` are drop-ins or files no
-package owns, so nothing ever fights us for them. `security/faillock.conf` is
-different — the `pam` package ships it and there is no drop-in directory. When
-`pam` upgrades, pacman notices the file changed and writes a `.pacnew` beside
-it rather than reverting it. Reconcile those with `pacdiff` (pacman-contrib,
-already installed). Prefer a drop-in wherever the tool offers one; this is the
-only file here that cannot use one.
+`security/faillock.conf` is shipped by the `pam` package and has no drop-in
+directory, so pacman writes a `.pacnew` beside it on upgrade. Reconcile with
+`pacdiff` (pacman-contrib). Everything else here is a drop-in that no package
+owns.
 
 ## Docker does not go through ufw
 
@@ -53,15 +50,3 @@ binds `127.0.0.1:8080` instead of `0.0.0.0:8080`. Exposing a container to the
 network then has to be deliberate:
 
     docker run -p 0.0.0.0:8080:80 ...   # explicit, on purpose
-
-### Deliberately not set in daemon.json
-
-- `"icc": false` — isolates containers on the *default* bridge. compose files
-  use user-defined networks and are unaffected, but a plain
-  `docker run` postgres that another `docker run` container talks to would
-  break, with a confusing connection error rather than a clear one.
-- `"no-new-privileges": true` — a good per-container flag, a poor daemon-wide
-  default: it breaks any image relying on a setuid binary (`ping`, `sudo`).
-  Prefer `--security-opt no-new-privileges` on containers you control.
-- `"userns-remap"` — strongest isolation available, but it breaks bind-mount
-  ownership, which is how most local dev containers get source code.

@@ -291,9 +291,7 @@ reel, so that step 2 alone reproduces it.
 ## Security
 
 The repo carries its own hardening rather than leaving it to be redone by hand
-on each machine. What that gets you, and what it deliberately does not:
-
-### In the repo
+on each machine.
 
 | Where | What |
 |---|---|
@@ -303,7 +301,7 @@ on each machine. What that gets you, and what it deliberately does not:
 | `shared/.gitignore_global` | Credential paths that must never be committed anywhere. |
 | `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys served only by the 1Password agent. |
 | `shared/.claude/settings.json` | Deny rules keeping agents out of `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gh` and away from destructive and exfiltrating commands. |
-| `lib/pkg.sh` | AUR installs are **not** `--noconfirm`: a PKGBUILD is arbitrary shell from a repo anyone can upload to, and the diff prompt is the only checkpoint. Official repos stay `--noconfirm` — they are signed. |
+| `lib/pkg.sh` | AUR installs keep yay's PKGBUILD diff prompt, since a PKGBUILD is arbitrary shell from a repo anyone can upload to. Official repos are signed and stay `--noconfirm`. |
 
 Preview anything that would be written outside `$HOME`:
 
@@ -338,19 +336,6 @@ as well:
 sudo ufw delete limit 22/tcp
 sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 ```
-
-Note `AllowTcpForwarding no` — loosen it if you ever need this box as a jump
-host or want `ssh -L` tunnels *through* it.
-
-### Deferred, deliberately
-
-- **Full-disk encryption.** Planned for the next reinstall rather than
-  retrofitted. Until then, physical access to this machine is total access,
-  regardless of everything above — that is the single largest remaining gap.
-- **Secure Boot** (`sbctl`) and TPM2-backed unlock. Worth doing at the same
-  reinstall; it needs firmware key enrolment, not a config change.
-- **Locking the root account.** `sudo` works through `/etc/sudoers.d/00_nick`,
-  so root's password is redundant: `sudo passwd -l root`.
 
 ## Machine-specific / private setup
 

@@ -65,11 +65,9 @@ pkg_install() {
 # Install from the AUR (or the family equivalent). A no-op where there isn't one,
 # so callers don't have to guard.
 #
-# Deliberately NOT --noconfirm, unlike the official-repo path above. An AUR
-# PKGBUILD is arbitrary shell that runs as you at build time, from a repo any
-# user can upload to; the diff prompt yay shows is the only checkpoint against
-# a hijacked or typosquatted package. Official repos are signed and reviewed,
-# so --noconfirm is fine there and not here.
+# An AUR PKGBUILD is arbitrary shell that runs as you at build time, from a
+# repo any user can upload to, so yay's diff prompt is left in place as the
+# checkpoint against a hijacked or typosquatted package.
 #
 # Set DOTFILES_AUR_NOCONFIRM=1 for an unattended rebuild of a machine you
 # already trust the package set on.

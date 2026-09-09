@@ -1,11 +1,9 @@
 # Arch official repos (core/extra). Installed with `pacman -S --needed`, so
 # entries already present are skipped.
 #
-# This is a full manifest of what this machine runs, not just the interesting
-# parts: the point is that a fresh install plus ./setup.sh lands in the same
-# place. Packages the Arch installer puts down are listed too -- --needed makes
-# them no-ops, and leaving them out means the list quietly stops describing the
-# machine.
+# A full manifest of what this machine runs: a fresh install plus ./setup.sh
+# lands in the same place. Installer-provided packages are listed too, since
+# --needed makes them no-ops.
 
 # ---------------------------------------------------------------- base ------
 base
@@ -16,14 +14,11 @@ linux-headers
 linux-firmware
 mkinitcpio
 sudo
-# Bootloader: systemd-boot (from systemd) is what actually boots this machine.
-# `limine` is also installed and unused -- a leftover from the installer.
-# Remove it rather than carrying it, unless you deliberately switch.
+make
 efibootmgr
-# btrfs root with snapshots
+limine
 btrfs-progs
 snapper
-# swap is zram, not a disk partition
 zram-generator
 
 # ------------------------------------------------------------ hardware ------
@@ -148,8 +143,7 @@ swaync
 quickshell
 # Interactive display layout editor; writes ~/.config/hypr/monitors.lua
 nwg-displays
-# Wallpaper daemon. Upstream renamed swww -> awww; the package still
-# Provides/Replaces swww, and wallpaper.sh resolves either binary name.
+# Wallpaper daemon; wallpaper.sh resolves either the awww or swww binary name.
 awww
 grim
 slurp
@@ -159,8 +153,7 @@ cliphist
 wl-clip-persist
 fuzzel
 matugen
-# TUI display manager. Installed but its unit (ly@.service) is NOT enabled --
-# login is plain getty. Drop it unless you intend to switch.
+# TUI display manager; post-link.sh enables ly@tty2.service.
 ly
 
 # ------------------------------------------------------- hardware keys ------
@@ -182,8 +175,7 @@ telegram-desktop
 imagemagick
 
 # --------------------------------------------------------------- fonts ------
-# Monaspace Neon Var is what the ghostty config asks for; JetBrains Mono Nerd
-# is what hyprlock.conf asks for.
+# ghostty asks for Monaspace Neon Var; hyprlock.conf asks for JetBrains Mono Nerd.
 ttf-monaspace-variable
 otf-monaspace-nerd
 ttf-jetbrains-mono-nerd
