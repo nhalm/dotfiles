@@ -63,6 +63,22 @@ apply_hypr_colors() {
 	hyprctl eval "hl.config({ general = { col = { active_border = { colors = {\"$primary\", \"$secondary\"}, angle = 45 }, inactive_border = \"$outline\" } } })" >/dev/null 2>&1
 }
 
+# GTK apps re-read gtk.css when color-scheme changes, and only then. Bounce it
+# to the other value and back, or they keep the old palette until restarted.
+reload_gtk() {
+	local current other
+	current="$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)" || return 0
+	current="${current//\'/}"
+	[ -n "$current" ] || return 0
+	case "$current" in
+	prefer-dark) other="prefer-light" ;;
+	*) other="prefer-dark" ;;
+	esac
+	gsettings set org.gnome.desktop.interface color-scheme "$other" 2>/dev/null
+	gsettings set org.gnome.desktop.interface color-scheme "$current" 2>/dev/null
+}
+
 qs ipc call theme-manager reload >/dev/null 2>&1
 swaync-client --reload-css >/dev/null 2>&1
 apply_hypr_colors
+reload_gtk
