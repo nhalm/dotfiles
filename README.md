@@ -247,8 +247,10 @@ The runbook is `./setup.sh`. Everything below it is what the script genuinely
 cannot do, kept short on purpose.
 
 1. **Install Arch**, with LUKS on the root partition this time. Choose btrfs,
-   and let the installer set up systemd-boot. Swap is zram (`zram-generator`),
-   so there is no swap partition to encrypt and no hibernation image to leak.
+   and let the installer set up systemd-boot. A minimal profile is enough --
+   `packages.txt` lists the audio, printing, bluetooth and filesystem pieces
+   itself rather than assuming which options were ticked. Swap is zram, so
+   there is no swap partition to encrypt and no hibernation image to leak.
 2. **Bootstrap**, which clones this repo and hands off to `setup.sh`:
    ```bash
    bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)

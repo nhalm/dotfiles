@@ -12,6 +12,10 @@
 linux-lts
 linux-headers
 
+# ----------------------------------------------------------- filesystem -----
+snapper
+zram-generator
+
 # ------------------------------------------------------------- hardware -----
 intel-ucode
 intel-media-driver
@@ -20,6 +24,7 @@ vulkan-intel
 libva-utils
 thermald
 fwupd
+sof-firmware
 v4l2loopback-dkms
 
 # ------------------------------------------------------------- security -----
@@ -78,6 +83,7 @@ docker-buildx
 ghostty
 
 # ---------------------------------------------------------------- audio -----
+gst-plugin-pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
@@ -130,6 +136,11 @@ matugen
 ly
 brightnessctl
 
+# ------------------------------------------------------------- printing -----
+cups
+cups-pk-helper
+system-config-printer
+
 # --------------------------------------------------------- desktop apps -----
 firefox
 nemo
@@ -144,4 +155,6 @@ imagemagick
 # quickshell, hyprlock -- asks for JetBrainsMono Nerd Font.
 ttf-monaspace-variable
 ttf-jetbrains-mono-nerd
+noto-fonts
 noto-fonts-emoji
+ttf-dejavu
