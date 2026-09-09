@@ -103,6 +103,50 @@ install_zsh_plugins() {
 	done
 }
 
+# --------------------------------------------------------- ssh access -------
+
+# Authorise the agent's public keys for login to this machine.
+#
+# This is what unblocks the sshd hardening: the drop-in that turns off password
+# authentication refuses to install until authorized_keys has something in it,
+# because applying it first would lock this account out of SSH.
+#
+# Only public keys are involved. They come from whatever the agent is serving,
+# which here is 1Password, so nothing is read from or written to disk as key
+# material.
+authorize_ssh_keys() {
+	local file="$HOME/.ssh/authorized_keys" keys key body added=0
+
+	keys="$(ssh-add -L 2>/dev/null)" || true
+	case "$keys" in
+	"" | *"no identities"* | *"Could not open"* | *"Error connecting"*)
+		echo "no keys available from the ssh agent, skipping"
+		echo "  sign in to 1Password and enable its agent, then re-run"
+		return 0
+		;;
+	esac
+
+	mkdir -p "$HOME/.ssh"
+	chmod 700 "$HOME/.ssh"
+	touch "$file"
+	chmod 600 "$file"
+
+	while IFS= read -r key; do
+		[ -n "$key" ] || continue
+		# Compare on type + key body only: the comment differs between what
+		# the agent reports and what may already be in the file.
+		body="$(printf '%s' "$key" | awk '{print $1" "$2}')"
+		grep -qF "$body" "$file" && continue
+		printf '%s\n' "$key" >>"$file"
+		added=$((added + 1))
+		echo "  authorised $(printf '%s' "$key" | awk '{print $1, $3, $4, $5}')"
+	done <<<"$keys"
+
+	if [ "$added" -eq 0 ]; then
+		echo "ssh keys already authorised"
+	fi
+}
+
 # ---------------------------------------------------------- wallpapers ------
 
 # Kept out of this repo so cloning configs does not mean cloning images. The

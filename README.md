@@ -272,14 +272,11 @@ cannot do, kept short on purpose.
 3. **Sign in to 1Password** and enable the SSH agent. Nothing else can
    authenticate to GitHub or sign a commit until this is done — no private key
    exists on disk by design.
-4. **Authorise your SSH key**, before the sshd hardening will install. The
-   re-run also picks up the wallpaper and zsh-plugin clones, which need GitHub
-   access and are skipped with a warning if step 3 has not happened yet:
-   ```bash
-   ssh-add -L > ~/.ssh/authorized_keys
-   chmod 600 ~/.ssh/authorized_keys
-   ./setup.sh        # re-run; the drop-in installs and passwords stop working
-   ```
+4. **Re-run `./setup.sh`.** Steps that need GitHub or the 1Password agent —
+   authorising your SSH key, the wallpaper clone, the zsh plugins — are skipped
+   with a warning when step 3 has not happened yet, and picked up here. Once a
+   key is authorised the sshd drop-in installs and password authentication
+   stops working.
 5. **Bind LUKS to the TPM** so you are not typing a passphrase at every boot:
    ```bash
    sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p2
@@ -333,19 +330,14 @@ This machine accepts SSH, so the goal is a locked-down sshd rather than no
 sshd. `system/linux/etc/ssh/sshd_config.d/99-hardening.conf` sets key-only
 auth, `PermitRootLogin no`, `AllowUsers nick`, and modern KEX/cipher/MAC lists.
 
-**It will not install until `~/.ssh/authorized_keys` has a key in it.**
-`_system_file_allowed` in `lib/system.sh` refuses, because the drop-in turns
-off password authentication and applying it with no authorised key locks this
-account out of SSH — irrecoverably, if you are not physically at the machine.
+`setup.sh` handles the ordering. `authorize_ssh_keys` writes the agent's public
+keys to `~/.ssh/authorized_keys` first, and `_system_file_allowed` in
+`lib/system.sh` refuses to install the drop-in until that file has something in
+it — applying it with no authorised key locks this account out of SSH,
+irrecoverably if you are not sitting at the machine.
 
-Order matters:
-
-```bash
-ssh-add -L > ~/.ssh/authorized_keys     # public keys from the 1Password agent
-chmod 600 ~/.ssh/authorized_keys
-# log in from another machine and confirm it works, keeping that session open
-./setup.sh                              # now the drop-in installs
-```
+With no agent available, both steps are skipped and setup says so, rather than
+leaving a machine that cannot be logged into.
 
 ufw rate-limits 22 rather than leaving it wide open. To restrict it to the LAN
 as well:

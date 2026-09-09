@@ -71,6 +71,12 @@ fi
 
 # ------------------------------------------------------------ hardening ----
 
+# Before install_system_files: the sshd drop-in it installs disables password
+# authentication, and refuses to install until a key is authorised.
+echo "==> ssh access"
+authorize_ssh_keys
+echo
+
 # Kernel sysctls and other root-owned config. Copied rather than symlinked --
 # see lib/system.sh for why.
 echo "==> system config"
@@ -124,26 +130,16 @@ if command -v ufw >/dev/null 2>&1; then
 	fi
 fi
 
-# The sshd hardening drop-in disables password authentication, and
-# install_system_files refuses to install it until a key is authorised (see
-# _system_file_allowed in lib/system.sh). Say so here too, because a machine
-# that accepts passwords from the whole network is the single biggest exposure
-# on this host until it is fixed.
+# Only reachable when the agent had nothing to offer, since authorize_ssh_keys
+# above handles the normal case.
 if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
 	cat <<-'WARN'
 
 		  ACTION NEEDED: sshd accepts password authentication from any source.
 
-		  ~/.ssh/authorized_keys is empty, so the ssh hardening drop-in was
-		  skipped -- installing it would have locked you out.
-
-		  Fix, in this order:
-		    1. ssh-add -L > ~/.ssh/authorized_keys
-		       chmod 600 ~/.ssh/authorized_keys
-		    2. Verify key login works from another machine, in a session you
-		       keep open.
-		    3. Re-run ./setup.sh -- the drop-in installs and passwords stop
-		       being accepted.
+		  No key could be authorised, so the ssh hardening drop-in was skipped --
+		  installing it would have locked you out. Sign in to 1Password, enable
+		  its ssh agent, and re-run ./setup.sh.
 
 	WARN
 fi
