@@ -1,4 +1,12 @@
-# Packages that only exist in the AUR. Installed with yay.
+# Packages with no official-repo equivalent. Installed with yay, keeping the
+# PKGBUILD diff prompt (see lib/pkg.sh).
+#
+# Both fetch a tarball from 1Password's own domain and gpg-verify it against
+#
+#     3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+#
+# so the trust root is the vendor. When the diff prompt appears, that
+# fingerprint and the downloads.1password.com / agilebits.com source URLs are
+# what to check.
 1password
 1password-cli
-swww

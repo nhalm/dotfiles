@@ -1,29 +1,64 @@
-# Arch official repos (core/extra). Installed with `pacman -S --needed`, so
-# entries already present are skipped -- the list describes a fresh machine.
+# Arch official repos. Installed with `pacman -S --needed`.
+#
+# Scope: what this machine needs *beyond* a base archinstall. Anything the
+# installer lays down, and anything another entry here already pulls in as a
+# dependency, is left out -- the closure of this list still reproduces the
+# machine.
+#
+# Step 1 of the rebuild (see README) must select the same archinstall options:
+# btrfs + snapper, pipewire audio, NetworkManager, bluetooth, printing.
 
-# core
+# --------------------------------------------------------------- kernel -----
+linux-lts
+linux-headers
+
+# ----------------------------------------------------------- filesystem -----
+snapper
+zram-generator
+
+# ------------------------------------------------------------- hardware -----
+intel-ucode
+intel-media-driver
+intel-lpmd
+vulkan-intel
+libva-utils
+thermald
+fwupd
+sof-firmware
+v4l2loopback-dkms
+
+# ------------------------------------------------------------- security -----
+ufw
+gitleaks
+arch-audit
+
+# ----------------------------------------------------------------- core -----
 base-devel
 git
 git-lfs
 openssh
-gnupg
 stow
 wget
 unzip
 man-db
+clang
+7zip
+jq
+yq
 
-# shell
+# ---------------------------------------------------------------- shell -----
 zsh
 starship
 mise
 
-# editor
+# --------------------------------------------------------------- editor -----
 neovim
 python-pynvim
 tree-sitter-cli
 wl-clipboard
+xclip
 
-# search and files
+# ------------------------------------------------------ search and files ----
 ripgrep
 fd
 fzf
@@ -31,73 +66,95 @@ bat
 glow
 tree
 
-# data
-jq
-yq
-
-# system
+# --------------------------------------------------------------- system -----
 htop
+btop
+pacman-contrib
 
-# git
+# ------------------------------------------------------------------ git -----
 github-cli
 
-# containers -- native docker; no Colima VM needed on Linux
+# ----------------------------------------------------------- containers -----
 docker
 docker-compose
 docker-buildx
 
-# terminal
+# ------------------------------------------------------------- terminal -----
 ghostty
 
-# desktop -- Hyprland session
+# ---------------------------------------------------------------- audio -----
+gst-plugin-pipewire
+pipewire-alsa
+pipewire-jack
+pipewire-pulse
+wireplumber
+alsa-utils
+pavucontrol
+playerctl
+
+# -------------------------------------------------------------- network -----
+network-manager-applet
+blueman
+# Bluetooth.qml shells out to bluetoothctl, and so does post-link.sh.
+bluez-utils
+
+# ---------------------------------------------- desktop: Hyprland session ---
 hyprland
 hyprlauncher
 hyprpicker
 hyprpolkitagent
 hyprshutdown
-xdg-desktop-portal-hyprland
-qt5-wayland
-qt6-wayland
-qt5ct
-qt6ct
-papirus-icon-theme
-swaync
-# Toolkit for building a custom shell in QML -- see arch/.config/quickshell
-quickshell
-# Interactive display layout editor; writes ~/.config/hypr/monitors.lua
-nwg-displays
 hyprlock
 hypridle
 hyprshot
-grim
-slurp
+hyprsunset
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt5ct
+qt6ct
+qt6-multimedia-ffmpeg
+qt6-virtualkeyboard
+papirus-icon-theme
+swaync
+quickshell
+# Runtime dependencies of the quickshell modules, none of which quickshell
+# itself declares: Battery.qml uses the UPower service, PowerProfile.qml runs
+# powerprofilesctl. Volume/Network/Bluetooth/Updates reach wireplumber,
+# networkmanager, bluez-utils and pacman-contrib, listed elsewhere here.
+upower
+power-profiles-daemon
+nwg-displays
+# Wallpaper daemon; wallpaper.sh resolves either the awww or swww binary name.
+awww
 satty
 wf-recorder
 cliphist
 wl-clip-persist
 fuzzel
 matugen
-btop
-pacman-contrib
-hyprsunset
-
-# hardware keys -- brightnessctl needs the video group, see post-link.sh
+# TUI display manager; post-link.sh enables ly@tty2.service.
+ly
 brightnessctl
-playerctl
-alsa-utils
-pavucontrol
-network-manager-applet
-nm-connection-editor
-# Bluetooth: bluez is in the base install, this is the GTK manager + tray applet
-bluez
-bluez-utils
-blueman
 
-# desktop apps
+# ------------------------------------------------------------- printing -----
+cups
+cups-pk-helper
+system-config-printer
+
+# --------------------------------------------------------- desktop apps -----
+firefox
 nemo
 imv
 mpv
+obs-studio
+telegram-desktop
+imagemagick
 
-# fonts -- Monaspace Neon Var is what the ghostty config asks for
+# ---------------------------------------------------------------- fonts -----
+# ghostty asks for Monaspace Neon Var; everything else -- fuzzel, gtk, swaync,
+# quickshell, hyprlock -- asks for JetBrainsMono Nerd Font.
 ttf-monaspace-variable
-otf-monaspace-nerd
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+ttf-dejavu

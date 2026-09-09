@@ -12,7 +12,7 @@
 # it pulls the machine's version *into* the repo, silently overwriting the
 # config you were trying to install.
 stow_package() {
-	local pkg="$1" rel target tdir
+	local pkg="$1" rel target tdir backup
 	[ -d "$DOTFILES/$pkg" ] || return 0
 	echo "linking $pkg..."
 
@@ -33,8 +33,15 @@ stow_package() {
 		"$DOTFILES"/*) continue ;;
 		esac
 
-		mv "$target" "$target.dotfiles-backup"
-		echo "  backed up $target -> $target.dotfiles-backup"
+		# Don't clobber an earlier backup: a second run would otherwise
+		# overwrite the original file captured by the first. Timestamp goes
+		# before the suffix so `*.dotfiles-backup` in .gitignore still matches.
+		backup="$target.dotfiles-backup"
+		if [ -e "$backup" ]; then
+			backup="$target.$(date +%Y%m%d-%H%M%S).dotfiles-backup"
+		fi
+		mv "$target" "$backup"
+		echo "  backed up $target -> $backup"
 	done < <(cd "$DOTFILES/$pkg" && find . \( -type f -o -type l \) | sed 's|^\./||')
 
 	stow -d "$DOTFILES" -t "$HOME" -R "$pkg"
@@ -96,6 +103,82 @@ install_zsh_plugins() {
 	done
 }
 
+# --------------------------------------------------------- ssh access -------
+
+# Authorise the agent's public keys for login to this machine.
+#
+# This is what unblocks the sshd hardening: the drop-in that turns off password
+# authentication refuses to install until authorized_keys has something in it,
+# because applying it first would lock this account out of SSH.
+#
+# Only public keys are involved. They come from whatever the agent is serving,
+# which here is 1Password, so nothing is read from or written to disk as key
+# material.
+authorize_ssh_keys() {
+	local file="$HOME/.ssh/authorized_keys" keys key body added=0
+
+	keys="$(ssh-add -L 2>/dev/null)" || true
+	case "$keys" in
+	"" | *"no identities"* | *"Could not open"* | *"Error connecting"*)
+		echo "no keys available from the ssh agent, skipping"
+		echo "  sign in to 1Password and enable its agent, then re-run"
+		return 0
+		;;
+	esac
+
+	mkdir -p "$HOME/.ssh"
+	chmod 700 "$HOME/.ssh"
+	touch "$file"
+	chmod 600 "$file"
+
+	while IFS= read -r key; do
+		[ -n "$key" ] || continue
+		# Compare on type + key body only: the comment differs between what
+		# the agent reports and what may already be in the file.
+		body="$(printf '%s' "$key" | awk '{print $1" "$2}')"
+		grep -qF "$body" "$file" && continue
+		printf '%s\n' "$key" >>"$file"
+		added=$((added + 1))
+		echo "  authorised $(printf '%s' "$key" | awk '{print $1, $3, $4, $5}')"
+	done <<<"$keys"
+
+	if [ "$added" -eq 0 ]; then
+		echo "ssh keys already authorised"
+	fi
+}
+
+# ---------------------------------------------------------- wallpapers ------
+
+# Kept out of this repo so cloning configs does not mean cloning images. The
+# collection is a subset of ML4W's, credited and GPL-2.0 in its own README --
+# 43M against the 1.5G the full 219-image upstream costs.
+#
+# matugen derives the whole palette from the selected image, so this is not
+# decoration: without it a fresh machine has nothing to theme from.
+WALLPAPER_REPO="${WALLPAPER_REPO:-https://github.com/nhalm/wallpapers}"
+
+install_wallpapers() {
+	local dir="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+
+	if [ -d "$dir/.git" ]; then
+		echo "updating wallpapers..."
+		git -C "$dir" pull --quiet --ff-only || echo "  pull failed, leaving as-is"
+		return 0
+	fi
+
+	# git refuses to clone into a directory that already has anything in it.
+	if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+		echo "wallpapers: $dir is not empty and not a clone, leaving it alone"
+		echo "  move its contents aside to have setup manage it"
+		return 0
+	fi
+
+	echo "cloning wallpapers..."
+	mkdir -p "$(dirname "$dir")"
+	git clone --quiet --depth 1 "$WALLPAPER_REPO" "$dir" ||
+		echo "  clone failed; the picker will be empty until this succeeds"
+}
+
 # ------------------------------------------------------- login shell --------
 
 # chsh needs the shell listed in /etc/shells; macOS and Linux agree on that much.
@@ -138,6 +221,21 @@ check_herdr() {
 		echo "herdr $(herdr --version 2>/dev/null || echo installed)"
 	else
 		echo "herdr not on PATH; see https://herdr.dev/docs/install/"
+	fi
+}
+
+# Report installed packages with published CVEs. Advisory only -- never fails
+# setup, since an open advisory usually means "wait for the patched build",
+# not "this machine is broken".
+check_vulnerable_packages() {
+	command -v arch-audit >/dev/null 2>&1 || { echo "arch-audit not installed, skipping"; return 0; }
+	local out
+	out="$(arch-audit --upgradable --quiet 2>/dev/null)" || true
+	if [ -z "$out" ]; then
+		echo "no packages with known vulnerabilities and an available fix"
+	else
+		echo "packages with known vulnerabilities that a pacman -Syu would fix:"
+		echo "$out" | sed 's/^/  /'
 	fi
 }
 

@@ -119,6 +119,18 @@
 	defaultBranch = main
 [core]
 	excludesfile = ~/.gitignore_global
+	# Runs the gitleaks pre-commit scan in every repo, not just the ones where
+	# a hook was installed by hand. The hook chains to the repo's own
+	# .git/hooks/pre-commit first, because hooksPath otherwise replaces it.
+	hooksPath = ~/.config/git/hooks
+
+[transfer]
+	# Reject objects with broken links or known-bad SHA-1 collisions on fetch.
+	fsckobjects = true
+[fetch]
+	fsckobjects = true
+[receive]
+	fsckObjects = true
 
 [includeIf "gitdir:~/work/"]
 	path = ~/.gitconfig-work

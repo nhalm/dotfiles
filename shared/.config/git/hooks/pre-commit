@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Global pre-commit hook, reached through core.hooksPath in ~/.gitconfig, so it
+# runs in every repo rather than only the ones where someone remembered to
+# install it. Scans staged content for secrets before they become a commit --
+# which matters because a secret that reaches a public remote is burned even if
+# the commit is amended away seconds later.
+set -euo pipefail
+
+# core.hooksPath replaces .git/hooks wholesale, so a repo that installs its own
+# hook (husky, lefthook, a Makefile target) would silently stop running it.
+# Chain to it first and honour its exit code.
+repo_hook="$(git rev-parse --git-path hooks/pre-commit)"
+if [ -x "$repo_hook" ] && ! [ "$repo_hook" -ef "${BASH_SOURCE[0]}" ]; then
+	"$repo_hook" "$@" || exit $?
+fi
+
+command -v gitleaks >/dev/null 2>&1 || exit 0
+
+# gitleaks renamed the staged-scan subcommand in v8.19: `git --staged`
+# supersedes `protect --staged`. Support both so this works on either version.
+if gitleaks git --help >/dev/null 2>&1; then
+	scan=(gitleaks git --staged)
+else
+	scan=(gitleaks protect --staged)
+fi
+
+# A repo's own .gitleaks.toml wins; otherwise fall back to the global config,
+# which allowlists placeholder strings and test fixtures.
+cfg="$(git rev-parse --show-toplevel 2>/dev/null)/.gitleaks.toml"
+if [ ! -f "$cfg" ]; then
+	cfg="${XDG_CONFIG_HOME:-$HOME/.config}/gitleaks/config.toml"
+fi
+[ -f "$cfg" ] && scan+=(--config "$cfg")
+
+if ! "${scan[@]}" --redact --no-banner --verbose; then
+	cat >&2 <<'MSG'
+
+gitleaks found a secret in the staged changes -- commit refused.
+
+If it is a real secret: unstage it, rotate the credential (assume it is
+already compromised if it ever touched a remote), and keep it out of the repo.
+
+If it is a false positive, either:
+  - add a `gitleaks:allow` comment on the offending line, or
+  - add a targeted rule to .gitleaks.toml in this repo, or
+  - bypass once with `git commit --no-verify` (last resort -- it skips the
+    repo's own hooks too, since they are chained above).
+MSG
+	exit 1
+fi

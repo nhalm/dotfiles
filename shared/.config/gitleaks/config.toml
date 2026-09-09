@@ -1,0 +1,22 @@
+# Global gitleaks config, used by the pre-commit hook when a repo has no
+# .gitleaks.toml of its own.
+
+title = "global default"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and fixtures that are not real credentials"
+regexes = [
+  '''EXAMPLE_[A-Z0-9_]+''',
+  '''(?i)your[-_]?(api[-_]?key|token|secret)[-_]?here''',
+  '''(?i)(changeme|placeholder|dummy|redacted|xxxxx+)''',
+]
+paths = [
+  '''(^|/)\.env\.(example|sample|template)$''',
+  '''(^|/)testdata/''',
+  '''(^|/)fixtures?/''',
+  '''(^|/)__snapshots__/''',
+  '''\.lock$''',
+]

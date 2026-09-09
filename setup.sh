@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Full machine setup. Safe to re-run.
 #
-#   ./setup.sh              install packages, link configs, set up tools
-#   ./setup.sh --link-only  just re-link the stow packages
+#   ./setup.sh               install packages, link configs, set up tools
+#   ./setup.sh --link-only   just re-link the stow packages
+#   ./setup.sh --diff-system show what would change under /etc, change nothing
 #
 # For a brand new machine use bootstrap.sh instead -- it installs git/stow,
 # clones this repo, and calls into here.
@@ -18,12 +19,20 @@ export DOTFILES
 . "$DOTFILES/lib/pkg.sh"
 # shellcheck source=lib/common.sh
 . "$DOTFILES/lib/common.sh"
+# shellcheck source=lib/system.sh
+. "$DOTFILES/lib/system.sh"
 
 LINK_ONLY=false
 [ "${1:-}" = "--link-only" ] && LINK_ONLY=true
 
 detect_platform
 _resolve_backend
+
+if [ "${1:-}" = "--diff-system" ]; then
+	echo "==> pending changes under /"
+	diff_system_files
+	exit 0
+fi
 
 # Which shell the platform setup wants as the login shell. Overridden below.
 LOGIN_SHELL=""
@@ -93,6 +102,12 @@ echo "==> agent tooling"
 install_claude_code
 check_herdr
 echo
+
+if [ "$OS_FAMILY" = "linux" ]; then
+	echo "==> vulnerability check"
+	check_vulnerable_packages
+	echo
+fi
 
 echo "==> git"
 setup_github_gpg
