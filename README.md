@@ -355,8 +355,13 @@ written from scratch, but a lot of the "how is this normally solved" came from
 reading theirs. [nhalm/wallpapers](https://github.com/nhalm/wallpapers) is a
 subset of [their wallpaper collection](https://github.com/mylinuxforwork/wallpaper).
 
-Two directories are vendored and keep their own licences:
-`darwin/.config/sketchybar/` (GPL-3.0) and `darwin/tmux/plugins/tpm/` (MIT).
+## Licence
+
+MIT, so anything here can be lifted into your own setup without conditions.
+
+Two vendored directories keep their own, which the MIT licence above does not
+override: `darwin/.config/sketchybar/` (GPL-3.0) and `darwin/tmux/plugins/tpm/`
+(MIT).
 
 ## Machine-specific / private setup
 
