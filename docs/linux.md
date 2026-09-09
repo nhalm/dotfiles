@@ -160,6 +160,23 @@ taken by move-to-workspace. Output goes to `~/Pictures/Screenshots`.
 | `SUPER+SHIFT+V` | clipboard history through fuzzel |
 | `SUPER+SHIFT+N` | toggle `hyprsunset -t 4000` |
 
+## Input
+
+`kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
+the Mac's Karabiner setup. Natural scroll on both mouse and touchpad,
+`follow_mouse = 1`, sensitivity −0.1, tap-to-click `lrm`, disable-while-typing.
+One gesture: three-finger horizontal swipe switches workspace.
+
+## Window rules
+
+| Rule | Match | Effect |
+|---|---|---|
+| suppress-maximize-events | everything | stops apps that spam maximize from fighting the layout |
+| fix-xwayland-drags | empty class and title, xwayland, floating | `no_focus` — drag surfaces must not steal focus |
+| move-hyprland-run | `hyprland-run` | float, positioned near the bottom left |
+| float-1password, float-audio-mixer, float-nm-connection-editor | those classes | float |
+| pip-stays-visible | title `Picture-in-Picture` | float and pin |
+
 ## The bar
 
 `arch/.config/quickshell/`. One `PanelWindow` per monitor, 32px tall inside a
@@ -371,23 +388,6 @@ and date, and sources its colours from
 | `suspend-if-on-battery.sh` | — | hypridle at 1800s |
 
 No systemd units ship for these; the long-running ones start from `autostart.lua`.
-
-## Input
-
-`kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
-the Mac's Karabiner setup. Natural scroll on both mouse and touchpad,
-`follow_mouse = 1`, sensitivity −0.1, tap-to-click `lrm`, disable-while-typing.
-One gesture: three-finger horizontal swipe switches workspace.
-
-## Window rules
-
-| Rule | Match | Effect |
-|---|---|---|
-| suppress-maximize-events | everything | stops apps that spam maximize from fighting the layout |
-| fix-xwayland-drags | empty class and title, xwayland, floating | `no_focus` — drag surfaces must not steal focus |
-| move-hyprland-run | `hyprland-run` | float, positioned near the bottom left |
-| float-1password, float-audio-mixer, float-nm-connection-editor | those classes | float |
-| pip-stays-visible | title `Picture-in-Picture` | float and pin |
 
 ## Shell
 
