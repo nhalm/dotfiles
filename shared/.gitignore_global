@@ -51,8 +51,7 @@ ehthumbs.db
 Desktop.ini
 **/.claude/settings.local.json
 
-# Credentials -- defense in depth. Nothing here should ever be committed to any
-# repo; these patterns are global so they apply to every clone, not just this one.
+# Credentials
 .netrc
 .npmrc
 .pypirc

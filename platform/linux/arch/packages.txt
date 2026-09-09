@@ -95,7 +95,6 @@ playerctl
 # -------------------------------------------------------------- network -----
 network-manager-applet
 blueman
-# Bluetooth.qml shells out to bluetoothctl, and so does post-link.sh.
 bluez-utils
 
 # ---------------------------------------------- desktop: Hyprland session ---
@@ -117,14 +116,9 @@ qt6-virtualkeyboard
 papirus-icon-theme
 swaync
 quickshell
-# Runtime dependencies of the quickshell modules, none of which quickshell
-# itself declares: Battery.qml uses the UPower service, PowerProfile.qml runs
-# powerprofilesctl. Volume/Network/Bluetooth/Updates reach wireplumber,
-# networkmanager, bluez-utils and pacman-contrib, listed elsewhere here.
 upower
 power-profiles-daemon
 nwg-displays
-# Wallpaper daemon; wallpaper.sh resolves either the awww or swww binary name.
 awww
 satty
 wf-recorder
@@ -132,7 +126,6 @@ cliphist
 wl-clip-persist
 fuzzel
 matugen
-# TUI display manager; post-link.sh enables ly@tty2.service.
 ly
 brightnessctl
 
@@ -151,8 +144,6 @@ telegram-desktop
 imagemagick
 
 # ---------------------------------------------------------------- fonts -----
-# ghostty asks for Monaspace Neon Var; everything else -- fuzzel, gtk, swaync,
-# quickshell, hyprlock -- asks for JetBrainsMono Nerd Font.
 ttf-monaspace-variable
 ttf-jetbrains-mono-nerd
 noto-fonts

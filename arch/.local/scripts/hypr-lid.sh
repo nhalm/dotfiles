@@ -30,11 +30,7 @@ INTERNAL_MODE="${HYPR_INTERNAL_MODE:-preferred}"
 INTERNAL_POSITION="${HYPR_INTERNAL_POSITION:-auto}"
 INTERNAL_SCALE="${HYPR_INTERNAL_SCALE:-1.5}"
 
-# Lock when the lid shuts while docked. The undocked case needs nothing:
-# logind suspends, and hypridle's before_sleep_cmd locks on the way down.
-# Docked, logind uses HandleLidSwitchDocked=ignore, so nothing suspends and
-# nothing locks -- a shut laptop sitting on live external monitors stays
-# unlocked. Set HYPR_LID_LOCK=0 to keep working on the externals lid-closed.
+# HYPR_LID_LOCK=0 to keep working on externals with the lid closed.
 LID_LOCK="${HYPR_LID_LOCK:-1}"
 
 # hyprctl exits 0 even when the Lua call errors, so inspect the output.
