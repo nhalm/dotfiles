@@ -1,23 +1,14 @@
 # Arch official repos (core/extra). Installed with `pacman -S --needed`, so
 # entries already present are skipped.
 #
-# A full manifest of what this machine runs: a fresh install plus ./setup.sh
-# lands in the same place. Installer-provided packages are listed too, since
-# --needed makes them no-ops.
+# The deliberate choices only. Anything another entry already pulls in as a
+# dependency, and anything the Arch installer lays down, is left to them -- a
+# fresh install plus ./setup.sh still lands in the same place.
 
 # ---------------------------------------------------------------- base ------
-base
 base-devel
-linux
 linux-lts
 linux-headers
-linux-firmware
-mkinitcpio
-sudo
-make
-efibootmgr
-limine
-btrfs-progs
 snapper
 zram-generator
 
@@ -33,28 +24,23 @@ power-profiles-daemon
 sof-firmware
 # Firmware updates -- `fwupdmgr refresh && fwupdmgr get-updates`
 fwupd
-# Virtual camera for OBS; needs dkms + matching headers
-dkms
+# Virtual camera for OBS; builds against linux-headers above
 v4l2loopback-dkms
 
 # ------------------------------------------------------------- network ------
 networkmanager
 network-manager-applet
 nm-connection-editor
-wpa_supplicant
-# Bluetooth: bluez is in the base install, this is the manager + applet
 bluez
 bluez-utils
 blueman
 
 # --------------------------------------------------------------- audio ------
-pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
 wireplumber
 gst-plugin-pipewire
-libpulse
 alsa-utils
 pavucontrol
 playerctl
@@ -132,7 +118,6 @@ hyprshot
 hyprsunset
 xdg-desktop-portal-hyprland
 qt5-wayland
-qt6-wayland
 qt5ct
 qt6ct
 qt6-multimedia-ffmpeg
@@ -145,7 +130,6 @@ quickshell
 nwg-displays
 # Wallpaper daemon; wallpaper.sh resolves either the awww or swww binary name.
 awww
-grim
 slurp
 satty
 wf-recorder
