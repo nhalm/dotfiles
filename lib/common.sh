@@ -33,9 +33,6 @@ stow_package() {
 		"$DOTFILES"/*) continue ;;
 		esac
 
-		# Don't clobber an earlier backup: a second run would otherwise
-		# overwrite the original file captured by the first. Timestamp goes
-		# before the suffix so `*.dotfiles-backup` in .gitignore still matches.
 		backup="$target.dotfiles-backup"
 		if [ -e "$backup" ]; then
 			backup="$target.$(date +%Y%m%d-%H%M%S).dotfiles-backup"
@@ -105,13 +102,6 @@ install_zsh_plugins() {
 
 # ------------------------------------------------------ kernel drift --------
 
-# Warn when the running kernel's modules are gone.
-#
-# setup.sh runs a full pacman -Syu, and upgrading the kernel replaces
-# /usr/lib/modules/<running version>. Anything not already loaded then cannot
-# load at all: docker cannot create veth pairs for container networking, VPNs
-# cannot bring up wireguard, and the errors name none of this. A reboot is the
-# only fix.
 check_kernel_drift() {
 	[ "$OS_FAMILY" = "linux" ] || return 0
 	local running
@@ -133,15 +123,6 @@ check_kernel_drift() {
 
 # --------------------------------------------------------- ssh access -------
 
-# Authorise the agent's public keys for login to this machine.
-#
-# This is what unblocks the sshd hardening: the drop-in that turns off password
-# authentication refuses to install until authorized_keys has something in it,
-# because applying it first would lock this account out of SSH.
-#
-# Only public keys are involved. They come from whatever the agent is serving,
-# which here is 1Password, so nothing is read from or written to disk as key
-# material.
 authorize_ssh_keys() {
 	local file="$HOME/.ssh/authorized_keys" keys key body added=0
 
@@ -161,8 +142,6 @@ authorize_ssh_keys() {
 
 	while IFS= read -r key; do
 		[ -n "$key" ] || continue
-		# Compare on type + key body only: the comment differs between what
-		# the agent reports and what may already be in the file.
 		body="$(printf '%s' "$key" | awk '{print $1" "$2}')"
 		grep -qF "$body" "$file" && continue
 		printf '%s\n' "$key" >>"$file"
@@ -177,12 +156,6 @@ authorize_ssh_keys() {
 
 # ---------------------------------------------------------- wallpapers ------
 
-# Kept out of this repo so cloning configs does not mean cloning images. The
-# collection is a subset of ML4W's, credited and GPL-2.0 in its own README --
-# 43M against the 1.5G the full 219-image upstream costs.
-#
-# matugen derives the whole palette from the selected image, so this is not
-# decoration: without it a fresh machine has nothing to theme from.
 WALLPAPER_REPO="${WALLPAPER_REPO:-https://github.com/nhalm/wallpapers}"
 
 install_wallpapers() {
@@ -194,7 +167,6 @@ install_wallpapers() {
 		return 0
 	fi
 
-	# git refuses to clone into a directory that already has anything in it.
 	if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
 		echo "wallpapers: $dir is not empty and not a clone, leaving it alone"
 		echo "  move its contents aside to have setup manage it"
@@ -252,9 +224,6 @@ check_herdr() {
 	fi
 }
 
-# Report installed packages with published CVEs. Advisory only -- never fails
-# setup, since an open advisory usually means "wait for the patched build",
-# not "this machine is broken".
 check_vulnerable_packages() {
 	command -v arch-audit >/dev/null 2>&1 || { echo "arch-audit not installed, skipping"; return 0; }
 	local out

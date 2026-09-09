@@ -65,12 +65,7 @@ pkg_install() {
 # Install from the AUR (or the family equivalent). A no-op where there isn't one,
 # so callers don't have to guard.
 #
-# An AUR PKGBUILD is arbitrary shell that runs as you at build time, from a
-# repo any user can upload to, so yay's diff prompt is left in place as the
-# checkpoint against a hijacked or typosquatted package.
-#
-# Set DOTFILES_AUR_NOCONFIRM=1 for an unattended rebuild of a machine you
-# already trust the package set on.
+# DOTFILES_AUR_NOCONFIRM=1 skips yay's PKGBUILD diff prompt.
 pkg_install_aur() {
 	[ $# -gt 0 ] || return 0
 	local confirm=()

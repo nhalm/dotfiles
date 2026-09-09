@@ -158,17 +158,11 @@ to the stock generated config:
 
 ### Wallpapers
 
-In [nhalm/wallpapers](https://github.com/nhalm/wallpapers), not here — images
-do not belong in a config repo. `setup.sh` clones it to
-`~/Pictures/Wallpapers`; add one by committing it there. The collection is a
-subset of [ML4W's](https://github.com/mylinuxforwork/wallpaper), credited and
-GPL-2.0 in that repo, trimmed to 43M from upstream's 1.5G.
+[nhalm/wallpapers](https://github.com/nhalm/wallpapers), cloned by `setup.sh`
+to `~/Pictures/Wallpapers`. `matugen` derives the palette from the selected
+image, so it retints ghostty, hyprlock, fuzzel, gtk, swaync and quickshell.
 
-The wallpaper is not decoration: `matugen` derives the whole palette from it,
-so changing it recolours ghostty, hyprlock, fuzzel, gtk, swaync and quickshell
-together. Images with a clear dominant colour work best.
-
-`WALLPAPER_REPO` and `WALLPAPER_DIR` override the source and destination.
+`WALLPAPER_REPO` and `WALLPAPER_DIR` override source and destination.
 
 ### Display layout
 
@@ -257,90 +251,45 @@ See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
 
 ## Rebuilding this machine
 
-The runbook is `./setup.sh`. Everything below it is what the script genuinely
-cannot do, kept short on purpose.
+See [INSTALL.md](INSTALL.md) for the LUKS + btrfs + snapper install. After it:
 
-1. **Install Arch**, with LUKS on the root partition this time. Choose btrfs,
-   and let the installer set up systemd-boot. A minimal profile is enough --
-   `packages.txt` lists the audio, printing, bluetooth and filesystem pieces
-   itself rather than assuming which options were ticked. Swap is zram, so
-   there is no swap partition to encrypt and no hibernation image to leak.
-2. **Bootstrap**, which clones this repo and hands off to `setup.sh`:
-   ```bash
-   bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
-   ```
-3. **Sign in to 1Password** and enable the SSH agent. Nothing else can
-   authenticate to GitHub or sign a commit until this is done — no private key
-   exists on disk by design.
-4. **Re-run `./setup.sh`.** Steps that need GitHub or the 1Password agent —
-   authorising your SSH key, the wallpaper clone, the zsh plugins — are skipped
-   with a warning when step 3 has not happened yet, and picked up here. Once a
-   key is authorised the sshd drop-in installs and password authentication
-   stops working.
-5. **Bind LUKS to the TPM** so you are not typing a passphrase at every boot:
-   ```bash
-   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p2
-   ```
-   Do this *after* Secure Boot, if you are doing Secure Boot at all — PCR 7
-   measures Secure Boot state, so enabling it later invalidates the enrolment.
-6. **Secure Boot**, optional and last, because it is the only step that
-   touches firmware:
-   ```bash
-   sudo pacman -S sbctl
-   # reboot into firmware, put Secure Boot in Setup Mode, then:
-   sudo sbctl create-keys
-   sudo sbctl enroll-keys -m      # -m keeps Microsoft certs; ASUS option ROMs need them
-   sudo sbctl sign -s /boot/vmlinuz-linux
-   sudo sbctl verify              # nothing should be left unsigned
-   # reboot into firmware, enable Secure Boot
-   ```
-   `sbctl` installs a pacman hook that re-signs on every kernel update, so this
-   is one-time. The keys live in `/var/lib/sbctl` and are machine secrets —
-   they must never end up in this repo.
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
+```
 
-Anything not on that list should be in the repo. If you install a package by
-hand, add it to `platform/linux/arch/packages.txt` in the same breath —
-`packages.txt` is meant to be a full manifest of the machine, not a highlights
-reel, so that step 2 alone reproduces it.
+Sign in to 1Password and enable its SSH agent, then re-run `./setup.sh`. Steps
+needing GitHub or the agent — ssh key authorisation, wallpapers, zsh plugins —
+are skipped until it is available.
+
+Install a package by hand, add it to `platform/linux/arch/packages.txt`.
 
 ## Security
 
-The repo carries its own hardening rather than leaving it to be redone by hand
-on each machine.
-
 | Where | What |
 |---|---|
-| `system/` | Root-owned config copied into `/etc` — kernel sysctls, an sshd drop-in, docker's default publish address. See [system/README.md](system/README.md). |
-| `platform/linux/arch/post-link.sh` | Enables ufw default-deny, rate-limits inbound SSH, installs the `system/` tree, enables `paccache.timer`. |
-| `shared/.config/git/hooks/pre-commit` | gitleaks scan of staged content, wired globally via `core.hooksPath`, so it runs in every repo and not only where someone installed it. Chains to a repo's own hook first. |
-| `shared/.gitignore_global` | Credential paths that must never be committed anywhere. |
-| `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys served only by the 1Password agent. |
-| `shared/.claude/settings.json` | Deny rules keeping agents out of `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gh` and away from destructive and exfiltrating commands. |
-| `lib/pkg.sh` | AUR installs keep yay's PKGBUILD diff prompt, since a PKGBUILD is arbitrary shell from a repo anyone can upload to. Official repos are signed and stay `--noconfirm`. |
-
-Preview anything that would be written outside `$HOME`:
+| `system/` | Root-owned config copied into `/etc`. |
+| `platform/linux/arch/post-link.sh` | ufw default-deny, ssh rate-limited, `system/` tree, `paccache.timer` |
+| `shared/.config/git/hooks/pre-commit` | gitleaks on staged content, global via `core.hooksPath`, chains to repo-local hooks |
+| `shared/.gitignore_global` | Credential paths |
+| `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys from the 1Password agent |
+| `shared/.claude/settings.json` | Deny rules for credential paths and unrecoverable commands |
+| `lib/pkg.sh` | AUR keeps yay's PKGBUILD diff prompt; official repos stay `--noconfirm` |
 
 ```bash
-./setup.sh --diff-system
+./setup.sh --diff-system    # preview writes outside $HOME
 ```
 
 ### Inbound SSH
 
-This machine accepts SSH, so the goal is a locked-down sshd rather than no
-sshd. `system/linux/etc/ssh/sshd_config.d/99-hardening.conf` sets key-only
-auth, `PermitRootLogin no`, `AllowUsers nick`, and modern KEX/cipher/MAC lists.
+`system/linux/etc/ssh/sshd_config.d/99-hardening.conf`: key-only,
+`PermitRootLogin no`, `AllowUsers nick`, modern KEX/cipher/MAC.
 
-`setup.sh` handles the ordering. `authorize_ssh_keys` writes the agent's public
-keys to `~/.ssh/authorized_keys` first, and `_system_file_allowed` in
-`lib/system.sh` refuses to install the drop-in until that file has something in
-it — applying it with no authorised key locks this account out of SSH,
-irrecoverably if you are not sitting at the machine.
+`authorize_ssh_keys` writes the agent's public keys to
+`~/.ssh/authorized_keys`; `_system_file_allowed` refuses to install the drop-in
+until that file is non-empty, since password auth off with no authorised key
+locks the account out of ssh.
 
-With no agent available, both steps are skipped and setup says so, rather than
-leaving a machine that cannot be logged into.
-
-ufw rate-limits 22 rather than leaving it wide open. To restrict it to the LAN
-as well:
+Restrict ssh to the LAN:
 
 ```bash
 sudo ufw delete limit 22/tcp
@@ -349,19 +298,14 @@ sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 
 ## Credits
 
-[ML4W](https://github.com/mylinuxforwork/dotfiles) by Stephan Raabe was the
-reference while working out the Hyprland side of this — the configs here are
-written from scratch, but a lot of the "how is this normally solved" came from
-reading theirs. [nhalm/wallpapers](https://github.com/nhalm/wallpapers) is a
-subset of [their wallpaper collection](https://github.com/mylinuxforwork/wallpaper).
+Hyprland configs written against [ML4W](https://github.com/mylinuxforwork/dotfiles)
+by Stephan Raabe as reference. [nhalm/wallpapers](https://github.com/nhalm/wallpapers)
+is a subset of [their collection](https://github.com/mylinuxforwork/wallpaper).
 
 ## Licence
 
-MIT, so anything here can be lifted into your own setup without conditions.
-
-Two vendored directories keep their own, which the MIT licence above does not
-override: `darwin/.config/sketchybar/` (GPL-3.0) and `darwin/tmux/plugins/tpm/`
-(MIT).
+MIT. Vendored `darwin/.config/sketchybar/` (GPL-3.0) and
+`darwin/tmux/plugins/tpm/` (MIT) keep their own.
 
 ## Machine-specific / private setup
 
