@@ -266,6 +266,7 @@ path in `~/.local/state/wallpaper`, then reloads each consumer:
 | `hyprlock-colors.conf` | `~/.local/state/matugen/hyprlock-colors.conf` | `hyprlock.conf` | next lock |
 | `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt5ct, qt6ct | app restart |
 | `fuzzel-colors.ini` | `~/.config/fuzzel/colors.ini` | `fuzzel.ini` | next launch |
+| `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
 
 Borders are applied with a single `hyprctl eval` rather than a config reload,
@@ -275,12 +276,14 @@ Light/dark lives in `~/.local/state/matugen/mode`, written only by
 `theme-mode.sh` (`SUPER+SHIFT+W`), which also sets the GTK colour-scheme
 gsettings keys and then re-runs `wallpaper.sh --restore`.
 
-**TokyoNight Storm is still the fallback**, hardcoded in four places: the
-property defaults in `Theme.qml` (what the bar shows before `colors.json`
-exists), `hypr/colors.lua` (border colours before any wallpaper is set),
-`starship.toml`, and ghostty's base `theme =` under the matugen include.
-`hypr/colors.lua` supplies only `primary`, `secondary` and `outline_variant`;
-its other two keys are unused.
+Two hardcoded TokyoNight fallbacks remain, and both exist because something must
+render before matugen has ever run: the property defaults in `Theme.qml`, and
+`hypr/colors.lua` for the border colours. Neither is normally reached — Arch
+post-link seeds a wallpaper, so the generated palette exists from setup onward.
+
+Ghostty's `theme = TokyoNight Storm` is not a fallback: `config-file = ?colors`
+is optional and that file only exists on Arch, so the base theme is what macOS
+actually uses.
 
 Wallpapers come from [nhalm/wallpapers](https://github.com/nhalm/wallpapers),
 cloned to `~/Pictures/Wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
@@ -417,7 +420,14 @@ aliases, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`.
 The starship prompt is two lines — directory, repo name when below the repo
 root, branch, git state and status, then right-aligned language versions, docker
 context and command duration over 2s. Exit status shows only through the prompt
-character's colour. Palette is TokyoNight Storm, independent of matugen.
+character's colour.
+
+Its palette comes from the wallpaper: the config lives as a matugen template at
+`arch/.config/matugen/templates/starship.toml`, renders to
+`~/.local/state/matugen/starship.toml`, and `os.zsh` points `STARSHIP_CONFIG`
+at that file when it exists. Edit the template, never the output. The success
+character keeps a fixed green — Material has no success role, and a
+wallpaper-derived one could land on red, which is the failure colour.
 
 ## Packages
 
@@ -460,7 +470,7 @@ itself is never started.
 | bluetooth | enable `bluetooth.service`; bluez ships it disabled and blueman cannot see the adapter without it |
 | blueman | `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"` — pairing agent without a tray icon |
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
-| wallpapers | clone or update `~/Pictures/Wallpapers` |
+| wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
 | ssh | authorise agent keys, then install `system/` |
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |

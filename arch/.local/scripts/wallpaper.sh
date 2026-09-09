@@ -31,15 +31,19 @@ esac
 
 [ -n "${IMAGE:-}" ] && [ -f "$IMAGE" ] || { echo "wallpaper: no image" >&2; exit 1; }
 
-# The AUR swww package installs its binaries as awww; upstream swww uses swww.
-SWWW="$(command -v awww || command -v swww)"
-DAEMON="$(command -v awww-daemon || command -v swww-daemon)"
+# Setup runs this from a TTY to seed the palette; there is no compositor to show
+# an image on yet, and the session applies it at startup with --restore.
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	# The AUR swww package installs its binaries as awww; upstream swww uses swww.
+	SWWW="$(command -v awww || command -v swww)"
+	DAEMON="$(command -v awww-daemon || command -v swww-daemon)"
 
-if ! "$SWWW" query >/dev/null 2>&1; then
-	"$DAEMON" >/dev/null 2>&1 &
-	sleep 0.5
+	if ! "$SWWW" query >/dev/null 2>&1; then
+		"$DAEMON" >/dev/null 2>&1 &
+		sleep 0.5
+	fi
+	"$SWWW" img "$IMAGE" --transition-type grow --transition-fps 60 --transition-duration 1
 fi
-"$SWWW" img "$IMAGE" --transition-type grow --transition-fps 60 --transition-duration 1
 
 matugen image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null || echo "wallpaper: matugen failed" >&2
 

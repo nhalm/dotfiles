@@ -20,6 +20,10 @@ output_path = '~/.config/fuzzel/colors.ini'
 input_path = '~/.config/matugen/templates/colors.css'
 output_path = '~/.local/state/matugen/swaync-colors.css'
 
+[templates.starship]
+input_path = '~/.config/matugen/templates/starship.toml'
+output_path = '~/.local/state/matugen/starship.toml'
+
 [templates.btop]
 input_path = '~/.config/matugen/templates/btop.theme'
 output_path = '~/.config/btop/themes/matugen.theme'
