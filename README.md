@@ -347,6 +347,17 @@ sudo ufw delete limit 22/tcp
 sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 ```
 
+## Credits
+
+[ML4W](https://github.com/mylinuxforwork/dotfiles) by Stephan Raabe was the
+reference while working out the Hyprland side of this — the configs here are
+written from scratch, but a lot of the "how is this normally solved" came from
+reading theirs. [nhalm/wallpapers](https://github.com/nhalm/wallpapers) is a
+subset of [their wallpaper collection](https://github.com/mylinuxforwork/wallpaper).
+
+Two directories are vendored and keep their own licences:
+`darwin/.config/sketchybar/` (GPL-3.0) and `darwin/tmux/plugins/tpm/` (MIT).
+
 ## Machine-specific / private setup
 
 Host-specific and sensitive setup (backups, sync, vault) lives in the private
