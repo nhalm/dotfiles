@@ -264,7 +264,7 @@ path in `~/.local/state/wallpaper`, then reloads each consumer:
 | `colors.css` | `~/.config/swaync/colors.css` | swaync glass theme | `swaync-client --reload-css` |
 | `gtk-colors.css` | `~/.config/gtk-3.0/colors.css` and `gtk-4.0/colors.css` | both `gtk.css` files | `color-scheme` bounce |
 | `hyprlock-colors.conf` | `~/.local/state/matugen/hyprlock-colors.conf` | `hyprlock.conf` | next lock |
-| `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt5ct, qt6ct | app restart |
+| `qtct-colors.conf` | `~/.local/state/matugen/qtct-colors.conf` | qt6ct | app restart |
 | `fuzzel-colors.ini` | `~/.config/fuzzel/colors.ini` | `fuzzel.ini` | next launch |
 | `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
@@ -273,8 +273,12 @@ Borders are applied with a single `hyprctl eval` rather than a config reload,
 because a reload re-applies the monitor rules and makes every display flicker.
 
 Light/dark lives in `~/.local/state/matugen/mode`, written only by
-`theme-mode.sh` (`SUPER+SHIFT+W`), which also sets the GTK colour-scheme
-gsettings keys and then re-runs `wallpaper.sh --restore`.
+`theme-mode.sh` (`SUPER+SHIFT+W`). It also writes both `gtk-3.0/settings.ini`
+and `gtk-4.0/settings.ini` — those carry the mode, so a stowed copy would be
+wrong in one of them, and matugen cannot render them because templates see
+colours but not the mode. `gtk-theme-name` stays `Adwaita` in both modes: the
+generated `colors.css` overrides every libadwaita named colour, so the stock
+theme's own palette never shows. Then it re-runs `wallpaper.sh --restore`.
 
 Two hardcoded TokyoNight fallbacks remain, and both exist because something must
 render before matugen has ever run: the property defaults in `Theme.qml`, and
@@ -390,7 +394,7 @@ and date, and sources its colours from
 | Script | Arguments | Invoked by |
 |---|---|---|
 | `wallpaper.sh` | image, `--random`, `--restore` | autostart, `SUPER+CTRL+W`, the carousel, `theme-mode.sh` |
-| `theme-mode.sh` | none (toggle), `dark`, `light`, `--current` | `SUPER+SHIFT+W`, sidebar |
+| `theme-mode.sh` | none (toggle), `dark`, `light`, `--apply`, `--current` | `SUPER+SHIFT+W`, sidebar, arch post-link |
 | `hypr-lid.sh` | `closed`, `open`, `sync` | lid switch binds, config load |
 | `hypr-monitors.sh` | — | `hypr-lid.sh` on close |
 | `toggle-float.sh` | — | `SUPER+SHIFT+F` |
@@ -453,7 +457,7 @@ provide, and omits anything another entry pulls in as a dependency.
 | Containers | docker, docker-compose, docker-buildx |
 | Audio | pipewire-alsa/jack/pulse, gst-plugin-pipewire, wireplumber, alsa-utils, pavucontrol, playerctl |
 | Network | network-manager-applet, blueman, bluez-utils |
-| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, upower, power-profiles-daemon, ly, qt5/qt6 support, papirus-icon-theme |
+| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, upower, power-profiles-daemon, ly, qt6ct, qt5/qt6 wayland, papirus-icon-theme |
 | Printing | cups, cups-pk-helper, system-config-printer |
 | Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
@@ -475,6 +479,7 @@ itself is never started.
 | blueman | `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"` — pairing agent without a tray icon |
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
 | wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
+| theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
 | ssh | authorise agent keys, then install `system/` |
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |
@@ -502,19 +507,12 @@ Present in the config and not what a reader would guess:
   nothing until `qs ipc call theme-manager reload`. quickshell, swaync and
   hyprland and gtk are each reloaded explicitly; Qt apps only pick up a new
   palette when they restart.
-- **Light mode is only half-wired.** `theme-mode.sh` sets the GTK theme through
-  gsettings, but the stowed `gtk-3.0/settings.ini` and `gtk-4.0/settings.ini`
-  hardcode `gtk-theme-name=Adwaita`, `Papirus-Dark` icons and
-  `gtk-application-prefer-dark-theme=1`. The ghostty matugen template reads
-  `.dark.hex` for every colour, so the terminal palette ignores the mode too.
-- **`QT_QPA_PLATFORMTHEME=qt6ct`** is set globally in `looks.lua`, so the tracked
-  `qt5ct.conf` is only consulted by Qt5 apps that locate a qt5ct plugin
-  themselves.
-- **Hardcoded `/home/nick` paths** remain in `qt5ct.conf` and `qt6ct.conf`:
-  `color_scheme_path` takes neither `~` nor an env var, so it cannot be made
-  relative the way the gtk and swaync imports were. `AllowUsers nick` in the sshd
-  drop-in is the other one. These are the files to change first if the repo is
-  reused.
+- **The ghostty palette ignores light mode.** Its matugen template reads
+  `.dark.hex` for every colour, so the terminal stays dark when everything else
+  flips.
+- **Hardcoded `/home/nick` paths** remain in `qt6ct.conf`, whose
+  `color_scheme_path` takes neither `~` nor an env var, and `AllowUsers nick` in
+  the sshd drop-in. These are the files to change first if the repo is reused.
 - **`Config.qml`'s built-in defaults are smaller than `bar.json`** — no Launcher,
   NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json`
   therefore yields a visibly reduced bar rather than an error.
