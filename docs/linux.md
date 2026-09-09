@@ -66,7 +66,8 @@ any of this.
 | Notification daemon, toasts, control center, DND state | swaync |
 | Notification count and DND glyph in the bar | quickshell, reading `swaync-client -swb` |
 | App launcher | hyprlauncher |
-| dmenu-style pickers (clipboard, `wallpaper.sh` with no args) | fuzzel |
+| Clipboard history picker | fuzzel |
+| Wallpaper picker | quickshell carousel, `SUPER+W` or the sidebar |
 | Wallpaper daemon | `awww-daemon`, started on demand by `wallpaper.sh` |
 | Idle | hypridle |
 | Lock | hyprlock |
@@ -243,11 +244,14 @@ rather than reverting and regenerating them.
 matugen derives a Material palette from the wallpaper. One command drives it:
 
 ```bash
-wallpaper.sh <image>    # a specific image
-wallpaper.sh            # pick with fuzzel
+wallpaper.sh <image>     # a specific image
 wallpaper.sh --random
 wallpaper.sh --restore   # what autostart runs
 ```
+
+Choosing one interactively is the carousel's job — `SUPER+W`, or the sidebar's
+Wallpaper button, both of which are `qs ipc call wallpaper toggle`. The script
+takes no interactive mode; with no argument it prints usage and exits 1.
 
 It sets the wallpaper with `awww`, runs `matugen image … -m <mode>`, records the
 path in `~/.local/state/wallpaper`, then reloads each consumer:
@@ -378,7 +382,7 @@ and date, and sources its colours from
 
 | Script | Arguments | Invoked by |
 |---|---|---|
-| `wallpaper.sh` | image, none, `--random`, `--restore` | autostart, `SUPER+CTRL+W`, sidebar, picker, `theme-mode.sh` |
+| `wallpaper.sh` | image, `--random`, `--restore` | autostart, `SUPER+CTRL+W`, the carousel, `theme-mode.sh` |
 | `theme-mode.sh` | none (toggle), `dark`, `light`, `--current` | `SUPER+SHIFT+W`, sidebar |
 | `hypr-lid.sh` | `closed`, `open`, `sync` | lid switch binds, config load |
 | `hypr-monitors.sh` | — | `hypr-lid.sh` on close |
@@ -484,9 +488,6 @@ Present in the config and not what a reader would guess:
   nothing until `qs ipc call theme-manager reload`. quickshell, swaync and
   hyprland are each reloaded explicitly; gtk and Qt apps only pick up a new
   palette when they restart.
-- **The sidebar's Wallpaper button is not the wallpaper picker.** It runs
-  `wallpaper.sh` with no arguments, which is the fuzzel picker. The QML carousel
-  is only reachable through `SUPER+W`.
 - **Light mode is only half-wired.** `theme-mode.sh` sets the GTK theme through
   gsettings, but the stowed `gtk-3.0/settings.ini` and `gtk-4.0/settings.ini`
   hardcode `gtk-theme-name=Adwaita`, `Papirus-Dark` icons and

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Set the wallpaper and regenerate every app's colours from it.
 #
-#   wallpaper.sh <image>   set a specific image
-#   wallpaper.sh           pick one with fuzzel
-#   wallpaper.sh --random  pick at random
+#   wallpaper.sh <image>    set a specific image
+#   wallpaper.sh --random   pick at random
+#   wallpaper.sh --restore  re-apply the remembered one
+#
+# Choosing one interactively is the quickshell carousel's job:
+# `qs ipc call wallpaper toggle`.
 #
 # matugen renders the templates in ~/.config/matugen/config.toml; consumers are
 # then told to reload. The chosen path is remembered so the session can restore
@@ -22,7 +25,7 @@ pick() {
 case "${1:-}" in
 --random) IMAGE="$(pick | shuf -n1)" ;;
 --restore) IMAGE="$(cat "$STATE" 2>/dev/null)" ;;
-"") IMAGE="$(pick | fuzzel --dmenu --width 60)" ;;
+"") echo "usage: wallpaper.sh <image> | --random | --restore" >&2; exit 1 ;;
 *) IMAGE="$1" ;;
 esac
 
