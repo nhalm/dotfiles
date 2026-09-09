@@ -2,273 +2,225 @@
 
 Personal configuration for macOS and Arch Linux, linked with GNU stow.
 
-## Install
+| Doc | Covers |
+|---|---|
+| [docs/linux.md](docs/linux.md) | Arch: Hyprland, the quickshell bar, notifications, theming, monitors, scripts, zsh |
+| [docs/macos.md](docs/macos.md) | macOS: AeroSpace, sketchybar, Karabiner, fish, GUI applications |
+| [docs/neovim.md](docs/neovim.md) | Neovim: layout, plugins, keymaps — shared by both machines |
+| [docs/tmux.md](docs/tmux.md) | Multiplexers: tmux + sessionizer on macOS, herdr on Linux |
 
-On a new machine:
+## Install
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
 ```
 
-`bootstrap.sh` installs just enough to proceed (git, stow, a compiler
-toolchain), clones this repo to `~/dotfiles`, and hands off to `setup.sh`.
+`bootstrap.sh` installs git, stow and a compiler toolchain, clones this repo to
+`~/dotfiles`, and executes `setup.sh`.
 
-That URL tracks `main`, so it is whatever is on the branch at the moment you
-run it — convenient, and a single point of trust. To pin what you execute to a
-reviewed commit instead, swap `main` for a full SHA:
+Process substitution rather than `curl … | bash`: piping occupies stdin, which
+breaks the `sudo` prompt the package installs need.
 
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/<sha>/bootstrap.sh)
-```
+The URL tracks `main`. To pin what you execute to a reviewed commit, swap `main`
+for a full SHA.
 
-Process substitution rather than `curl … | bash` is deliberate: piping ties up
-stdin, which breaks the `sudo` prompt the package installs need.
-
-If the repo is already cloned:
+Once cloned:
 
 ```bash
-./setup.sh              # packages, links, tools
-./setup.sh --link-only  # re-link configs only (same as ./make_links.sh)
+./setup.sh                # packages, links, post-link, tools
+./setup.sh --link-only    # re-link stow packages only (same as ./make_links.sh)
+./setup.sh --diff-system  # preview writes under /etc, change nothing
 ```
 
-Everything is idempotent — re-run it whenever.
+Every step is idempotent.
 
-On macOS, GUI applications are a separate manual step, because several casks
-prompt for a password:
+macOS GUI applications are a separate command, because several casks prompt for
+a password:
 
 ```bash
 ./platform/darwin/gui.sh
 ```
 
-## How the platform split works
+### Installing needs no key
 
-Differences fall on two axes, and keeping them separate is what stops a third
-distro from being a rewrite:
+`.gitconfig` requires signed commits and rewrites every GitHub https url to ssh.
+Both are deliberate. The rewrite is unconditional, though, and that includes the
+four anonymous clones of public repos setup performs on itself — the zsh
+plugins, wallpapers, TPM and SbarLua. GitHub authenticates every ssh connection
+whether the repo is public or not, so on a machine with no key those four would
+fail. They go through `git_public`, which drops the global config for that one
+command and re-passes the integrity checks it carries.
 
-- **OS family** (`darwin` / `linux`) — launchd vs systemd, `/Applications` vs
-  `/opt`, BSD vs GNU coreutils.
-- **Distro** (`macos` / `arch` / …) — which package manager speaks, and what
-  the packages are called.
+So a fresh machine installs in one command. What it cannot do until 1Password is
+signed in is commit, or update this repo:
+
+| | Needs a key | Why |
+|---|---|---|
+| Packages, links, runtimes, plugins, wallpapers | no | `git_public` keeps them on https |
+| `git commit` | yes | `commit.gpgsign = true` with the signer from `os.conf` |
+| `git pull` in `~/dotfiles` | yes | the https → ssh rewrite, and `use_ssh_remote` sets origin to ssh |
+| `~/.ssh/authorized_keys`, sshd hardening drop-in | yes | written once the agent serves keys; skipped with a notice otherwise |
+
+setup installs 1Password itself (`platform/linux/arch/aur.txt` on Arch,
+`platform/darwin/casks.txt` on macOS). Sign in, enable the SSH agent, then
+re-run `./setup.sh`.
+
+The sshd drop-in is refused while `~/.ssh/authorized_keys` is empty: disabling
+password authentication with no authorised key locks the account out of ssh.
+
+## Platform detection
+
+Differences fall on two axes, kept separate so a third distro is not a rewrite:
+
+| Axis | Values | Decides |
+|---|---|---|
+| `OS_FAMILY` | `darwin`, `linux` | launchd vs systemd, `/Applications` vs `/opt`, BSD vs GNU coreutils |
+| `DISTRO` | `macos`, `arch`, … | which package manager speaks, and what packages are called |
 
 `lib/detect.sh` resolves both from `uname` and `/etc/os-release`. A derivative
-with no entry of its own falls back to what its `ID_LIKE` names, so EndeavourOS
-or CachyOS reuse the Arch package list and stow package with no new files.
+with no entry of its own falls back to its `ID_LIKE`, so EndeavourOS and CachyOS
+reuse the Arch package lists and stow package with no new files.
 
 ### Layout
 
 ```
 bootstrap.sh          curl target for a fresh machine
-setup.sh              entrypoint: detect → packages → link → tools
-make_links.sh         re-link only
+setup.sh              detect → packages → link → post-link → tools
+make_links.sh         wrapper for ./setup.sh --link-only
 
 lib/
-  detect.sh           OS_FAMILY / DISTRO / DISTRO_LIKE, and which dirs apply
-  pkg.sh              pkg_install() → brew | pacman+yay | apt | dnf
-  common.sh           stow, mise, zsh plugins, claude, github gpg
+  detect.sh           OS_FAMILY / DISTRO / DISTRO_LIKE / CPU_ARCH, and which dirs apply
+  pkg.sh              pkg_install() → brew | pacman + yay | apt | dnf
+  common.sh           stow, mise, zsh plugins, wallpapers, git signing, ssh keys
+  system.sh           writes under /etc, and --diff-system
 
 platform/
   darwin/             setup.sh, post-link.sh, gui.sh, packages.txt, casks.txt, fonts.txt
   linux/              setup.sh (any distro)
     arch/             setup.sh, post-link.sh, packages.txt, aur.txt
 
-shared/               stow package: everything portable
-darwin/               stow package: macOS only
-linux/                stow package: any Linux
-arch/                 stow package: Arch only (hypr, waybar, swaync)
+system/linux/etc/     root-owned drop-ins installed into /etc
+
+shared/               stow: portable config
+darwin/               stow: macOS only
+linux/                stow: any Linux
+arch/                 stow: Arch only
 ```
 
-Stow packages are linked nearest-last: `shared`, then the OS family, then the
-distro. Only the ones that exist are used.
+`setup.sh` sources `platform/<family>/setup.sh` then
+`platform/<family>/<distro>/setup.sh`, links, then runs the same two
+`post-link.sh` scripts. Family first, so a distro script builds on it.
+
+### Stow packages
+
+| Package | Holds |
+|---|---|
+| `shared` | nvim, git, ssh, mise, ghostty, lazygit, herdr, psqlrc, gitleaks, ccstatusline, claude |
+| `darwin` | fish, tmux, aerospace, sketchybar, karabiner, kitty |
+| `linux` | zsh, starship, git and zsh OS fragments |
+| `arch` | hypr, quickshell, swaync, matugen, fuzzel, gtk, qt, `.local/scripts` |
+
+Linked nearest-last: `shared`, then the OS family, then the distro. Only
+packages that exist are used.
+
+`stow_package` moves any *real* file at a target path aside to
+`<path>.dotfiles-backup` before linking, rather than using `stow --adopt`, which
+resolves conflicts the other way round — pulling the machine's version into the
+repo and overwriting the config being installed. Targets whose physical
+directory already sits inside the repo are skipped, so a folded directory is not
+renamed out from under git.
 
 ### Per-file differences
 
-When a config is *mostly* shared but needs one OS-specific line, the shared file
-includes a fragment that each OS package provides, rather than the whole file
-being duplicated:
+A config that is mostly shared but needs OS-specific values includes a fragment
+that each package provides, instead of the whole file being duplicated:
 
 | Shared file | Includes | Provided by |
 |---|---|---|
-| `.gitconfig` | `~/.config/git/os.conf` | 1Password signing binary path |
-| `.zshrc` | `~/.config/zsh/os.zsh` | SSH agent socket, GNU vs BSD `ls` |
-| `mise/config.toml` | `mise/conf.d/*.toml` | per-OS runtimes (mise merges additively) |
+| `.gitconfig` | `~/.config/git/os.conf` | 1Password signer path, per OS package |
+| `mise/config.toml` | `mise/conf.d/*.toml` | per-OS runtimes; mise merges additively |
+| `ghostty/config` | `?colors` | matugen on Arch, absent elsewhere |
 
-`.zshrc` also sources `~/.config/zsh/local.zsh` if present — per-machine
-overrides, gitignored.
+`.zshrc` is not shared — `linux/.zshrc` and `darwin/.zshrc` are separate files.
+The Linux one sources `~/.config/zsh/os.zsh` from the same package, then
+`~/.config/zsh/local.zsh` for per-machine overrides. Stow folds
+`~/.config/zsh` into a symlink to `linux/.config/zsh`, so `local.zsh` is created
+inside the repo; `.gitignore` covers it.
 
 ### Adding a distro
 
 1. Add a case to `_resolve_backend` in `lib/pkg.sh` if no existing backend fits.
-2. Create `platform/linux/<distro>/packages.txt` and a `setup.sh`.
+2. Create `platform/linux/<distro>/packages.txt` and `setup.sh`.
 3. Create a `<distro>/` stow package only if a config genuinely differs.
-
-### Linking safety
-
-`stow_package` moves any *real* file already at a target path aside to
-`<path>.dotfiles-backup` before linking. This replaces `stow --adopt`, which
-resolves conflicts the wrong way round — it pulls the machine's version *into*
-the repo, silently overwriting the config you were installing.
 
 ## What's on each machine
 
-|  | macOS | Arch |
+| | macOS | Arch |
 |---|---|---|
 | Shell | fish + tide | zsh + starship |
 | Multiplexer | tmux + TPM | [herdr](https://herdr.dev) |
-| Window manager | AeroSpace | Hyprland |
-| Status bar | sketchybar | waybar |
-| Notifications | — | swaync *(under review)* |
-| Network / Bluetooth | — | nm-applet + blueman (tray) |
+| Window manager | AeroSpace | Hyprland (Lua config) |
+| Bar | sketchybar | quickshell |
+| Notifications | — | swaync |
+| Launcher | Raycast | hyprlauncher, fuzzel for dmenu pickers |
 | Display layout | — | nwg-displays |
-| Key remapping | Karabiner | *(not set up)* |
+| Key remapping | Karabiner | — |
 | Containers | Colima + docker CLI | native docker |
 | Terminal | Ghostty, Kitty | Ghostty |
 | Editor | Neovim | Neovim |
+| Theming | static TokyoNight Storm | matugen, derived from the wallpaper |
 
-The Arch package set is deliberately smaller than the Mac's — the cloud and
-infra tooling (awscli, kubectl, helm, terraform), the JVM/PHP stack, and the
-document toolchain are macOS-only. Add them to
-`platform/linux/arch/packages.txt` if that changes.
-
-## Hyprland (Arch)
-
-Config is Lua, split into modules under `arch/.config/hypr/`, with
-`hyprland.lua` as a table of contents:
-
-| Module | Holds |
-|---|---|
-| `monitors.lua` | outputs and scaling |
-| `programs.lua` | terminal/launcher/browser, referenced by keybinds and rules |
-| `colors.lua` | TokyoNight Storm palette, shared with the waybar CSS |
-| `looks.lua` | gaps, borders, decoration, animations |
-| `input.lua` | keyboard, touchpad, gestures |
-| `keybinds.lua` | all bindings |
-| `rules.lua` | window rules |
-| `autostart.lua` | waybar, swaync, polkit agent, nm-applet, 1Password |
-
-Bindings follow the conventional Hyprland scheme — `SUPER` plus `h/j/k/l` to
-focus, `SUPER+SHIFT` to move, `SUPER+1..0` for workspaces. Three fixes relative
-to the stock generated config:
-
-- `SUPER+P` was bound twice (file manager, then pseudo), so it never opened the
-  file manager. That's on `SUPER+E` now.
-- `SUPER+J` (togglesplit) collided with `SUPER+j` (focus down). Togglesplit
-  moved to `SUPER+V`.
-- Focus directions had `j`→right and `l`→down. Now `h/j/k/l` is
-  left/down/up/right.
-
-### Wallpapers
-
-[nhalm/wallpapers](https://github.com/nhalm/wallpapers), cloned by `setup.sh`
-to `~/Pictures/Wallpapers`. `matugen` derives the palette from the selected
-image, so it retints ghostty, hyprlock, fuzzel, gtk, swaync and quickshell.
-
-`WALLPAPER_REPO` and `WALLPAPER_DIR` override source and destination.
-
-### Display layout
-
-The layout is deliberately **not** in this repo -- it is machine-specific, and
-identical monitors differ only by serial, so connector names like `DP-1`/`DP-2`
-can swap between boots.
-
-Arrange displays by dragging them in `nwg-displays`, which writes
-`~/.config/hypr/monitors.lua`. That file is untracked and unstowed;
-`hyprland.lua` loads `monitors_default.lua` first and then `pcall`s it, so it
-overrides the defaults when present and is simply absent on a fresh machine.
-
-Tick **"use monitor descriptions"** in nwg-displays so its rules match on
-description/serial rather than connector name.
-
-### Lid / clamshell
-
-Closing the lid disables the internal panel and leaves the externals running.
-The suspend half needs no configuration: `logind` selects
-`HandleLidSwitchDocked` -- which defaults to `ignore` -- whenever more than one
-display is connected, so the machine stays awake while docked and still
-suspends when the lid is closed on its own.
-
-`~/.local/scripts/hypr-lid.sh` reads the kernel lid state rather than trusting
-which switch edge fired, since `switch:on`/`switch:off` has been unreliable for
-lids in the Lua config. It uses `hyprctl eval`, not `hyprctl keyword` -- a
-Lua-configured Hyprland rejects `keyword` outright while still exiting 0, which
-is why most clamshell recipes found online silently do nothing here.
-
-Nothing draws a wallpaper — `force_default_wallpaper = 0` disables the mascot
-and no wallpaper daemon is installed. Add `hyprpaper` or `swaybg` if you want
-one.
-
-### Brightness keys
-
-`XF86MonBrightness*` needs the `brightnessctl` package, which the stock Arch
-install does not include -- that alone is why the keys do nothing on a fresh
-system.
-
-Setup also adds you to the `video` group, but that is only a fallback:
-brightnessctl links `libsystemd` and goes through logind, which needs no
-permissions on `/sys/class/backlight/*/brightness` for the active session. The
-file stays `root:root 644` and the keys work anyway.
-
-## Shells
-
-### zsh (Arch)
-
-`starship` prompt from a single `starship.toml`, plus three plugins cloned by
-`lib/common.sh` rather than packaged, so the set is identical everywhere:
-`zsh-autosuggestions`, `zsh-completions`, `fast-syntax-highlighting`. fzf's own
-zsh integration provides `Ctrl+R` / `Ctrl+T`, so no plugin manager is involved.
-
-### fish (macOS)
-
-Tide prompt, with fisher plugins for fzf, autopair, and nvm.
+Package counts: 50 formulae, 11 casks and 7 font casks on macOS; 106 repo
+packages and 2 AUR packages on Arch. macOS-only: the cloud and infra tooling
+(awscli, aws-vault, helm, kubernetes-cli, terraform), the JVM/PHP stack, and
+ghostscript + tectonic. Arch-only: the whole Hyprland session, the kernel and
+hardware packages, and `arch-audit`.
 
 ## Runtimes
 
-[mise](https://mise.jdx.dev/) manages language runtimes on both machines.
-Shared: Node LTS, Python 3.13, Go, Rust, plus zoxide, lazygit, herdr, and
-ccstatusline. macOS adds Lua 5.5 (SbarLua builds against it), Ruby, and Bun
-through `conf.d`.
+[mise](https://mise.jdx.dev/) manages runtimes on both machines.
 
-Configs are trusted during setup so shims resolve for processes that never
-source a shell rc — systemd units, GUI launchers, sketchybar.
+| Scope | Tools |
+|---|---|
+| Shared | Node LTS, Python 3.13, Go, Rust, zoxide, lazygit, herdr, `npm:ccstatusline` |
+| macOS | Lua 5.5 (SbarLua builds against it), Ruby 3.4.1, Bun |
 
-## Neovim
+`auto_install` and `not_found_auto_install` are on; `idiomatic_version_file_enable_tools`
+is limited to node. Configs are trusted during setup so shims resolve for
+processes that never source a shell rc — systemd units, GUI launchers,
+sketchybar.
 
-Lazy.nvim, LSP via Mason, Telescope/snacks for navigation, Treesitter,
-Gitsigns, auto-session, which-key, conform + nvim-lint. Shared between both
-machines. Run `:checkhealth` after setup.
+`ccstatusline` comes through mise's npm backend rather than `npm install -g`,
+which would put it in the active node's global prefix and orphan it on a
+`node = "lts"` rollover.
 
 ## Git
 
-SSH commit signing through 1Password, `https://github.com/` rewritten to SSH,
-per-directory identity (`~/work` and `~/dev` are work, `~/personal` and
-`~/dotfiles` are personal), and rebase-on-pull.
+| Setting | Value |
+|---|---|
+| Signing | SSH format, `allowedSignersFile = ~/.config/git/allowed_signers`, signer from 1Password |
+| Identity | `~/work` and `~/dev` → work; `~/personal` and `~/dotfiles` → personal |
+| Pull | rebase |
+| Default branch | `main` |
+| Hooks | `core.hooksPath = ~/.config/git/hooks` |
+| Integrity | `fsckObjects` on transfer, fetch and receive |
 
-`bootstrap.sh` clones over https because no SSH key exists yet; `setup.sh`
-switches the remote to SSH at the end, once the 1Password agent is available.
+There is no top-level `user.email` — it comes only from the `includeIf` rules
+above, so a repo outside those four directories has no identity and git refuses
+to commit. Note that `~/dev` uses the **work** identity.
 
-## Keybindings
-
-See [CHEATSHEET.md](CHEATSHEET.md) — currently the macOS reference.
-
-## Rebuilding this machine
-
-Install Arch with LUKS + btrfs + snapper, then:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
-```
-
-Sign in to 1Password and enable its SSH agent, then re-run `./setup.sh`. Steps
-needing GitHub or the agent — ssh key authorisation, wallpapers, zsh plugins —
-are skipped until it is available.
-
-Install a package by hand, add it to `platform/linux/arch/packages.txt`.
+`core.hooksPath` is global and that directory holds only `pre-commit`, so
+repo-local `commit-msg`, `pre-push` and similar hooks (husky, lefthook) are
+disabled machine-wide. The `pre-commit` hook chains back to a repo-local one if
+it exists.
 
 ## Security
 
 | Where | What |
 |---|---|
-| `system/` | Root-owned config copied into `/etc`. |
+| `system/linux/etc/` | Root-owned drop-ins: sshd hardening, sysctl hardening, faillock, docker daemon |
 | `platform/linux/arch/post-link.sh` | ufw default-deny, ssh rate-limited, `system/` tree, `paccache.timer` |
+| `lib/system.sh` | Installs those files with `install -D -o root -g root -m 0644`, validates sshd with `sshd -t` before reload |
 | `shared/.config/git/hooks/pre-commit` | gitleaks on staged content, global via `core.hooksPath`, chains to repo-local hooks |
 | `shared/.gitignore_global` | Credential paths |
 | `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys from the 1Password agent |
@@ -276,18 +228,18 @@ Install a package by hand, add it to `platform/linux/arch/packages.txt`.
 | `lib/pkg.sh` | AUR keeps yay's PKGBUILD diff prompt; official repos stay `--noconfirm` |
 
 ```bash
-./setup.sh --diff-system    # preview writes outside $HOME
+./setup.sh --diff-system
 ```
 
 ### Inbound SSH
 
-`system/linux/etc/ssh/sshd_config.d/99-hardening.conf`: key-only,
-`PermitRootLogin no`, `AllowUsers nick`, modern KEX/cipher/MAC.
+`system/linux/etc/ssh/sshd_config.d/99-hardening.conf`: `PasswordAuthentication no`,
+`AuthenticationMethods publickey`, `PermitRootLogin no`, `AllowUsers nick`,
+post-quantum and modern KEX, AEAD ciphers, ETM MACs, ed25519 host keys only, no
+forwarding of any kind, `MaxAuthTries 3`, `LoginGraceTime 20`.
 
-`authorize_ssh_keys` writes the agent's public keys to
-`~/.ssh/authorized_keys`; `_system_file_allowed` refuses to install the drop-in
-until that file is non-empty, since password auth off with no authorised key
-locks the account out of ssh.
+`authorize_ssh_keys` writes the agent's public keys to `~/.ssh/authorized_keys`;
+`_system_file_allowed` refuses the drop-in while that file is empty.
 
 Restrict ssh to the LAN:
 
@@ -295,6 +247,18 @@ Restrict ssh to the LAN:
 sudo ufw delete limit 22/tcp
 sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 ```
+
+## Rebuilding this machine
+
+1. Install Arch with [nhalm/arch-install](https://github.com/nhalm/arch-install),
+   which lays down the base system this repo assumes: LUKS, btrfs + snapper,
+   pipewire audio, NetworkManager, bluetooth and printing. `packages.txt` lists
+   only what that does not already provide.
+2. Run the one-liner above. No key or account is needed for this.
+3. Sign in to 1Password and enable its SSH agent, then re-run `./setup.sh` for
+   the ssh hardening. Committing and pulling this repo need the agent too.
+
+Install a package by hand, then add it to `platform/linux/arch/packages.txt`.
 
 ## Credits
 

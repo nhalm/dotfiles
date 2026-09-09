@@ -7,7 +7,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # but the plugin manager expects it under ~/.tmux/plugins/tpm.
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 	echo "installing tmux plugin manager..."
-	git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+	git_public clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 else
 	echo "TPM already installed"
 fi

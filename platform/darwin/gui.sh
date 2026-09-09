@@ -13,6 +13,8 @@ DOTFILES="${DOTFILES:-$(cd "$HERE/../.." && pwd)}"
 . "$DOTFILES/lib/detect.sh"
 # shellcheck source=../../lib/pkg.sh
 . "$DOTFILES/lib/pkg.sh"
+# shellcheck source=../../lib/common.sh
+. "$DOTFILES/lib/common.sh"
 
 detect_platform
 _resolve_backend
@@ -30,7 +32,7 @@ brew install \
 # formula, so it is built from source.
 echo "installing SbarLua..."
 tmp="$(mktemp -d)"
-git clone https://github.com/FelixKratz/SbarLua.git "$tmp/SbarLua"
+git_public clone https://github.com/FelixKratz/SbarLua.git "$tmp/SbarLua"
 (cd "$tmp/SbarLua" && make install)
 rm -rf "$tmp"
 
