@@ -158,19 +158,17 @@ to the stock generated config:
 
 ### Wallpapers
 
-Not tracked here. `setup.sh` clones
-[ML4W's collection](https://github.com/mylinuxforwork/wallpaper) into
-`~/Pictures/Wallpapers/ml4w` — a subdirectory, not the directory itself, so
-your own images can sit in the top level without ending up untracked inside
-someone else's repo. `wallpaper.sh` and the quickshell picker both walk the
-tree recursively and pick up either.
+In [nhalm/wallpapers](https://github.com/nhalm/wallpapers), not here — images
+do not belong in a config repo. `setup.sh` clones it to
+`~/Pictures/Wallpapers`; add one by committing it there. The collection is a
+subset of [ML4W's](https://github.com/mylinuxforwork/wallpaper), credited and
+GPL-2.0 in that repo, trimmed to 43M from upstream's 1.5G.
 
-It is ~1.5G for 219 images, the slowest step of a fresh setup. Set
-`WALLPAPER_REPO` to use something else.
+The wallpaper is not decoration: `matugen` derives the whole palette from it,
+so changing it recolours ghostty, hyprlock, fuzzel, gtk, swaync and quickshell
+together. Images with a clear dominant colour work best.
 
-The wallpaper is not just decoration: `matugen` derives the whole palette from
-it, so changing it recolours ghostty, hyprlock, fuzzel, gtk, swaync and
-quickshell together.
+`WALLPAPER_REPO` and `WALLPAPER_DIR` override the source and destination.
 
 ### Display layout
 
@@ -274,7 +272,9 @@ cannot do, kept short on purpose.
 3. **Sign in to 1Password** and enable the SSH agent. Nothing else can
    authenticate to GitHub or sign a commit until this is done — no private key
    exists on disk by design.
-4. **Authorise your SSH key**, before the sshd hardening will install:
+4. **Authorise your SSH key**, before the sshd hardening will install. The
+   re-run also picks up the wallpaper and zsh-plugin clones, which need GitHub
+   access and are skipped with a warning if step 3 has not happened yet:
    ```bash
    ssh-add -L > ~/.ssh/authorized_keys
    chmod 600 ~/.ssh/authorized_keys
