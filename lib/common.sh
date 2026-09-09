@@ -103,6 +103,34 @@ install_zsh_plugins() {
 	done
 }
 
+# ------------------------------------------------------ kernel drift --------
+
+# Warn when the running kernel's modules are gone.
+#
+# setup.sh runs a full pacman -Syu, and upgrading the kernel replaces
+# /usr/lib/modules/<running version>. Anything not already loaded then cannot
+# load at all: docker cannot create veth pairs for container networking, VPNs
+# cannot bring up wireguard, and the errors name none of this. A reboot is the
+# only fix.
+check_kernel_drift() {
+	[ "$OS_FAMILY" = "linux" ] || return 0
+	local running
+	running="$(uname -r)"
+	[ -d "/usr/lib/modules/$running" ] && return 0
+
+	cat <<-EOF
+
+		  REBOOT NEEDED: the running kernel is $running, and its modules are
+		  gone -- an upgrade replaced them. Modules not already loaded cannot
+		  load, so container networking and VPNs will fail with errors that do
+		  not mention the kernel:
+
+		      failed to add the host <=> sandbox pair interfaces:
+		      operation not supported
+
+	EOF
+}
+
 # --------------------------------------------------------- ssh access -------
 
 # Authorise the agent's public keys for login to this machine.
