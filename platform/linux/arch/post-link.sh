@@ -2,7 +2,7 @@
 # Sourced by setup.sh after linking.
 
 # Docker replaces the Colima VM used on macOS -- the daemon runs natively here.
-if command -v docker >/dev/null 2>&1; then
+if have docker; then
 	if ! systemctl is-enabled --quiet docker.service 2>/dev/null; then
 		echo "enabling docker.service..."
 		sudo systemctl enable --now docker.service
@@ -22,7 +22,7 @@ fi
 # which needs no special permissions for the active session -- so this group is
 # only a fallback for a build without logind support, or a non-systemd setup.
 # Harmless either way; video is standard for DRM access on a desktop.
-if command -v brightnessctl >/dev/null 2>&1; then
+if have brightnessctl; then
 	if id -nG "$USER" | tr ' ' '\n' | grep -qx video; then
 		echo "already in the video group"
 	else
@@ -32,7 +32,7 @@ if command -v brightnessctl >/dev/null 2>&1; then
 fi
 
 # ly 1.x renamed the binary to ly-dm; older releases ship it as ly.
-if command -v ly-dm >/dev/null 2>&1 || command -v ly >/dev/null 2>&1; then
+if have ly-dm ly; then
 	if systemctl is-enabled --quiet ly@tty2.service 2>/dev/null; then
 		echo "ly@tty2.service already enabled"
 	else
@@ -43,7 +43,7 @@ fi
 
 # bluez ships bluetooth.service disabled; blueman needs it running to see the
 # adapter at all.
-if command -v bluetoothctl >/dev/null 2>&1; then
+if have bluetoothctl; then
 	if systemctl is-enabled --quiet bluetooth.service 2>/dev/null; then
 		echo "bluetooth.service already enabled"
 	else
@@ -86,7 +86,7 @@ fi
 # blueman-applet runs for its pairing agent, not its tray icon: without an
 # agent, BlueZ has nothing to answer pairing confirmations and bonding fails
 # with AuthenticationFailed. Network and bluetooth status live in the sidebar.
-if command -v blueman-applet >/dev/null 2>&1; then
+if have blueman-applet; then
 	current="$(gsettings get org.blueman.general plugin-list 2>/dev/null)"
 	if [ "$current" = "['!StatusNotifierItem']" ]; then
 		echo "blueman tray icon already disabled"
@@ -105,7 +105,7 @@ echo
 echo "==> system config"
 install_system_files
 
-if command -v ufw >/dev/null 2>&1; then
+if have ufw; then
 	if sudo ufw status 2>/dev/null | grep -q "Status: active"; then
 		echo "ufw already active"
 	else
@@ -126,7 +126,7 @@ if systemctl list-unit-files paccache.timer >/dev/null 2>&1; then
 	fi
 fi
 
-if command -v ufw >/dev/null 2>&1; then
+if have ufw; then
 	if sudo ufw status | grep -q '^22.*LIMIT'; then
 		echo "ssh already rate-limited"
 	elif sudo ufw status | grep -q '^22.*ALLOW'; then

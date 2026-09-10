@@ -13,7 +13,7 @@ else
 fi
 
 # --- docker compose plugin ----------------------------------------------
-if command -v docker-compose >/dev/null 2>&1; then
+if have docker-compose; then
 	mkdir -p "$HOME/.docker/cli-plugins"
 	ln -sfn "$(brew --prefix)/bin/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
 	echo "docker compose plugin configured"
@@ -31,7 +31,7 @@ fi
 # --- fish ---------------------------------------------------------------
 # Runs after linking so fisher sees the stowed config.fish. macOS keeps fish as
 # the login shell; Linux uses zsh + starship.
-if command -v fish >/dev/null 2>&1; then
+if have fish; then
 	echo "setting up fish plugins..."
 	if ! fish -c "type -q fisher" 2>/dev/null; then
 		fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"

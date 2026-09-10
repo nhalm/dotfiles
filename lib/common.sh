@@ -2,6 +2,20 @@
 # Steps that are the same everywhere: linking configs, runtimes, shell plugins,
 # and the tools we install from their own installers rather than a package manager.
 
+# -------------------------------------------------------------- guards ------
+
+# Guard an optional step on a command, saying so when it is missing: a bare
+# `command -v` cannot tell "not installed" from "renamed upstream", and the
+# step then vanishes from the log. Extra arguments are alternative names.
+have() {
+	local c
+	for c in "$@"; do
+		command -v "$c" >/dev/null 2>&1 && return 0
+	done
+	echo "  $1 not installed, skipping"
+	return 1
+}
+
 # ----------------------------------------------------------------- git ------
 
 # Clone/pull a public repo without the global config, whose https -> ssh rewrite
