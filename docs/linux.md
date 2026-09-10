@@ -44,7 +44,7 @@ place terminal, launcher, browser and file manager are named:
 | Command | Purpose |
 |---|---|
 | `wallpaper.sh --restore` | last wallpaper, and the palette derived from it; starts the wallpaper daemon itself |
-| `qs -d` | quickshell: bar, sidebar, overview, wallpaper picker |
+| `qs -d` | quickshell: bar, sidebar, overview, wallpaper picker, keybind overlay |
 | `swaync` | notification daemon and control center |
 | `hypridle` | idle timeouts |
 | `low-battery-notify.sh` | threshold warnings |
@@ -62,7 +62,7 @@ any of this.
 | Function | Owner |
 |---|---|
 | Bar, tray, workspaces, clock, volume/battery/updates/power-profile, power menu | quickshell |
-| Sidebar (quick settings), overview, wallpaper picker | quickshell |
+| Sidebar (quick settings), overview, wallpaper picker, keybind overlay | quickshell |
 | Notification daemon, toasts, control center, DND state | swaync |
 | Notification count and DND glyph in the bar | quickshell, reading `swaync-client -swb` |
 | App launcher | hyprlauncher |
@@ -83,6 +83,16 @@ quickshell's.
 `modules/Network.qml` and `modules/Bluetooth.qml` exist but are not listed in
 `bar.json`, so they never load. Network and bluetooth status come from the
 sidebar only.
+
+`bar.json` names only the modules that sit in the bar's islands; `shell.qml`
+instantiates `Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly,
+each reachable over `qs ipc call <target> toggle`.
+
+The overview draws a live thumbnail per window, including windows on workspaces
+that are not on screen — `ScreencopyView` bound to `HyprlandToplevel.wayland`,
+which goes through `hyprland_toplevel_export_v1` rather than plain screencopy.
+Capture only runs while the overview is open. `h`/`l` or the arrows walk the
+tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
 
 ## Keybindings
 
@@ -107,12 +117,30 @@ sidebar only.
 | `SUPER+C` | close |
 | `SUPER+F` | float this window |
 | `SUPER+SHIFT+F` | float or re-tile **every** window on the workspace |
-| `SUPER+P` | pseudo |
-| `SUPER+V` | togglesplit (dwindle only) |
-| `SUPER+minus` / `SUPER+equal` | resize −50 / +50, repeatable |
 | `SUPER+mouse:272` / `mouse:273` | drag / resize |
 | `SUPER+M` | `hyprshutdown` (session dialog) |
 | `SUPER+Escape` | `loginctl lock-session` |
+
+### Scrolling layout
+
+The session runs Hyprland's `scrolling` layout — windows sit in columns on a
+tape that extends past the screen edge, rather than a dwindle split. It has been
+in core since Hyprland 0.54, so there is no plugin to install. `dwindle` and
+`master` are still configured in `looks.lua`; a workspace rule can put a single
+workspace back on either.
+
+| Chord | Action |
+|---|---|
+| `SUPER+h/l` | focus the column left / right |
+| `SUPER+j/k` | focus within the column |
+| `SUPER+minus` / `SUPER+equal` | cycle column width through `explicit_column_widths` |
+| `SUPER+comma` / `SUPER+period` | scroll the tape one column |
+| `SUPER+SHIFT+comma` / `SUPER+SHIFT+period` | swap the column with its neighbour |
+| `SUPER+P` | move the window to its own column |
+| `SUPER+V` | consume into the previous column, or expel if alone |
+| `SUPER+G` | centre the focused column |
+| `SUPER+CTRL+equal` | expand the window into the free space |
+| `SUPER+CTRL+minus` | fit every visible column on screen |
 
 ### Workspaces
 
@@ -121,6 +149,7 @@ sidebar only.
 | `SUPER+1`…`SUPER+9`, `SUPER+0` | focus workspace 1–9, 10 |
 | `SUPER+SHIFT+1`…`0` | move window to that workspace |
 | `SUPER+Tab` | overview (`qs ipc call overview toggle`) |
+| `SUPER+slash` | keybind overlay (`qs ipc call hotkeys toggle`) |
 | `SUPER+grave` | previous workspace |
 | `SUPER+S` / `SUPER+SHIFT+S` | special workspace "magic": toggle / move window to |
 | `SUPER+scroll` | next / previous workspace |
@@ -160,6 +189,21 @@ taken by move-to-workspace. Output goes to `~/Pictures/Screenshots`.
 | `SUPER+SHIFT+W` | toggle light/dark |
 | `SUPER+SHIFT+V` | clipboard history through fuzzel |
 | `SUPER+SHIFT+N` | toggle `hyprsunset -t 4000` |
+
+### The keybind overlay
+
+`SUPER+slash` draws the cheatsheet, and it is not a second copy of
+`keybinds.lua` — `modules/Hotkeys.qml` renders `hyprctl binds -j`. A Lua
+dispatcher reports itself as `__lua` with no argument, so the `description` flag
+is the only thing the overlay has to read:
+
+```lua
+hl.bind(mod .. " + T", hl.dsp.exec_cmd(apps.terminal), { description = "Launch: terminal" })
+```
+
+Descriptions are `"Category: what it does"`. The overlay groups on the prefix and
+packs the groups into three shortest-first columns, so a new category needs no
+change here. A bind with no description does not appear.
 
 ## Input
 
