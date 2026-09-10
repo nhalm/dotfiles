@@ -32,7 +32,7 @@ place terminal, launcher, browser and file manager are named:
 |---|---|
 | `terminal` | ghostty |
 | `menu` | hyprlauncher |
-| `browser` | firefox |
+| `browser` | zen-browser |
 | `fileManager` | nemo |
 | `colorPicker` | hyprpicker -a |
 | `audioMixer` | pavucontrol — the app the `float-audio-mixer` rule exists for |
@@ -44,7 +44,7 @@ place terminal, launcher, browser and file manager are named:
 | Command | Purpose |
 |---|---|
 | `wallpaper.sh --restore` | last wallpaper, and the palette derived from it; starts the wallpaper daemon itself |
-| `qs -d` | quickshell: bar, sidebar, overview, wallpaper picker |
+| `qs -d` | quickshell: bar, sidebar, overview, wallpaper picker, keybind overlay |
 | `swaync` | notification daemon and control center |
 | `hypridle` | idle timeouts |
 | `low-battery-notify.sh` | threshold warnings |
@@ -62,7 +62,7 @@ any of this.
 | Function | Owner |
 |---|---|
 | Bar, tray, workspaces, clock, volume/battery/updates/power-profile, power menu | quickshell |
-| Sidebar (quick settings), overview, wallpaper picker | quickshell |
+| Sidebar (quick settings), overview, wallpaper picker, keybind overlay | quickshell |
 | Notification daemon, toasts, control center, DND state | swaync |
 | Notification count and DND glyph in the bar | quickshell, reading `swaync-client -swb` |
 | App launcher | hyprlauncher |
@@ -84,6 +84,17 @@ quickshell's.
 `bar.json`, so they never load. Network and bluetooth status come from the
 sidebar only.
 
+`bar.json` names only the modules that sit in the bar's islands; `shell.qml`
+instantiates `Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly,
+each reachable over `qs ipc call <target> toggle`. `NowPlaying` owns the `media`
+target for its dropdown, and is in the bar rather than in `shell.qml`.
+
+The overview draws a live thumbnail per window, including windows on workspaces
+that are not on screen — `ScreencopyView` bound to `HyprlandToplevel.wayland`,
+which goes through `hyprland_toplevel_export_v1` rather than plain screencopy.
+Capture only runs while the overview is open. `h`/`l` or the arrows walk the
+tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
+
 ## Keybindings
 
 `SUPER` throughout; `SUPER+SHIFT` acts on the window rather than the focus.
@@ -93,9 +104,9 @@ sidebar only.
 | Chord | Action |
 |---|---|
 | `SUPER+T` | ghostty |
-| `SUPER+R` | hyprlauncher |
+| `SUPER+space` | hyprlauncher |
 | `SUPER+E` | nemo |
-| `SUPER+B` | firefox |
+| `SUPER+B` | zen-browser |
 | `SUPER+SHIFT+C` | `hyprpicker -a` |
 
 ### Windows
@@ -107,12 +118,30 @@ sidebar only.
 | `SUPER+C` | close |
 | `SUPER+F` | float this window |
 | `SUPER+SHIFT+F` | float or re-tile **every** window on the workspace |
-| `SUPER+P` | pseudo |
-| `SUPER+V` | togglesplit (dwindle only) |
-| `SUPER+minus` / `SUPER+equal` | resize −50 / +50, repeatable |
 | `SUPER+mouse:272` / `mouse:273` | drag / resize |
 | `SUPER+M` | `hyprshutdown` (session dialog) |
 | `SUPER+Escape` | `loginctl lock-session` |
+
+### Scrolling layout
+
+The session runs Hyprland's `scrolling` layout — windows sit in columns on a
+tape that extends past the screen edge, rather than a dwindle split. It has been
+in core since Hyprland 0.54, so there is no plugin to install. `dwindle` and
+`master` are still configured in `looks.lua`; a workspace rule can put a single
+workspace back on either.
+
+| Chord | Action |
+|---|---|
+| `SUPER+h/l` | focus the column left / right |
+| `SUPER+j/k` | focus within the column |
+| `SUPER+minus` / `SUPER+equal` | cycle column width through `explicit_column_widths` |
+| `SUPER+comma` / `SUPER+period` | scroll the tape one column |
+| `SUPER+SHIFT+comma` / `SUPER+SHIFT+period` | swap the column with its neighbour |
+| `SUPER+P` | move the window to its own column |
+| `SUPER+V` | consume into the previous column, or expel if alone |
+| `SUPER+G` | centre the focused column |
+| `SUPER+CTRL+equal` | expand the window into the free space |
+| `SUPER+CTRL+minus` | fit every visible column on screen |
 
 ### Workspaces
 
@@ -121,6 +150,7 @@ sidebar only.
 | `SUPER+1`…`SUPER+9`, `SUPER+0` | focus workspace 1–9, 10 |
 | `SUPER+SHIFT+1`…`0` | move window to that workspace |
 | `SUPER+Tab` | overview (`qs ipc call overview toggle`) |
+| `SUPER+slash` | keybind overlay (`qs ipc call hotkeys toggle`) |
 | `SUPER+grave` | previous workspace |
 | `SUPER+S` / `SUPER+SHIFT+S` | special workspace "magic": toggle / move window to |
 | `SUPER+scroll` | next / previous workspace |
@@ -161,12 +191,33 @@ taken by move-to-workspace. Output goes to `~/Pictures/Screenshots`.
 | `SUPER+SHIFT+V` | clipboard history through fuzzel |
 | `SUPER+SHIFT+N` | toggle `hyprsunset -t 4000` |
 
+### The keybind overlay
+
+`SUPER+slash` draws the cheatsheet, and it is not a second copy of
+`keybinds.lua` — `modules/Hotkeys.qml` renders `hyprctl binds -j`. A Lua
+dispatcher reports itself as `__lua` with no argument, so the `description` flag
+is the only thing the overlay has to read:
+
+```lua
+hl.bind(mod .. " + T", hl.dsp.exec_cmd(apps.terminal), { description = "Launch: terminal" })
+```
+
+Descriptions are `"Category: what it does"`. The overlay groups on the prefix and
+packs the groups into three shortest-first columns, so a new category needs no
+change here. A bind with no description does not appear.
+
 ## Input
 
 `kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
-the Mac's Karabiner setup. Natural scroll on both mouse and touchpad,
-`follow_mouse = 1`, sensitivity −0.1, tap-to-click `lrm`, disable-while-typing.
-One gesture: three-finger horizontal swipe switches workspace.
+the Mac's Karabiner setup. Natural scroll on both mouse and touchpad, sensitivity
+−0.1, tap-to-click `lrm`, disable-while-typing. One gesture: three-finger
+horizontal swipe switches workspace.
+
+Focus is click-to-focus, not focus-follows-mouse: `follow_mouse = 2`. The value
+matters — `0` also stops the *pointer* following the cursor, which kills hover
+states and scrolling over a window that is not focused. `2` keeps those and moves
+only keyboard focus on click. `float_switch_override_focus = 0` stops focus
+jumping to whatever is under the cursor when a window is floated or re-tiled.
 
 ## Window rules
 
@@ -205,7 +256,7 @@ left one.
 |---|---|---|
 | `Launcher` | distro glyph | L hyprlauncher, R ghostty |
 | `Workspaces` | one pill per occupied or focused workspace, per monitor | focus that workspace |
-| `NowPlaying` | MPRIS title, collapses when nothing plays | play/pause |
+| `NowPlaying` | the source — YouTube, Spotify — collapses when nothing plays | L player dropdown, M play/pause |
 | `Volume` | sink icon + percent | L mute, R pavucontrol, wheel ±5% |
 | `Battery` | percent, warn under 20% — hidden on AC | — |
 | `Clock` | `ddd dd MMM  HH:mm` | month calendar popup |
@@ -214,6 +265,65 @@ left one.
 | `Tray` | SystemTray items | L activate, R menu |
 | `Notifications` | swaync count / DND glyph | L control center, R toggle DND |
 | `PowerMenu` | power glyph | lock, suspend, log out, reboot, shut down |
+
+#### NowPlaying
+
+The label is the source, not the track: a title is long enough to push the whole
+island around every time the song changes. MPRIS `identity` is no use for it —
+a browser calls itself "Mozilla zen" whatever is playing — so the name comes
+from the host in `xesam:url`, mapped for the sites worth naming and otherwise
+capitalised from the domain. `identity` is the fallback for a native player like
+Spotify, which reports itself correctly.
+
+Clicking drops down a `PopupWindow` with the art, title, artist, a progress bar
+when the player reports a length, and transport controls; with more than one
+player it also gets a row of chips to pick between them. Middle-clicking the
+label still toggles play/pause without opening anything, and
+`qs ipc call media toggle` opens it for a keybind.
+
+Three services on the session bus are not players, and the module filters them
+out. Spotify is a CEF app, so its embedded Chromium registers a second service
+on the same pid — it mirrors the same track, and once playing it is
+indistinguishable by title, since it reports `"Title • Artist"` where Spotify
+reports `"Title"`. `playerctld` is a proxy over whichever player is active, so
+it duplicates the real one too. The discriminator is `DesktopEntry`: every real
+player sets it, the CEF service does not expose the property at all. `playerctld`
+does report one, so it is excluded by name as well, and a service carrying no
+track at all is dropped for having nothing to show.
+
+Starting a player from the popup pauses the others — two things playing at once
+was never deliberate. Picking a chip only changes which player the card shows;
+playback changes when you press play. `qs ipc call media playpause` carries the
+same rule, unlike the `playerctl play-pause` on the hardware media keys, which
+resumes whatever `playerctld` last saw and leaves the rest playing.
+
+The progress bar needs a length, and only appears for players that report one to
+spec. Spotify sends `mpris:length` as a `t` (uint64) where MPRIS says `x`
+(int64), and quickshell drops it — `length` and `metadata["mpris:length"]` both
+arrive as 0, so there is nothing to fall back to. Zen sends `x` and gets a bar.
+Note also that quickshell reports `position` and `length` in **seconds**, not
+the microseconds on the bus.
+
+It closes when the pointer leaves both it and the label, after a 400ms grace so
+a slow hand does not lose it. Two details make that work: the popup surface
+starts at the label's bottom edge and covers the 8px visual gap with a
+transparent strip, and the `HoverHandler` sits on an item filling that whole
+surface rather than on the card — hover follows items, not paint, so a handler
+on the card alone leaves the gap dead and crossing it reads as a leave. The
+close only arms once the pointer has been inside, so opening over IPC with the
+mouse elsewhere does not immediately close itself.
+
+Two things about that popup are not obvious:
+
+- `grabFocus: true` makes it a toplevel, which cannot attach to a layer surface
+  — Qt refuses with *"the popup is not an xdg_popup"* and nothing maps. It uses
+  `HyprlandFocusGrab` instead, the same way the sidebar does.
+- It centres itself arithmetically: a zero-size `anchor.rect` with a
+  `Bottom | Right` gravity lands the popup's top-left exactly where it is put.
+  Handing the positioner a rect the width of the module and an `Edges.Bottom`
+  gravity instead centres it on that rect's *left edge*. `mapToItem` also does
+  not re-evaluate when an ancestor's layout changes, so the position is taken
+  each time the popup opens rather than bound.
 
 ### Sidebar, overview, picker
 
@@ -462,11 +572,18 @@ provide, and omits anything another entry pulls in as a dependency.
 | Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
 
-`aur.txt` holds only `1password` and `1password-cli`, installed through yay with
-the PKGBUILD diff prompt kept.
+`aur.txt` holds `1password`, `1password-cli` and `zen-browser-bin`, installed
+through yay with the PKGBUILD diff prompt kept. `firefox` stays in `packages.txt`
+as a second browser; `programs.lua` points `SUPER+B` at zen.
 
 `network-manager-applet` is installed for `nm-connection-editor`; the applet
 itself is never started.
+
+`spotify-launcher.conf` passes `--ozone-platform=wayland` to Spotify, which is
+an Electron app that otherwise runs on XWayland — it was the only XWayland
+client in `hyprctl clients`, and XWayland at the 1.25 scale is scaled by the
+compositor rather than rendered at it. `spotify-launcher -v --skip-update
+--no-exec` prints the assembled command without launching anything.
 
 ## System state set by post-link
 

@@ -4,6 +4,7 @@
 #   ./setup.sh               install packages, link configs, set up tools
 #   ./setup.sh --link-only   just re-link the stow packages
 #   ./setup.sh --diff-system show what would change under /etc, change nothing
+#   ./setup.sh --help        the same list
 #
 # For a brand new machine use bootstrap.sh instead -- it installs git/stow,
 # clones this repo, and calls into here.
@@ -23,12 +24,47 @@ export DOTFILES
 . "$DOTFILES/lib/system.sh"
 
 LINK_ONLY=false
-[ "${1:-}" = "--link-only" ] && LINK_ONLY=true
+DIFF_SYSTEM=false
+
+usage() {
+	cat <<-EOF
+		usage: ./setup.sh [--link-only | --diff-system]
+
+		  (none)          install packages, link configs, set up tools
+		  --link-only     just re-link the stow packages
+		  --diff-system   show what would change under /etc, change nothing
+	EOF
+}
+
+# An unrecognised flag used to fall through to the full run, so a typo in
+# --link-only installed packages and asked for a sudo password instead.
+while [ $# -gt 0 ]; do
+	case "$1" in
+	--link-only) LINK_ONLY=true ;;
+	--diff-system) DIFF_SYSTEM=true ;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "error: unknown argument: $1" >&2
+		echo >&2
+		usage >&2
+		exit 1
+		;;
+	esac
+	shift
+done
+
+if [ "$LINK_ONLY" = true ] && [ "$DIFF_SYSTEM" = true ]; then
+	echo "error: --link-only and --diff-system do different things; pass one." >&2
+	exit 1
+fi
 
 detect_platform
 _resolve_backend
 
-if [ "${1:-}" = "--diff-system" ]; then
+if [ "$DIFF_SYSTEM" = true ]; then
 	echo "==> pending changes under /"
 	diff_system_files
 	exit 0

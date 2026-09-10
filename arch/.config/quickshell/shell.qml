@@ -14,6 +14,7 @@ ShellRoot {
     }
 
     Sidebar { id: sidebar }
+    Hotkeys { id: hotkeys }
     Overview { id: overview }
     WallpaperPicker { id: wallpaperPicker }
 

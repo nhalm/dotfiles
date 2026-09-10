@@ -23,7 +23,7 @@ hl.config({
 		},
 		resize_on_border = true,
 		allow_tearing = false,
-		layout = "dwindle",
+		layout = "scrolling",
 	},
 
 	decoration = {
@@ -47,6 +47,16 @@ hl.config({
 
 	animations = {
 		enabled = true,
+	},
+
+	scrolling = {
+		column_width = 0.5,
+		explicit_column_widths = "0.333, 0.5, 0.667, 1.0",
+		focus_fit_method = 1,
+		follow_focus = true,
+		fullscreen_on_one_column = true,
+		wrap_focus = true,
+		direction = "right",
 	},
 
 	dwindle = {
