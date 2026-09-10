@@ -228,7 +228,7 @@ it exists.
 | `shared/.gitignore_global` | Credential paths |
 | `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys from the 1Password agent |
 | `shared/.claude/settings.json` | Deny rules for credential paths and unrecoverable commands |
-| `lib/pkg.sh` | AUR keeps yay's PKGBUILD diff prompt; official repos stay `--noconfirm` |
+| `lib/pkg.sh` | AUR PKGBUILDs are logged before building; everything installs `--noconfirm` |
 
 ```bash
 ./setup.sh --diff-system
