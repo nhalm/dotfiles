@@ -18,9 +18,9 @@ have() {
 
 # ----------------------------------------------------------------- git ------
 
-# Clone/pull a public repo without the global config, whose https -> ssh rewrite
-# would demand a key that a first install does not have yet. The integrity
-# checks that config carries are re-passed here.
+# Clone/pull a public repo without the global config, so a first install needs
+# no credential of any kind. The integrity checks that config carries are
+# re-passed here.
 git_public() {
 	GIT_CONFIG_GLOBAL=/dev/null git \
 		-c transfer.fsckobjects=true \
@@ -297,8 +297,7 @@ setup_github_gpg() {
 }
 
 # The bootstrap clones over https because no SSH key exists yet. Once the
-# 1Password agent is configured, switch to SSH so pulls use it -- and so the
-# insteadOf rewrite in .gitconfig isn't doing it invisibly.
+# 1Password agent is configured, switch to SSH so pulls use it.
 use_ssh_remote() {
 	local url
 	url="$(git -C "$DOTFILES" remote get-url origin 2>/dev/null)" || return 0
