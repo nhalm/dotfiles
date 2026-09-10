@@ -13,9 +13,6 @@
 [commit]
   gpgsign = true
 
-[url "ssh://git@github.com/"]
-	insteadOf = https://github.com/
-
 [alias]
 	# reword the last commit
 	amend = commit -a --amend
