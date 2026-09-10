@@ -31,7 +31,8 @@ if command -v brightnessctl >/dev/null 2>&1; then
 	fi
 fi
 
-if command -v ly >/dev/null 2>&1; then
+# ly 1.x renamed the binary to ly-dm; older releases ship it as ly.
+if command -v ly-dm >/dev/null 2>&1 || command -v ly >/dev/null 2>&1; then
 	if systemctl is-enabled --quiet ly@tty2.service 2>/dev/null; then
 		echo "ly@tty2.service already enabled"
 	else
