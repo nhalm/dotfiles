@@ -318,11 +318,12 @@ Two things about that popup are not obvious:
 - `grabFocus: true` makes it a toplevel, which cannot attach to a layer surface
   — Qt refuses with *"the popup is not an xdg_popup"* and nothing maps. It uses
   `HyprlandFocusGrab` instead, the same way the sidebar does.
-- It positions itself with `parentWindow` and `relativeX`/`relativeY`, computed
-  from `mapToItem`. `anchor.rect` with an `Edges.Bottom` gravity does not centre
-  on the anchor box here — the popup ends up centred on the box's left edge.
-  `mapToItem` also does not re-evaluate when an ancestor's layout changes, so
-  the position is taken each time the popup opens rather than bound.
+- It centres itself arithmetically: a zero-size `anchor.rect` with a
+  `Bottom | Right` gravity lands the popup's top-left exactly where it is put.
+  Handing the positioner a rect the width of the module and an `Edges.Bottom`
+  gravity instead centres it on that rect's *left edge*. `mapToItem` also does
+  not re-evaluate when an ancestor's layout changes, so the position is taken
+  each time the popup opens rather than bound.
 
 ### Sidebar, overview, picker
 

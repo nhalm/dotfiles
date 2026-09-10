@@ -194,11 +194,16 @@ Item {
     PopupWindow {
         id: popup
 
-        parentWindow: root.barWindow
+        anchor.window: root.barWindow
+        anchor.edges: Edges.Bottom | Edges.Left
+        anchor.gravity: Edges.Bottom | Edges.Right
 
-        // Centred under the module, clamped to the bar. mapToItem does not
-        // re-evaluate on an ancestor's layout change, so it is taken each time
-        // the popup opens.
+        // A zero-size anchor rect with this gravity puts the popup's top-left
+        // exactly where it is placed, so the centring is arithmetic here rather
+        // than left to the positioner -- an Edges.Bottom gravity over a rect the
+        // width of the module centres on the rect's left edge, not the rect.
+        // mapToItem does not re-evaluate on an ancestor's layout change, so the
+        // position is taken each time the popup opens.
         onVisibleChanged: {
             root.armed = root.pointerInside;
             if (!visible) {
