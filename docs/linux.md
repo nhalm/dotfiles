@@ -481,6 +481,7 @@ itself is never started.
 | wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
 | theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
 | hypridle | restarted if running — it reads its config only at startup, so a re-link alone leaves the old timeouts in place |
+| swaync | `--reload-config` and `--reload-css` if running; it reloads in place, so the notification history survives |
 | ssh | authorise agent keys, then install `system/` |
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |

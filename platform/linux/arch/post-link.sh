@@ -74,6 +74,14 @@ if pgrep -x hypridle >/dev/null 2>&1; then
 	setsid -f hypridle >/dev/null 2>&1
 fi
 
+# swaync reads its config at startup too, but it reloads in place, which keeps
+# the notification history a restart would throw away.
+if pgrep -x swaync >/dev/null 2>&1; then
+	echo "reloading swaync..."
+	swaync-client --reload-config >/dev/null 2>&1
+	swaync-client --reload-css >/dev/null 2>&1
+fi
+
 # blueman-applet runs for its pairing agent, not its tray icon: without an
 # agent, BlueZ has nothing to answer pairing confirmations and bonding fails
 # with AuthenticationFailed. Network and bluetooth status live in the sidebar.
