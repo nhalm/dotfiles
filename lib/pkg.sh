@@ -64,14 +64,13 @@ pkg_install() {
 
 # Install from the AUR (or the family equivalent). A no-op where there isn't one,
 # so callers don't have to guard.
-#
-# DOTFILES_AUR_NOCONFIRM=1 skips yay's PKGBUILD diff prompt.
 pkg_install_aur() {
 	[ $# -gt 0 ] || return 0
-	local confirm=()
-	[ "${DOTFILES_AUR_NOCONFIRM:-0}" = "1" ] && confirm=(--noconfirm)
 	case "$PKG_BACKEND" in
-	pacman) yay -S --needed "${confirm[@]}" "$@" ;;
+	pacman) yay -S --needed --noconfirm "$@" || {
+		echo "  yay failed on: $*" >&2
+		return 1
+	} ;;
 	*) echo "  no AUR equivalent on $PKG_BACKEND, skipping: $*" ;;
 	esac
 }

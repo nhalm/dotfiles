@@ -14,26 +14,11 @@ _install_yay() {
 	tmp="$(mktemp -d)"
 	git clone --depth 1 https://aur.archlinux.org/yay.git "$tmp/yay"
 
-	# Show the PKGBUILD before building it. This is the one AUR package we
-	# install without yay's own diff prompt available (yay is what provides
-	# it), so it is the one that most needs a human to look.
 	echo
-	echo "--- PKGBUILD for yay (review before it is built) ---"
+	echo "--- PKGBUILD for yay ---"
 	cat "$tmp/yay/PKGBUILD"
 	echo "--- end PKGBUILD ---"
 	echo
-	if [ "${DOTFILES_AUR_NOCONFIRM:-0}" != "1" ]; then
-		printf 'build and install yay from the above PKGBUILD? [y/N] '
-		read -r reply </dev/tty
-		case "$reply" in
-		[yY] | [yY][eE][sS]) ;;
-		*)
-			echo "skipping yay; AUR packages will not be installed."
-			rm -rf "$tmp"
-			return 0
-			;;
-		esac
-	fi
 
 	(cd "$tmp/yay" && makepkg -si --noconfirm)
 	rm -rf "$tmp"

@@ -1,4 +1,4 @@
-# No official-repo equivalent. Installed with yay, keeping the PKGBUILD diff
-# prompt. Both verify against 1Password's key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22.
+# No official-repo equivalent. Installed with yay. Both verify against
+# 1Password's key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22.
 1password
 1password-cli

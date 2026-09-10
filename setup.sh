@@ -43,7 +43,8 @@ echo
 if [ "$LINK_ONLY" = false ]; then
 	# Platform package installs, family first then distro, so a distro script can
 	# build on what the family already did.
-	while IFS= read -r dir; do
+	# Read on fd 3 so a sourced script does not inherit the pipe as stdin.
+	while IFS= read -r dir <&3; do
 		[ -n "$dir" ] || continue
 		if [ -r "$dir/setup.sh" ]; then
 			echo "==> ${dir#"$DOTFILES/platform/"} setup"
@@ -51,7 +52,7 @@ if [ "$LINK_ONLY" = false ]; then
 			. "$dir/setup.sh"
 			echo
 		fi
-	done < <(platform_dirs "$DOTFILES/platform")
+	done 3< <(platform_dirs "$DOTFILES/platform")
 fi
 
 # stow comes from the package phase above (it is in every packages.txt). If it
@@ -76,7 +77,7 @@ if [ "$LINK_ONLY" = true ]; then
 fi
 
 # Platform steps that need the stowed configs in place, or that touch services.
-while IFS= read -r dir; do
+while IFS= read -r dir <&3; do
 	[ -n "$dir" ] || continue
 	if [ -r "$dir/post-link.sh" ]; then
 		echo "==> ${dir#"$DOTFILES/platform/"} post-link"
@@ -84,7 +85,7 @@ while IFS= read -r dir; do
 		. "$dir/post-link.sh"
 		echo
 	fi
-done < <(platform_dirs "$DOTFILES/platform")
+done 3< <(platform_dirs "$DOTFILES/platform")
 
 echo "==> project directories"
 mkdir -p "$HOME/personal" "$HOME/work" "$HOME/dev"
