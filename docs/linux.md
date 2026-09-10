@@ -554,6 +554,12 @@ the PKGBUILD diff prompt kept.
 `network-manager-applet` is installed for `nm-connection-editor`; the applet
 itself is never started.
 
+`spotify-launcher.conf` passes `--ozone-platform=wayland` to Spotify, which is
+an Electron app that otherwise runs on XWayland — it was the only XWayland
+client in `hyprctl clients`, and XWayland at the 1.25 scale is scaled by the
+compositor rather than rendered at it. `spotify-launcher -v --skip-update
+--no-exec` prints the assembled command without launching anything.
+
 ## System state set by post-link
 
 | Step | Detail |
