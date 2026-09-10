@@ -103,7 +103,7 @@ tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
 | Chord | Action |
 |---|---|
 | `SUPER+T` | ghostty |
-| `SUPER+R` | hyprlauncher |
+| `SUPER+space` | hyprlauncher |
 | `SUPER+E` | nemo |
 | `SUPER+B` | firefox |
 | `SUPER+SHIFT+C` | `hyprpicker -a` |
@@ -208,9 +208,15 @@ change here. A bind with no description does not appear.
 ## Input
 
 `kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
-the Mac's Karabiner setup. Natural scroll on both mouse and touchpad,
-`follow_mouse = 1`, sensitivity −0.1, tap-to-click `lrm`, disable-while-typing.
-One gesture: three-finger horizontal swipe switches workspace.
+the Mac's Karabiner setup. Natural scroll on both mouse and touchpad, sensitivity
+−0.1, tap-to-click `lrm`, disable-while-typing. One gesture: three-finger
+horizontal swipe switches workspace.
+
+Focus is click-to-focus, not focus-follows-mouse: `follow_mouse = 2`. The value
+matters — `0` also stops the *pointer* following the cursor, which kills hover
+states and scrolling over a window that is not focused. `2` keeps those and moves
+only keyboard focus on click. `float_switch_override_focus = 0` stops focus
+jumping to whatever is under the cursor when a window is floated or re-tiled.
 
 ## Window rules
 

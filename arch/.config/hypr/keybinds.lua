@@ -21,7 +21,7 @@ end
 
 -- --- launching ----------------------------------------------------------
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(apps.terminal), desc("Launch: terminal"))
-hl.bind(mod .. " + R", hl.dsp.exec_cmd(apps.menu), desc("Launch: app launcher"))
+hl.bind(mod .. " + space", hl.dsp.exec_cmd(apps.menu), desc("Launch: app launcher"))
 hl.bind(mod .. " + E", hl.dsp.exec_cmd(apps.fileManager), desc("Launch: file manager"))
 hl.bind(mod .. " + B", hl.dsp.exec_cmd(apps.browser), desc("Launch: browser"))
 hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd(apps.colorPicker), desc("Launch: colour picker"))

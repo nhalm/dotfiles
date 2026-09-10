@@ -11,7 +11,11 @@ hl.config({
 
 		natural_scroll = true,
 		numlock_by_default = true,
-		follow_mouse = 1,
+		-- Click to focus. 2 rather than 0: the pointer still follows the cursor,
+		-- so hover and scroll work over an unfocused window, but keyboard focus
+		-- moves only on click.
+		follow_mouse = 2,
+		float_switch_override_focus = 0,
 		sensitivity = -0.1, -- -1.0 to 1.0; 0 is unmodified
 
 		touchpad = {
