@@ -17,6 +17,10 @@ darwin/.config/sketchybar/helpers/git_toolkit/.git_cache
 # Per-machine shell overrides, sourced by .zshrc if present
 .config/zsh/local.zsh
 
+# lazy.nvim rewrites this on every plugin update, and the churn is not worth
+# reviewing -- a fresh machine resolves plugin versions at install time instead
+shared/.config/nvim/lazy-lock.json
+
 # Generated beside the configs that consume them, never tracked
 .config/gtk-3.0/colors.css
 .config/gtk-4.0/colors.css
