@@ -11,6 +11,10 @@ Item {
 
     property var chosen: null
 
+    // Visual gap under the bar. The popup surface covers it, so moving the
+    // pointer from the label into the card never leaves the hover area.
+    readonly property int gap: 8
+
     readonly property var barWindow: QsWindow.window
     readonly property var barContent: QsWindow.contentItem
 
@@ -108,6 +112,27 @@ Item {
 
     HoverHandler { id: hover }
 
+    // The popup closes when the pointer leaves both it and the label. It only
+    // arms once the pointer has actually been inside, so opening over IPC with
+    // the mouse elsewhere does not close itself immediately.
+    readonly property bool pointerInside: hover.hovered || cardHover.hovered
+    property bool armed: false
+
+    onPointerInsideChanged: {
+        if (pointerInside) {
+            armed = true;
+            closeTimer.stop();
+        } else if (popup.visible && armed) {
+            closeTimer.restart();
+        }
+    }
+
+    Timer {
+        id: closeTimer
+        interval: 400
+        onTriggered: if (!root.pointerInside) popup.visible = false;
+    }
+
     IpcHandler {
         target: "media"
         function toggle(): void { popup.visible = !popup.visible && !root.collapsed; }
@@ -144,17 +169,20 @@ Item {
         // re-evaluate on an ancestor's layout change, so it is taken each time
         // the popup opens.
         onVisibleChanged: {
-            if (!visible)
+            root.armed = root.pointerInside;
+            if (!visible) {
+                closeTimer.stop();
                 return;
+            }
             const origin = root.mapToItem(root.barContent, 0, root.height);
             const centred = origin.x + root.width / 2 - implicitWidth / 2;
             relativeX = Math.round(Math.max(8,
                 Math.min(centred, root.barWindow.width - implicitWidth - 8)));
-            relativeY = Math.round(origin.y + 8);
+            relativeY = Math.round(origin.y);
         }
 
         implicitWidth: 380
-        implicitHeight: card.implicitHeight
+        implicitHeight: card.implicitHeight + root.gap
         color: "transparent"
         grabFocus: false
 
@@ -172,211 +200,219 @@ Item {
             NumberAnimation { duration: 220; easing.type: Easing.OutQuint }
         }
 
-        Rectangle {
-            id: card
+        // Fills the surface, gap included -- a HoverHandler only on the card
+        // leaves the gap dead, and the pointer crossing it reads as a leave.
+        Item {
+            anchors.fill: parent
 
-            width: parent.width
-            implicitHeight: body.implicitHeight + 28
-            y: (1 - popup.shown) * -10
-            opacity: popup.shown
+            HoverHandler { id: cardHover }
 
-            radius: Theme.radius
-            color: Theme.island
-            border.width: 1
-            border.color: Theme.islandBorder
+            Rectangle {
+                id: card
 
-            function fmt(us) {
-                if (!us || us <= 0)
-                    return "0:00";
-                const total = Math.floor(us / 1000000);
-                const mins = Math.floor(total / 60);
-                const secs = total % 60;
-                return mins + ":" + (secs < 10 ? "0" : "") + secs;
-            }
+                width: parent.width
+                implicitHeight: body.implicitHeight + 28
+                y: root.gap + (1 - popup.shown) * -10
+                opacity: popup.shown
 
-            ColumnLayout {
-                id: body
-                anchors.fill: parent
-                anchors.margins: 14
-                spacing: 12
+                radius: Theme.radius
+                color: Theme.island
+                border.width: 1
+                border.color: Theme.islandBorder
 
-                RowLayout {
-                    Layout.fillWidth: true
+                function fmt(us) {
+                    if (!us || us <= 0)
+                        return "0:00";
+                    const total = Math.floor(us / 1000000);
+                    const mins = Math.floor(total / 60);
+                    const secs = total % 60;
+                    return mins + ":" + (secs < 10 ? "0" : "") + secs;
+                }
+
+                ColumnLayout {
+                    id: body
+                    anchors.fill: parent
+                    anchors.margins: 14
                     spacing: 12
 
-                    Rectangle {
-                        implicitWidth: 60
-                        implicitHeight: 60
-                        radius: 8
-                        color: Theme.surface_container_high
-                        clip: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
 
-                        Image {
-                            anchors.fill: parent
-                            source: root.player?.trackArtUrl ?? ""
-                            fillMode: Image.PreserveAspectCrop
-                            visible: (root.player?.trackArtUrl ?? "") !== ""
+                        Rectangle {
+                            implicitWidth: 60
+                            implicitHeight: 60
+                            radius: 8
+                            color: Theme.surface_container_high
+                            clip: true
+
+                            Image {
+                                anchors.fill: parent
+                                source: root.player?.trackArtUrl ?? ""
+                                fillMode: Image.PreserveAspectCrop
+                                visible: (root.player?.trackArtUrl ?? "") !== ""
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰝚"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 24
+                                color: Theme.primary
+                                visible: (root.player?.trackArtUrl ?? "") === ""
+                            }
                         }
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰝚"
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 24
-                            color: Theme.primary
-                            visible: (root.player?.trackArtUrl ?? "") === ""
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.sourceName(root.player)
+                                color: Theme.primary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                font.letterSpacing: 1
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.player?.trackTitle || "Nothing playing"
+                                color: Theme.on_surface
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 13
+                                font.bold: true
+                                elide: Text.ElideRight
+                                maximumLineCount: 2
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: (root.player?.trackArtist ?? "") !== ""
+                                text: root.player?.trackArtist ?? ""
+                                color: Theme.on_surface_variant
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                opacity: 0.85
+                                elide: Text.ElideRight
+                            }
                         }
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.sourceName(root.player)
-                            color: Theme.primary
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            font.letterSpacing: 1
-                            elide: Text.ElideRight
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.player?.trackTitle || "Nothing playing"
-                            color: Theme.on_surface
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            elide: Text.ElideRight
-                            maximumLineCount: 2
-                            wrapMode: Text.WordWrap
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: (root.player?.trackArtist ?? "") !== ""
-                            text: root.player?.trackArtist ?? ""
-                            color: Theme.on_surface_variant
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            opacity: 0.85
-                            elide: Text.ElideRight
-                        }
-                    }
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    visible: (root.player?.lengthSupported ?? false) && (root.player?.length ?? 0) > 0
-                    spacing: 4
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: 3
-                        radius: 2
-                        color: Theme.surface_container_high
+                        visible: (root.player?.lengthSupported ?? false) && (root.player?.length ?? 0) > 0
+                        spacing: 4
 
                         Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1,
-                                (root.player?.position ?? 0) / (root.player?.length ?? 1)))
-                            height: parent.height
+                            Layout.fillWidth: true
+                            implicitHeight: 3
                             radius: 2
-                            color: Theme.primary
+                            color: Theme.surface_container_high
+
+                            Rectangle {
+                                width: parent.width * Math.max(0, Math.min(1,
+                                    (root.player?.position ?? 0) / (root.player?.length ?? 1)))
+                                height: parent.height
+                                radius: 2
+                                color: Theme.primary
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Text {
+                                text: card.fmt(root.player?.position ?? 0)
+                                color: Theme.on_surface_variant
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                opacity: 0.7
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: card.fmt(root.player?.length ?? 0)
+                                color: Theme.on_surface_variant
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                opacity: 0.7
+                            }
                         }
                     }
 
                     RowLayout {
                         Layout.fillWidth: true
-
-                        Text {
-                            text: card.fmt(root.player?.position ?? 0)
-                            color: Theme.on_surface_variant
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            opacity: 0.7
-                        }
+                        spacing: 18
 
                         Item { Layout.fillWidth: true }
 
-                        Text {
-                            text: card.fmt(root.player?.length ?? 0)
-                            color: Theme.on_surface_variant
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            opacity: 0.7
+                        Control {
+                            glyph: "󰒮"
+                            active: root.player?.canGoPrevious ?? false
+                            onActivated: root.player.previous()
                         }
-                    }
-                }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 18
+                        Control {
+                            glyph: root.player?.isPlaying ? "󰏤" : "󰐊"
+                            size: 38
+                            active: root.player?.canTogglePlaying ?? false
+                            onActivated: root.player.togglePlaying()
+                        }
 
-                    Item { Layout.fillWidth: true }
+                        Control {
+                            glyph: "󰒭"
+                            active: root.player?.canGoNext ?? false
+                            onActivated: root.player.next()
+                        }
 
-                    Control {
-                        glyph: "󰒮"
-                        active: root.player?.canGoPrevious ?? false
-                        onActivated: root.player.previous()
-                    }
-
-                    Control {
-                        glyph: root.player?.isPlaying ? "󰏤" : "󰐊"
-                        size: 38
-                        active: root.player?.canTogglePlaying ?? false
-                        onActivated: root.player.togglePlaying()
+                        Item { Layout.fillWidth: true }
                     }
 
-                    Control {
-                        glyph: "󰒭"
-                        active: root.player?.canGoNext ?? false
-                        onActivated: root.player.next()
-                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.players.length > 1
+                        spacing: 6
 
-                    Item { Layout.fillWidth: true }
-                }
+                        Repeater {
+                            model: root.players
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: root.players.length > 1
-                    spacing: 6
+                            Rectangle {
+                                required property var modelData
 
-                    Repeater {
-                        model: root.players
+                                readonly property bool active: root.player === modelData
 
-                        Rectangle {
-                            required property var modelData
+                                radius: 6
+                                color: active ? Theme.primary_container : Theme.surface_container_high
+                                border.width: 1
+                                border.color: active ? Theme.primary : Theme.outline_variant
+                                implicitWidth: chip.implicitWidth + 14
+                                implicitHeight: chip.implicitHeight + 8
 
-                            readonly property bool active: root.player === modelData
+                                Text {
+                                    id: chip
+                                    anchors.centerIn: parent
+                                    text: root.sourceName(modelData)
+                                    color: Theme.on_surface
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    elide: Text.ElideRight
+                                }
 
-                            radius: 6
-                            color: active ? Theme.primary_container : Theme.surface_container_high
-                            border.width: 1
-                            border.color: active ? Theme.primary : Theme.outline_variant
-                            implicitWidth: chip.implicitWidth + 14
-                            implicitHeight: chip.implicitHeight + 8
-
-                            Text {
-                                id: chip
-                                anchors.centerIn: parent
-                                text: root.sourceName(modelData)
-                                color: Theme.on_surface
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                elide: Text.ElideRight
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: root.chosen = modelData
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: root.chosen = modelData
+                                }
                             }
                         }
-                    }
 
-                    Item { Layout.fillWidth: true }
+                        Item { Layout.fillWidth: true }
+                    }
                 }
             }
         }

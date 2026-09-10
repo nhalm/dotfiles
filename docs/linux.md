@@ -281,6 +281,15 @@ player it also gets a row of chips to pick between them. Middle-clicking the
 label still toggles play/pause without opening anything, and
 `qs ipc call media toggle` opens it for a keybind.
 
+It closes when the pointer leaves both it and the label, after a 400ms grace so
+a slow hand does not lose it. Two details make that work: the popup surface
+starts at the label's bottom edge and covers the 8px visual gap with a
+transparent strip, and the `HoverHandler` sits on an item filling that whole
+surface rather than on the card — hover follows items, not paint, so a handler
+on the card alone leaves the gap dead and crossing it reads as a leave. The
+close only arms once the pointer has been inside, so opening over IPC with the
+mouse elsewhere does not immediately close itself.
+
 Two things about that popup are not obvious:
 
 - `grabFocus: true` makes it a toplevel, which cannot attach to a layer surface
