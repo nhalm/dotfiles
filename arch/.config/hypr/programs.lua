@@ -4,7 +4,7 @@ return {
 	terminal = "ghostty",
 	fileManager = "nemo",
 	menu = "hyprlauncher",
-	browser = "firefox",
+	browser = "zen-browser",
 	colorPicker = "hyprpicker -a",
 	audioMixer = "pavucontrol",
 }

@@ -32,7 +32,7 @@ place terminal, launcher, browser and file manager are named:
 |---|---|
 | `terminal` | ghostty |
 | `menu` | hyprlauncher |
-| `browser` | firefox |
+| `browser` | zen-browser |
 | `fileManager` | nemo |
 | `colorPicker` | hyprpicker -a |
 | `audioMixer` | pavucontrol — the app the `float-audio-mixer` rule exists for |
@@ -106,7 +106,7 @@ tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
 | `SUPER+T` | ghostty |
 | `SUPER+space` | hyprlauncher |
 | `SUPER+E` | nemo |
-| `SUPER+B` | firefox |
+| `SUPER+B` | zen-browser |
 | `SUPER+SHIFT+C` | `hyprpicker -a` |
 
 ### Windows
@@ -270,7 +270,7 @@ left one.
 
 The label is the source, not the track: a title is long enough to push the whole
 island around every time the song changes. MPRIS `identity` is no use for it —
-a browser calls itself "Mozilla Firefox" whatever is playing — so the name comes
+a browser calls itself "Mozilla zen" whatever is playing — so the name comes
 from the host in `xesam:url`, mapped for the sites worth naming and otherwise
 capitalised from the domain. `identity` is the fallback for a native player like
 Spotify, which reports itself correctly.
@@ -572,8 +572,9 @@ provide, and omits anything another entry pulls in as a dependency.
 | Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
 
-`aur.txt` holds only `1password` and `1password-cli`, installed through yay with
-the PKGBUILD diff prompt kept.
+`aur.txt` holds `1password`, `1password-cli` and `zen-browser-bin`, installed
+through yay with the PKGBUILD diff prompt kept. `firefox` stays in `packages.txt`
+as a second browser; `programs.lua` points `SUPER+B` at zen.
 
 `network-manager-applet` is installed for `nm-connection-editor`; the applet
 itself is never started.
