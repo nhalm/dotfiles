@@ -59,8 +59,10 @@ done
 
 # gtk-theme stays Adwaita in both modes: the palette comes from the generated
 # colors.css, which overrides every libadwaita named colour.
-gsettings set org.gnome.desktop.interface color-scheme "prefer-$MODE" 2>/dev/null
-gsettings set org.gnome.desktop.interface gtk-theme Adwaita 2>/dev/null
-gsettings set org.gnome.desktop.interface icon-theme "$ICONS" 2>/dev/null
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-$MODE" 2>/dev/null
+	gsettings set org.gnome.desktop.interface gtk-theme Adwaita 2>/dev/null
+	gsettings set org.gnome.desktop.interface icon-theme "$ICONS" 2>/dev/null
+fi
 
 MATUGEN_MODE="$MODE" exec "$(dirname "$0")/wallpaper.sh" --restore

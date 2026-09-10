@@ -78,8 +78,10 @@ reload_gtk() {
 	gsettings set org.gnome.desktop.interface color-scheme "$current" 2>/dev/null
 }
 
-qs ipc call theme-manager reload >/dev/null 2>&1
-sleep 0.1 # let matugen's write land before swaync re-reads it
-swaync-client --reload-css >/dev/null 2>&1
-apply_hypr_colors
-reload_gtk
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	qs ipc call theme-manager reload >/dev/null 2>&1
+	sleep 0.1 # let matugen's write land before swaync re-reads it
+	swaync-client --reload-css >/dev/null 2>&1
+	apply_hypr_colors
+	reload_gtk
+fi
