@@ -86,7 +86,8 @@ sidebar only.
 
 `bar.json` names only the modules that sit in the bar's islands; `shell.qml`
 instantiates `Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly,
-each reachable over `qs ipc call <target> toggle`.
+each reachable over `qs ipc call <target> toggle`. `NowPlaying` owns the `media`
+target for its dropdown, and is in the bar rather than in `shell.qml`.
 
 The overview draws a live thumbnail per window, including windows on workspaces
 that are not on screen — `ScreencopyView` bound to `HyprlandToplevel.wayland`,
@@ -255,7 +256,7 @@ left one.
 |---|---|---|
 | `Launcher` | distro glyph | L hyprlauncher, R ghostty |
 | `Workspaces` | one pill per occupied or focused workspace, per monitor | focus that workspace |
-| `NowPlaying` | MPRIS title, collapses when nothing plays | play/pause |
+| `NowPlaying` | the source — YouTube, Spotify — collapses when nothing plays | L player dropdown, M play/pause |
 | `Volume` | sink icon + percent | L mute, R pavucontrol, wheel ±5% |
 | `Battery` | percent, warn under 20% — hidden on AC | — |
 | `Clock` | `ddd dd MMM  HH:mm` | month calendar popup |
@@ -264,6 +265,32 @@ left one.
 | `Tray` | SystemTray items | L activate, R menu |
 | `Notifications` | swaync count / DND glyph | L control center, R toggle DND |
 | `PowerMenu` | power glyph | lock, suspend, log out, reboot, shut down |
+
+#### NowPlaying
+
+The label is the source, not the track: a title is long enough to push the whole
+island around every time the song changes. MPRIS `identity` is no use for it —
+a browser calls itself "Mozilla Firefox" whatever is playing — so the name comes
+from the host in `xesam:url`, mapped for the sites worth naming and otherwise
+capitalised from the domain. `identity` is the fallback for a native player like
+Spotify, which reports itself correctly.
+
+Clicking drops down a `PopupWindow` with the art, title, artist, a progress bar
+when the player reports a length, and transport controls; with more than one
+player it also gets a row of chips to pick between them. Middle-clicking the
+label still toggles play/pause without opening anything, and
+`qs ipc call media toggle` opens it for a keybind.
+
+Two things about that popup are not obvious:
+
+- `grabFocus: true` makes it a toplevel, which cannot attach to a layer surface
+  — Qt refuses with *"the popup is not an xdg_popup"* and nothing maps. It uses
+  `HyprlandFocusGrab` instead, the same way the sidebar does.
+- It positions itself with `parentWindow` and `relativeX`/`relativeY`, computed
+  from `mapToItem`. `anchor.rect` with an `Edges.Bottom` gravity does not centre
+  on the anchor box here — the popup ends up centred on the box's left edge.
+  `mapToItem` also does not re-evaluate when an ancestor's layout changes, so
+  the position is taken each time the popup opens rather than bound.
 
 ### Sidebar, overview, picker
 
