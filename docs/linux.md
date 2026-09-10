@@ -484,7 +484,31 @@ One line per invocation is logged to `$XDG_RUNTIME_DIR/hypr-lid.log`.
 | 300s | dim to 10% (`brightnessctl -s`, restored on resume) |
 | 600s | `loginctl lock-session` |
 | 900s | screens off — `wlopm --off '*'`, back on with any activity |
-| 1800s | `suspend-if-on-battery.sh` — suspends only on battery; on AC the machine is docked and stays up |
+| 1200s | `suspend-if-on-battery.sh` — only on battery, and only if nothing is playing |
+
+### Why the suspend listener ignores inhibitors
+
+zen raises an `org.freedesktop.ScreenSaver` inhibit whose reason reads
+`Playing video` and keeps it up for as long as a video is *loaded* — paused
+counts — and it releases and re-takes the lock as tabs change. hypridle logs the
+outcome plainly:
+
+```
+[LOG] ScreenSaver inhibit: true dbus message from zen (owner: :1.55) with content Playing video
+[LOG] Idled: rule 564df29fdda0
+[LOG] Ignoring from onIdled(), inhibit locks: 1
+```
+
+A listener fires once when its timeout elapses. If a lock happens to be held at
+that instant the fire is dropped, and nothing retries it until the next idle
+cycle — so whether the machine ever suspended came down to what zen was doing at
+minute 20. Hence `ignore_inhibit = true` on that listener only.
+
+Dim, lock and screens-off still respect inhibitors, which is what you want while
+a video really is playing. The suspend listener asks the players directly
+instead: `suspend-if-on-battery.sh` bails if any MPRIS player reports `Playing`.
+The gap is a video on a site that publishes no MPRIS session — that can be
+suspended out from under you after 20 idle minutes on battery.
 
 Powering the outputs down goes through `wlopm` rather than Hyprland's own
 dispatcher. `hl.dsp.dpms` ignores its argument and toggles every monitor, so a
