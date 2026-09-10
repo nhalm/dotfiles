@@ -281,6 +281,29 @@ player it also gets a row of chips to pick between them. Middle-clicking the
 label still toggles play/pause without opening anything, and
 `qs ipc call media toggle` opens it for a keybind.
 
+Three services on the session bus are not players, and the module filters them
+out. Spotify is a CEF app, so its embedded Chromium registers a second service
+on the same pid — it mirrors the same track, and once playing it is
+indistinguishable by title, since it reports `"Title • Artist"` where Spotify
+reports `"Title"`. `playerctld` is a proxy over whichever player is active, so
+it duplicates the real one too. The discriminator is `DesktopEntry`: every real
+player sets it, the CEF service does not expose the property at all. `playerctld`
+does report one, so it is excluded by name as well, and a service carrying no
+track at all is dropped for having nothing to show.
+
+Starting a player from the popup pauses the others — two things playing at once
+was never deliberate. Picking a chip only changes which player the card shows;
+playback changes when you press play. `qs ipc call media playpause` carries the
+same rule, unlike the `playerctl play-pause` on the hardware media keys, which
+resumes whatever `playerctld` last saw and leaves the rest playing.
+
+The progress bar needs a length, and only appears for players that report one to
+spec. Spotify sends `mpris:length` as a `t` (uint64) where MPRIS says `x`
+(int64), and quickshell drops it — `length` and `metadata["mpris:length"]` both
+arrive as 0, so there is nothing to fall back to. Zen sends `x` and gets a bar.
+Note also that quickshell reports `position` and `length` in **seconds**, not
+the microseconds on the bus.
+
 It closes when the pointer leaves both it and the label, after a 400ms grace so
 a slow hand does not lose it. Two details make that work: the popup surface
 starts at the label's bottom edge and covers the 8px visual gap with a

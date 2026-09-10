@@ -18,7 +18,20 @@ Item {
     readonly property var barWindow: QsWindow.window
     readonly property var barContent: QsWindow.contentItem
 
-    readonly property var players: Mpris.players.values
+    // Two services on the bus are not players. Spotify is a CEF app, so its
+    // embedded Chromium registers a second service on the same pid -- always
+    // Stopped, no title, no url. playerctld is a proxy that mirrors whichever
+    // player is active, so it shows up as a duplicate of the real one.
+    // Three things on the bus are not players worth listing. A CEF app like
+    // Spotify has its embedded Chromium register a second service on the same
+    // pid, mirroring the same track; playerctld is a proxy over whichever
+    // player is active; and an idle service carries no track at all. The first
+    // two expose no DesktopEntry, which every real player does.
+    readonly property var players: Mpris.players.values.filter(
+        p => (p.desktopEntry ?? "") !== ""
+            && !(p.dbusName ?? "").includes("playerctld")
+            && ((p.trackTitle ?? "") !== "" || (p.metadata?.["xesam:url"] ?? "") !== ""))
+
     readonly property var player: {
         if (chosen && players.indexOf(chosen) >= 0)
             return chosen;
@@ -41,6 +54,22 @@ Item {
         "x.com": "X",
         "twitter.com": "X"
     })
+
+    // Starting one player stops the rest -- two things playing at once is
+    // never deliberate here.
+    function solo(target) {
+        for (const p of root.players)
+            if (p !== target && p.isPlaying && p.canPause)
+                p.pause();
+    }
+
+    function toggle(target) {
+        if (!target?.canTogglePlaying)
+            return;
+        if (!target.isPlaying)
+            root.solo(target);
+        target.togglePlaying();
+    }
 
     function sourceName(p) {
         if (!p)
@@ -137,6 +166,9 @@ Item {
         target: "media"
         function toggle(): void { popup.visible = !popup.visible && !root.collapsed; }
         function close(): void { popup.visible = false; }
+
+        // Play/pause that carries the solo rule, unlike `playerctl play-pause`.
+        function playpause(): void { root.toggle(root.player); }
     }
 
     MouseArea {
@@ -144,8 +176,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: mouse => {
             if (mouse.button === Qt.MiddleButton) {
-                if (root.player?.canTogglePlaying)
-                    root.player.togglePlaying();
+                root.toggle(root.player);
                 return;
             }
             popup.visible = !popup.visible;
@@ -220,13 +251,19 @@ Item {
                 border.width: 1
                 border.color: Theme.islandBorder
 
-                function fmt(us) {
-                    if (!us || us <= 0)
+                // Quickshell reports these in seconds, not the microseconds MPRIS
+                // puts on the bus.
+                function fmt(seconds) {
+                    if (!seconds || seconds <= 0)
                         return "0:00";
-                    const total = Math.floor(us / 1000000);
-                    const mins = Math.floor(total / 60);
+                    const total = Math.floor(seconds);
+                    const hrs = Math.floor(total / 3600);
+                    const mins = Math.floor((total % 3600) / 60);
                     const secs = total % 60;
-                    return mins + ":" + (secs < 10 ? "0" : "") + secs;
+                    const pad = n => (n < 10 ? "0" : "") + n;
+                    return hrs > 0
+                        ? hrs + ":" + pad(mins) + ":" + pad(secs)
+                        : mins + ":" + pad(secs);
                 }
 
                 ColumnLayout {
@@ -355,20 +392,20 @@ Item {
                         Control {
                             glyph: "󰒮"
                             active: root.player?.canGoPrevious ?? false
-                            onActivated: root.player.previous()
+                            onActivated: { root.solo(root.player); root.player.previous(); }
                         }
 
                         Control {
                             glyph: root.player?.isPlaying ? "󰏤" : "󰐊"
                             size: 38
                             active: root.player?.canTogglePlaying ?? false
-                            onActivated: root.player.togglePlaying()
+                            onActivated: root.toggle(root.player)
                         }
 
                         Control {
                             glyph: "󰒭"
                             active: root.player?.canGoNext ?? false
-                            onActivated: root.player.next()
+                            onActivated: { root.solo(root.player); root.player.next(); }
                         }
 
                         Item { Layout.fillWidth: true }
