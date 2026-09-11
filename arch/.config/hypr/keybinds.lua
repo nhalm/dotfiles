@@ -7,10 +7,8 @@
 --   * SUPER+J was togglesplit while SUPER+j is focus-down; the scrolling layout
 --     has no split to toggle, so SUPER+V consumes/expels instead.
 --
--- Every bind carries a `description` of the form "Category: what it does".
--- `hyprctl binds -j` reports nothing but `__lua` for a Lua dispatcher, so the
--- description is the only thing the SUPER+slash overlay has to read. Keep the
--- prefix -- the overlay groups on it.
+-- Descriptions read "Category: what it does" -- the SUPER+slash overlay groups
+-- on that prefix.
 
 local apps = require("programs")
 local mod = "SUPER"
@@ -34,11 +32,9 @@ hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("loginctl lock-session"), desc("Syst
 
 -- --- focus --------------------------------------------------------------
 -- h/j/k/l = left/down/up/right. The stock sample had j and l transposed.
--- Under scrolling, left/right crosses columns and up/down moves within one.
--- These stay on hl.dsp.focus rather than the layout's own `focus` message,
--- which wraps at the ends instead of moving to the neighbouring monitor.
--- Ordered, not a keyed table -- `pairs` iteration order is undefined and the
--- SUPER+slash overlay lists binds in declaration order.
+-- hl.dsp.focus, not the layout's own `focus`, which wraps instead of crossing
+-- to the next monitor.
+-- Ordered: the overlay lists binds in declaration order.
 local directions = {
 	{ "h", "left" },
 	{ "j", "down" },

@@ -13,8 +13,6 @@ PanelWindow {
     property bool isOpen: false
     property int selected: 0
 
-    // Workspaces that have windows, ordered normal-first then scratchpads,
-    // each with its client list flattened for keyboard navigation.
     readonly property var groups: {
         const all = [...Hyprland.workspaces.values]
             .map(w => ({ ws: w, clients: [...w.toplevels.values] }))
@@ -55,7 +53,6 @@ PanelWindow {
         root.selected = (root.selected + delta + root.flat.length) % root.flat.length;
     }
 
-    // Up/down jump a whole workspace rather than a single tile.
     function stepGroup(delta) {
         if (root.flat.length === 0)
             return;
@@ -180,8 +177,7 @@ PanelWindow {
                                             constraintSize: Qt.size(parent.width, parent.height)
                                         }
 
-                                        // Toplevel export needs a frame before it
-                                        // has anything to show; until then, the class.
+                                        // Until the first captured frame.
                                         Text {
                                             anchors.centerIn: parent
                                             visible: !preview.hasContent
