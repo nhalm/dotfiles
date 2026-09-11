@@ -218,11 +218,12 @@ on every call — 75ms of CPU against busctl's 1.6ms, polled every 10s forever.
 Both work from the session: `.zprofile` appends the mise shims, so the session's
 PATH still finds the system python first.
 
-An **interactive** shell is different. `.zshrc` runs `mise activate`, which puts
-mise's python (3.13, no python-gobject) ahead of the system's 3.14, so every
-system script with a `#!/usr/bin/env python3` shebang that needs a distro-packaged
-module fails when you run it by hand. On this machine that is 7 of the 12 such
-scripts:
+There is deliberately **no global `python` pin** in `~/.config/mise/config.toml`,
+and that is not a detail. `mise activate` in `.zshrc` prepends its shims, so a
+global pin puts mise's python ahead of the distro's in every interactive shell —
+and every system script shebanged `#!/usr/bin/env python3` that imports a
+packaged module then fails when run by hand. On this machine that was 7 of the
+12 such scripts:
 
 | Script | Needs |
 |---|---|
@@ -232,10 +233,10 @@ scripts:
 | `libwacom-show-stylus` | `libevdev`, `pyudev` |
 | `lv2specgen.py` | `lxml`, `markdown`, `pygments`, `rdflib` |
 
-`git-clang-format`, `hmaptool`, `libwacom-update-db` and `routel` only use the
-stdlib, so they survive. Run a broken one as `/usr/bin/python3 /usr/bin/<script>`,
-or drop the global `python` pin in `~/.config/mise/config.toml` so python is
-per-project and the system copy stays first.
+`git-clang-format`, `hmaptool`, `libwacom-update-db` and `routel` are stdlib-only
+and were unaffected. Nothing had ever been installed into the mise python, so the
+pin bought nothing and cost those seven. Pin python per project instead —
+`auto_install` fetches it on demand.
 
 ## Input
 
