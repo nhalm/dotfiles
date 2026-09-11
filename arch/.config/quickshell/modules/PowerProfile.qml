@@ -16,12 +16,25 @@ Item {
         "performance": "󰓅"
     })
 
+    // busctl rather than `powerprofilesctl get`, which is a python script that
+    // imports gi on every call: 75ms of CPU against busctl's 1.6ms, and this
+    // polls every 10s forever. Both work here -- the session's PATH puts the
+    // mise shims last, so powerprofilesctl finds the system python. It is an
+    // interactive shell, where `mise activate` puts mise's python first, that
+    // cannot run it at all.
+    readonly property string iface: "org.freedesktop.UPower.PowerProfiles"
+    readonly property string path: "/org/freedesktop/UPower/PowerProfiles"
+
     Process {
         id: get
         running: true
-        command: ["powerprofilesctl", "get"]
+        command: ["busctl", "--system", "get-property", root.iface, root.path, root.iface, "ActiveProfile"]
         stdout: StdioCollector {
-            onStreamFinished: root.profile = this.text.trim() || "balanced"
+            // prints: s "balanced"
+            onStreamFinished: {
+                const m = /"([a-z-]+)"/.exec(this.text);
+                root.profile = m ? m[1] : "balanced";
+            }
         }
     }
 
@@ -44,7 +57,8 @@ Item {
         onClicked: {
             const order = ["power-saver", "balanced", "performance"];
             const next = order[(order.indexOf(root.profile) + 1) % order.length];
-            Quickshell.execDetached(["powerprofilesctl", "set", next]);
+            Quickshell.execDetached(["busctl", "--system", "set-property",
+                root.iface, root.path, root.iface, "ActiveProfile", "s", next]);
             root.profile = next;
         }
     }

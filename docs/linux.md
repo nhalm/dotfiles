@@ -206,6 +206,37 @@ Descriptions are `"Category: what it does"`. The overlay groups on the prefix an
 packs the groups into three shortest-first columns, so a new category needs no
 change here. A bind with no description does not appear.
 
+## Power
+
+The profile is whatever you last set it to — nothing switches it on plug or
+unplug, and power-profiles-daemon starts every boot on `balanced`.
+`modules/PowerProfile.qml` cycles it from the bar.
+
+That module talks to `org.freedesktop.UPower.PowerProfiles` over `busctl` rather
+than calling `powerprofilesctl get`, which is a python script that imports `gi`
+on every call — 75ms of CPU against busctl's 1.6ms, polled every 10s forever.
+Both work from the session: `.zprofile` appends the mise shims, so the session's
+PATH still finds the system python first.
+
+An **interactive** shell is different. `.zshrc` runs `mise activate`, which puts
+mise's python (3.13, no python-gobject) ahead of the system's 3.14, so every
+system script with a `#!/usr/bin/env python3` shebang that needs a distro-packaged
+module fails when you run it by hand. On this machine that is 7 of the 12 such
+scripts:
+
+| Script | Needs |
+|---|---|
+| `powerprofilesctl` | `gi`, `shtab` |
+| `run-clang-tidy` | `yaml` |
+| `analyze-build`, `intercept-build`, `scan-build-py` | `libscanbuild` |
+| `libwacom-show-stylus` | `libevdev`, `pyudev` |
+| `lv2specgen.py` | `lxml`, `markdown`, `pygments`, `rdflib` |
+
+`git-clang-format`, `hmaptool`, `libwacom-update-db` and `routel` only use the
+stdlib, so they survive. Run a broken one as `/usr/bin/python3 /usr/bin/<script>`,
+or drop the global `python` pin in `~/.config/mise/config.toml` so python is
+per-project and the system copy stays first.
+
 ## Input
 
 `kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
