@@ -11,9 +11,7 @@ hl.config({
 
 		natural_scroll = true,
 		numlock_by_default = true,
-		-- Click to focus. 2 rather than 0: the pointer still follows the cursor,
-		-- so hover and scroll work over an unfocused window, but keyboard focus
-		-- moves only on click.
+		-- Click to focus. 2, not 0: the pointer still follows the cursor.
 		follow_mouse = 2,
 		float_switch_override_focus = 0,
 		sensitivity = -0.1, -- -1.0 to 1.0; 0 is unmodified

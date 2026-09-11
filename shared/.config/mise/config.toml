@@ -1,6 +1,5 @@
 [tools]
 node = "lts"
-python = "3.13"
 go = "latest"
 rust = "latest"
 zoxide = "latest"
@@ -13,6 +12,8 @@ herdr = "latest"
 # -- so a node = "lts" rollover would silently orphan it. The npm backend gives
 # it its own tool directory and shim, and mise orders node before npm: tools.
 "npm:ccstatusline" = "latest"
+
+# No global python: it shadows the distro interpreter. Pin it per project.
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]

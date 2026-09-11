@@ -16,12 +16,19 @@ Item {
         "performance": "󰓅"
     })
 
+    // busctl, not powerprofilesctl: 1.6ms a poll against 75ms.
+    readonly property string iface: "org.freedesktop.UPower.PowerProfiles"
+    readonly property string path: "/org/freedesktop/UPower/PowerProfiles"
+
     Process {
         id: get
         running: true
-        command: ["powerprofilesctl", "get"]
+        command: ["busctl", "--system", "get-property", root.iface, root.path, root.iface, "ActiveProfile"]
         stdout: StdioCollector {
-            onStreamFinished: root.profile = this.text.trim() || "balanced"
+            onStreamFinished: {
+                const m = /"([a-z-]+)"/.exec(this.text);
+                root.profile = m ? m[1] : "balanced";
+            }
         }
     }
 
@@ -44,7 +51,8 @@ Item {
         onClicked: {
             const order = ["power-saver", "balanced", "performance"];
             const next = order[(order.indexOf(root.profile) + 1) % order.length];
-            Quickshell.execDetached(["powerprofilesctl", "set", next]);
+            Quickshell.execDetached(["busctl", "--system", "set-property",
+                root.iface, root.path, root.iface, "ActiveProfile", "s", next]);
             root.profile = next;
         }
     }

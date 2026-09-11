@@ -206,6 +206,38 @@ Descriptions are `"Category: what it does"`. The overlay groups on the prefix an
 packs the groups into three shortest-first columns, so a new category needs no
 change here. A bind with no description does not appear.
 
+## Power
+
+The profile is whatever you last set it to — nothing switches it on plug or
+unplug, and power-profiles-daemon starts every boot on `balanced`.
+`modules/PowerProfile.qml` cycles it from the bar.
+
+That module talks to `org.freedesktop.UPower.PowerProfiles` over `busctl` rather
+than calling `powerprofilesctl get`, which is a python script that imports `gi`
+on every call — 75ms of CPU against busctl's 1.6ms, polled every 10s forever.
+Both work from the session: `.zprofile` appends the mise shims, so the session's
+PATH still finds the system python first.
+
+There is deliberately **no global `python` pin** in `~/.config/mise/config.toml`,
+and that is not a detail. `mise activate` in `.zshrc` prepends its shims, so a
+global pin puts mise's python ahead of the distro's in every interactive shell —
+and every system script shebanged `#!/usr/bin/env python3` that imports a
+packaged module then fails when run by hand. On this machine that was 7 of the
+12 such scripts:
+
+| Script | Needs |
+|---|---|
+| `powerprofilesctl` | `gi`, `shtab` |
+| `run-clang-tidy` | `yaml` |
+| `analyze-build`, `intercept-build`, `scan-build-py` | `libscanbuild` |
+| `libwacom-show-stylus` | `libevdev`, `pyudev` |
+| `lv2specgen.py` | `lxml`, `markdown`, `pygments`, `rdflib` |
+
+`git-clang-format`, `hmaptool`, `libwacom-update-db` and `routel` are stdlib-only
+and were unaffected. Nothing had ever been installed into the mise python, so the
+pin bought nothing and cost those seven. Pin python per project instead —
+`auto_install` fetches it on demand.
+
 ## Input
 
 `kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
@@ -484,7 +516,31 @@ One line per invocation is logged to `$XDG_RUNTIME_DIR/hypr-lid.log`.
 | 300s | dim to 10% (`brightnessctl -s`, restored on resume) |
 | 600s | `loginctl lock-session` |
 | 900s | screens off — `wlopm --off '*'`, back on with any activity |
-| 1800s | `suspend-if-on-battery.sh` — suspends only on battery; on AC the machine is docked and stays up |
+| 1200s | `suspend-if-on-battery.sh` — only on battery, and only if nothing is playing |
+
+### Why the suspend listener ignores inhibitors
+
+zen raises an `org.freedesktop.ScreenSaver` inhibit whose reason reads
+`Playing video` and keeps it up for as long as a video is *loaded* — paused
+counts — and it releases and re-takes the lock as tabs change. hypridle logs the
+outcome plainly:
+
+```
+[LOG] ScreenSaver inhibit: true dbus message from zen (owner: :1.55) with content Playing video
+[LOG] Idled: rule 564df29fdda0
+[LOG] Ignoring from onIdled(), inhibit locks: 1
+```
+
+A listener fires once when its timeout elapses. If a lock happens to be held at
+that instant the fire is dropped, and nothing retries it until the next idle
+cycle — so whether the machine ever suspended came down to what zen was doing at
+minute 20. Hence `ignore_inhibit = true` on that listener only.
+
+Dim, lock and screens-off still respect inhibitors, which is what you want while
+a video really is playing. The suspend listener asks the players directly
+instead: `suspend-if-on-battery.sh` bails if any MPRIS player reports `Playing`.
+The gap is a video on a site that publishes no MPRIS session — that can be
+suspended out from under you after 20 idle minutes on battery.
 
 Powering the outputs down goes through `wlopm` rather than Hyprland's own
 dispatcher. `hl.dsp.dpms` ignores its argument and toggles every monitor, so a

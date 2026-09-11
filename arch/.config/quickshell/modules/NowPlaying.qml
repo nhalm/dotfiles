@@ -11,22 +11,14 @@ Item {
 
     property var chosen: null
 
-    // Visual gap under the bar. The popup surface covers it, so moving the
-    // pointer from the label into the card never leaves the hover area.
+    // The popup surface covers this, so crossing it is not a hover leave.
     readonly property int gap: 8
 
     readonly property var barWindow: QsWindow.window
     readonly property var barContent: QsWindow.contentItem
 
-    // Two services on the bus are not players. Spotify is a CEF app, so its
-    // embedded Chromium registers a second service on the same pid -- always
-    // Stopped, no title, no url. playerctld is a proxy that mirrors whichever
-    // player is active, so it shows up as a duplicate of the real one.
-    // Three things on the bus are not players worth listing. A CEF app like
-    // Spotify has its embedded Chromium register a second service on the same
-    // pid, mirroring the same track; playerctld is a proxy over whichever
-    // player is active; and an idle service carries no track at all. The first
-    // two expose no DesktopEntry, which every real player does.
+    // Mirrors: a CEF app's embedded Chromium, and playerctld. Neither sets
+    // DesktopEntry; every real player does.
     readonly property var players: Mpris.players.values.filter(
         p => (p.desktopEntry ?? "") !== ""
             && !(p.dbusName ?? "").includes("playerctld")
@@ -41,7 +33,7 @@ Item {
     readonly property bool collapsed: player === null
         || ((player.trackTitle ?? "") === "" && (player.identity ?? "") === "")
 
-    // A browser reports itself as the browser, so the site is the useful label.
+    // A browser names itself, not the site, so the url is the better label.
     readonly property var sites: ({
         "youtube.com": "YouTube",
         "music.youtube.com": "YouTube Music",
@@ -55,8 +47,6 @@ Item {
         "twitter.com": "X"
     })
 
-    // Starting one player stops the rest -- two things playing at once is
-    // never deliberate here.
     function solo(target) {
         for (const p of root.players)
             if (p !== target && p.isPlaying && p.canPause)
@@ -141,9 +131,7 @@ Item {
 
     HoverHandler { id: hover }
 
-    // The popup closes when the pointer leaves both it and the label. It only
-    // arms once the pointer has actually been inside, so opening over IPC with
-    // the mouse elsewhere does not close itself immediately.
+    // Arms only once the pointer has been inside, so an IPC open stays put.
     readonly property bool pointerInside: hover.hovered || cardHover.hovered
     property bool armed: false
 
@@ -167,7 +155,6 @@ Item {
         function toggle(): void { popup.visible = !popup.visible && !root.collapsed; }
         function close(): void { popup.visible = false; }
 
-        // Play/pause that carries the solo rule, unlike `playerctl play-pause`.
         function playpause(): void { root.toggle(root.player); }
     }
 
@@ -183,7 +170,7 @@ Item {
         }
     }
 
-    // Position only ticks while something is reading it.
+    // Position only ticks while something reads it.
     Timer {
         running: popup.visible && (root.player?.positionSupported ?? false)
         interval: 500
@@ -198,12 +185,8 @@ Item {
         anchor.edges: Edges.Bottom | Edges.Left
         anchor.gravity: Edges.Bottom | Edges.Right
 
-        // A zero-size anchor rect with this gravity puts the popup's top-left
-        // exactly where it is placed, so the centring is arithmetic here rather
-        // than left to the positioner -- an Edges.Bottom gravity over a rect the
-        // width of the module centres on the rect's left edge, not the rect.
-        // mapToItem does not re-evaluate on an ancestor's layout change, so the
-        // position is taken each time the popup opens.
+        // Centred by hand: the positioner centres on the rect's left edge.
+        // mapToItem needs re-reading on each open, so it is not bound.
         onVisibleChanged: {
             root.armed = root.pointerInside;
             if (!visible) {
@@ -222,8 +205,7 @@ Item {
         color: "transparent"
         grabFocus: false
 
-        // grabFocus makes the popup a toplevel that cannot attach to a layer
-        // surface, so the grab is done by hand.
+        // grabFocus would make this a toplevel, which cannot attach to a layer.
         HyprlandFocusGrab {
             windows: [popup]
             active: popup.visible
@@ -236,8 +218,7 @@ Item {
             NumberAnimation { duration: 220; easing.type: Easing.OutQuint }
         }
 
-        // Fills the surface, gap included -- a HoverHandler only on the card
-        // leaves the gap dead, and the pointer crossing it reads as a leave.
+        // Fills the surface, gap included: hover follows items, not paint.
         Item {
             anchors.fill: parent
 
@@ -256,8 +237,7 @@ Item {
                 border.width: 1
                 border.color: Theme.islandBorder
 
-                // Quickshell reports these in seconds, not the microseconds MPRIS
-                // puts on the bus.
+                // Seconds, not the microseconds MPRIS puts on the bus.
                 function fmt(seconds) {
                     if (!seconds || seconds <= 0)
                         return "0:00";
