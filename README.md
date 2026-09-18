@@ -145,7 +145,7 @@ that each package provides, instead of the whole file being duplicated:
 | `.gitconfig` | `~/.config/git/os.conf` | 1Password signer path, per OS package |
 | `mise/config.toml` | `mise/conf.d/*.toml` | every tool, per scope; mise merges additively |
 | `ghostty/config` | `?colors` | matugen on both machines; the include is optional, so it is absent until matugen has run |
-| `.zshrc` | `~/.config/zsh/os.zsh` | per-OS agent socket, ls flags, aliases |
+| `.zshrc` | `~/.config/zsh/os.zsh` | per-OS ls flags, completions, aliases |
 
 `.zshrc` sources its OS fragment *before* `compinit`, so a package can extend
 `fpath` — that is how Homebrew's `site-functions` reach completion on macOS. It

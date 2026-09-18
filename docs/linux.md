@@ -588,8 +588,10 @@ zsh with a starship prompt. `linux/.zshrc` sources two fragments:
 | Plugins | zsh-autosuggestions, zsh-completions, fast-syntax-highlighting — cloned by `lib/common.sh`, syntax highlighting sourced last |
 | Tools | mise, zoxide (as `cd`), starship, fzf's own `--zsh` integration for `Ctrl+R` / `Ctrl+T` |
 
-`os.zsh` exports `SSH_AUTH_SOCK` for the 1Password agent, sets GNU colour
-aliases, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`.
+`os.zsh` sets GNU colour aliases, points `STARSHIP_CONFIG` at the matugen
+render, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`. The 1Password
+`SSH_AUTH_SOCK` moved to `.zprofile`, so non-interactive shells reach the agent
+too.
 
 `.zprofile` holds environment only: `EDITOR`/`VISUAL` as nvim, `GOPATH`,
 `PROJECTS_DIR`, `~/.local/bin` and the mise shims on `PATH`.

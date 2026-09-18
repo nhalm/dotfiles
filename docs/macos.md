@@ -40,6 +40,7 @@ into processing, which Karabiner skips by default.
 | On workspace change | `sketchybar --trigger aerospace_workspace_change` |
 | On monitor focus change | `move-mouse monitor-lazy-center` |
 | Start at login | yes |
+| `config-version` | 2 — `persistent-workspaces` must then be explicit, or a workspace vanishes with its last window and the sketchybar chips empty |
 
 Five workspaces, assigned by app:
 
@@ -127,7 +128,6 @@ package:
 
 | What | Value |
 |---|---|
-| `SSH_AUTH_SOCK` | `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock` — Linux uses `~/.1password/agent.sock` |
 | `fpath` | Homebrew's `share/zsh/site-functions` prepended, so brew completions work |
 | Colour flags | `ls -G` / `ls -lahG`; BSD ls rejects GNU's `--color=auto` |
 | Aliases | `tmf` (sessionizer `--windows`), `tmc` (bare) |
@@ -140,6 +140,12 @@ The fragment is sourced *before* `compinit`, which is what lets it extend
 never source a shell rc — sketchybar being the one that matters here.
 Homebrew's `shellenv` runs from there too, guarded on `/opt/homebrew/bin/brew`
 existing.
+
+`SSH_AUTH_SOCK` is set there rather than in the fragment, taking whichever
+1Password socket exists. It lived in `os.zsh` once, which meant only
+*interactive* shells reached the agent — git run from a script or a
+GUI-launched editor silently fell back to the system agent, which holds no
+keys.
 
 Interactive extras come from the shared file, each guarded on the command being
 present: `mise activate`, `zoxide init --cmd cd` (zoxide takes over `cd`),

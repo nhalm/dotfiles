@@ -1,8 +1,5 @@
 # Linux-specific interactive setup, sourced by .zshrc.
 
-# 1Password SSH agent (macOS puts this under ~/Library/Group Containers).
-export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
-
 # GNU coreutils colour flags; BSD ls on macOS uses -G instead.
 alias ls='ls --color=auto'
 alias ll='ls -lah --color=auto'

@@ -1,6 +1,14 @@
 # Place a copy of this config to ~/.aerospace.toml
 # After that, you can edit ~/.aerospace.toml to your liking
 
+config-version = 2
+
+# Version 2 stops inferring these from the keybindings below. Without them the
+# list is empty and a workspace disappears the moment its last window closes --
+# which would empty the sketchybar chips, since those come from
+# `aerospace list-workspaces --all`.
+persistent-workspaces = ['1', '2', '3', '4', '5']
+
 # You can use it to add commands that run after AeroSpace startup.
 # Available commands : https://nikitabobko.github.io/AeroSpace/commands
 after-startup-command = [
