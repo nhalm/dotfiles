@@ -52,15 +52,18 @@ the top-level import is not recursive. Global keymaps belong in
 | n | `<leader>s+` / `<leader>s-` | height ±2 |
 | n | `<leader>s>` / `<leader>s<` | width ±2 |
 | n | `<leader>sm` | maximize / restore |
-| n | `<C-h/j/k/l>` | navigate splits (tmux-aware on macOS) |
+| n | `<C-h/j/k/l>` | navigate splits, crossing into herdr panes at the edge |
 | n | `<C-\>` | previous split |
 | n | `<leader>to` / `<leader>tx` | open / close tab |
 | n | `<leader>tn` / `<leader>tp` | next / previous tab |
 | n | `<leader>tf` | current buffer in a new tab |
 | t | `<C-w>` | leave terminal mode, then window command |
 
-`<C-h/j/k/l>` go through vim-tmux-navigator, which only has a counterpart on
-macOS; on Linux they are plain window moves.
+`<C-h/j/k/l>` and `<M-h/j/k/l>` come from herdr-splits.nvim, which only loads
+when `HERDR_ENV=1`. Inside herdr they walk splits and then cross into the
+adjacent pane; Alt resizes whichever is focused. Outside herdr the plugin is
+absent and `core/keymaps.lua` keeps the same navigation keys on plain `<C-w>`
+moves. Both halves need matching `plugin_action` bindings in herdr's config.
 
 ### Finding (snacks)
 
@@ -107,8 +110,8 @@ Buffer-local, attached per server.
 | `<C-e>` | abort |
 | `<CR>` | confirm, without preselect |
 
-Inside tmux on macOS, `Ctrl+Space` is the tmux prefix — use `prefix C-Space` to
-deliver one here.
+`Ctrl+Space` is herdr's prefix, so it does not reach here — send a literal one
+through herdr's send-prefix binding.
 
 ### Git
 

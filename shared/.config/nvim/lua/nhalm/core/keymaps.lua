@@ -25,6 +25,14 @@ keymap.set("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" }) 
 keymap.set("n", "<leader>se", "<C-w>=", { desc = "Make splits equal size" }) -- make split windows equal width & height
 keymap.set("n", "<leader>sx", "<cmd>close<CR>", { desc = "Close current split" }) -- close current split window
 
+-- Split navigation. herdr-splits.nvim overrides these inside herdr, where the
+-- same keys also cross into adjacent panes.
+keymap.set("n", "<C-h>", "<C-w>h", { desc = "Go to left split" })
+keymap.set("n", "<C-j>", "<C-w>j", { desc = "Go to split below" })
+keymap.set("n", "<C-k>", "<C-w>k", { desc = "Go to split above" })
+keymap.set("n", "<C-l>", "<C-w>l", { desc = "Go to right split" })
+keymap.set("n", "<C-\\>", "<C-w>p", { desc = "Go to previous split" })
+
 -- window resizing
 keymap.set("n", "<leader>s+", "<cmd>resize +2<CR>", { desc = "Increase window height" })
 keymap.set("n", "<leader>s-", "<cmd>resize -2<CR>", { desc = "Decrease window height" })  

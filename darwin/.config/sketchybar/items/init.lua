@@ -1,5 +1,3 @@
 require("items.aerospace_workspaces")
 require("items.calendar")
 require("items.widgets")
--- require("items.media")
--- require("items.spotify")

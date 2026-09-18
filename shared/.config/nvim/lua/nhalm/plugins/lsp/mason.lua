@@ -1,7 +1,7 @@
 return {
-  "williamboman/mason.nvim",
+  "mason-org/mason.nvim",
   dependencies = {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     "WhoIsSethDaniel/mason-tool-installer.nvim",
   },
   config = function()
@@ -41,8 +41,9 @@ return {
         "gopls",
         "elixirls",
       },
-      -- auto-install configured servers (with lspconfig)
-      automatic_installation = true, -- not the same as ensure_installed
+      -- lspconfig.lua calls vim.lsp.enable() with this same list, so leave
+      -- the enabling to it rather than doing it twice.
+      automatic_enable = false,
     }
 
     mason_tool_installer.setup {

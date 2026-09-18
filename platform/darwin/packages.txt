@@ -18,8 +18,8 @@ dos2unix
 autoconf
 
 # shell
-fish
 mise
+starship
 
 # editor
 neovim
@@ -33,6 +33,8 @@ fzf
 tree
 bat
 glow
+# terminal image rendering, for the wallpaper picker's thumbnails
+chafa
 
 # data
 jq
@@ -59,7 +61,8 @@ awscli
 aws-vault
 helm
 kubernetes-cli
-terraform
+# left homebrew-core with the BUSL relicence
+hashicorp/tap/terraform
 
 # containers -- Colima provides the daemon; docker here is the CLI client only
 colima

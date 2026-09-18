@@ -2,15 +2,9 @@
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# --- tmux ---------------------------------------------------------------
-# tmux is macOS-only now; Linux uses herdr. TPM is vendored in darwin/tmux,
-# but the plugin manager expects it under ~/.tmux/plugins/tpm.
-if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
-	echo "installing tmux plugin manager..."
-	git_public clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-else
-	echo "TPM already installed"
-fi
+# --- wallpapers ---------------------------------------------------------
+# Cloned over https by git_public, so this needs no key.
+install_wallpapers
 
 # --- docker compose plugin ----------------------------------------------
 if have docker-compose; then
@@ -19,35 +13,35 @@ if have docker-compose; then
 	echo "docker compose plugin configured"
 fi
 
-# --- kitty theme --------------------------------------------------------
-kitty_dir="$HOME/.config/kitty"
-if [ ! -f "$kitty_dir/tokyonight_storm.conf" ]; then
-	echo "downloading kitty tokyonight-storm theme..."
-	mkdir -p "$kitty_dir"
-	curl -fsSL "https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/kitty/tokyonight_storm.conf" \
-		-o "$kitty_dir/tokyonight_storm.conf"
-fi
+# --- config checks ------------------------------------------------------
+# Validate what stow just linked, so a syntax error surfaces here rather than
+# the next time the app starts.
 
-# --- fish ---------------------------------------------------------------
-# Runs after linking so fisher sees the stowed config.fish. macOS keeps fish as
-# the login shell; Linux uses zsh + starship.
-if have fish; then
-	echo "setting up fish plugins..."
-	if ! fish -c "type -q fisher" 2>/dev/null; then
-		fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
+# luac comes from the mise-managed lua, whose shims are not on PATH during setup.
+if command -v mise >/dev/null 2>&1 && mise which luac >/dev/null 2>&1; then
+	lua_bad=0
+	while IFS= read -r f; do
+		mise exec -- luac -p "$f" || lua_bad=1
+	done < <(find "$HOME/.config/sketchybar" -name '*.lua' 2>/dev/null)
+	if [ "$lua_bad" -eq 0 ]; then
+		echo "sketchybar lua ok"
+	else
+		echo "  sketchybar will not start until the errors above are fixed"
 	fi
-	for plugin in \
-		PatrickF1/fzf.fish \
-		jorgebucaran/autopair.fish \
-		jorgebucaran/nvm.fish \
-		ilancosman/tide@v6 \
-		vitallium/tokyonight-fish; do
-		fish -c "fisher install $plugin" || echo "  $plugin failed to install"
-	done
+	unset lua_bad
 fi
 
-# --- npm globals --------------------------------------------------------
-# macOS-only extras; ccstatusline is installed for every platform by setup.sh.
-install_npm_globals carbonyl @mermaid-js/mermaid-cli ccusage
+# aerospace answers only while the app is running. It is installed by gui.sh and
+# starts at login, so on a first install there is nothing to ask yet.
+if have aerospace; then
+	if ! aerospace list-workspaces --all >/dev/null 2>&1; then
+		echo "aerospace not running, skipping config check"
+	elif aerospace reload-config >/dev/null 2>&1; then
+		echo "aerospace config ok"
+	else
+		echo "aerospace config REJECTED:"
+		aerospace reload-config 2>&1 | sed 's/^/  /'
+	fi
+fi
 
 brew cleanup || true

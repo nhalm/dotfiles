@@ -398,6 +398,9 @@ takes no interactive mode; with no argument it prints usage and exits 1.
 It sets the wallpaper with `awww`, runs `matugen image … -m <mode>`, records the
 path in `~/.local/state/wallpaper`, then reloads each consumer:
 
+Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors`
+and `starship.toml`, which are in `shared/` because macOS renders them too.
+
 | Template | Output | Consumer | Reload |
 |---|---|---|---|
 | `colors.json` | `~/.local/state/matugen/colors.json` | quickshell `Theme.qml` | `qs ipc call theme-manager reload` |
@@ -597,7 +600,7 @@ context and command duration over 2s. Exit status shows only through the prompt
 character's colour.
 
 Its palette comes from the wallpaper: the config lives as a matugen template at
-`arch/.config/matugen/templates/starship.toml`, renders to
+`shared/.config/matugen/templates/starship.toml` (shared with macOS), renders to
 `~/.local/state/matugen/starship.toml`, and `os.zsh` points `STARSHIP_CONFIG`
 at that file when it exists. Edit the template, never the output. The success
 character keeps a fixed green — Material has no success role, and a

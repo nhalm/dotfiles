@@ -8,7 +8,7 @@ keybind = shift+enter=text:\x1b\r
 # gtk-tabs-location = hidden
 macos-titlebar-style = hidden
 clipboard-read = allow
-# Linux runs zsh, macOS runs fish -- let ghostty work it out.
+# Both machines run zsh; detect covers login vs non-login either way.
 shell-integration = detect
 window-padding-x = 10
 window-padding-y = 10

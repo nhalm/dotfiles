@@ -4,15 +4,7 @@
 # Files moved aside by stow_package when a real file already occupied a target
 *.dotfiles-backup
 
-# Vendored TPM: track the plugin manager, nothing else tmux drops in there
-darwin/tmux/*
-!darwin/tmux/plugins
 
-# Fish: config.fish is ours, the rest of the directory is fisher's
-darwin/.config/fish/*
-!darwin/.config/fish/config.fish
-
-darwin/.config/sketchybar/helpers/git_toolkit/.git_cache
 
 # Per-machine shell overrides, sourced by .zshrc if present
 .config/zsh/local.zsh
@@ -27,3 +19,4 @@ shared/.config/nvim/lazy-lock.json
 .config/gtk-3.0/settings.ini
 .config/gtk-4.0/settings.ini
 .config/swaync/colors.css
+.config/sketchybar/matugen-colors.lua
