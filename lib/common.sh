@@ -285,6 +285,26 @@ check_herdr() {
 	fi
 }
 
+# herdr-splits provides the nav/resize actions that ~/.config/herdr/config.toml
+# binds ctrl+hjkl and alt+hjkl to. Without it those keys dead-end: the nvim
+# plugin only covers nvim -> herdr, and `herdr config check` reports a binding
+# to a missing plugin as fine.
+HERDR_PLUGINS="lmilojevicc/herdr-splits.nvim"
+
+install_herdr_plugins() {
+	_herdr --version >/dev/null 2>&1 || return 0
+
+	local repo
+	for repo in $HERDR_PLUGINS; do
+		if _herdr plugin install "$repo" --yes >/dev/null 2>&1; then
+			echo "  ${repo##*/} installed"
+		else
+			echo "  ${repo##*/} failed to install"
+			echo "    ctrl+hjkl will not cross from a herdr pane into nvim"
+		fi
+	done
+}
+
 check_vulnerable_packages() {
 	command -v arch-audit >/dev/null 2>&1 || { echo "arch-audit not installed, skipping"; return 0; }
 	local out

@@ -30,9 +30,27 @@ herdr sees the key first, forwards it into Neovim when the focused pane is
 running it, and moves or resizes the pane itself otherwise — so one key family
 covers Neovim splits and herdr panes both.
 
-The plugin detects herdr through `HERDR_ENV`, `HERDR_PANE_ID` and
-`HERDR_BIN_PATH`, and needs herdr ≥ 0.7.0. `herdr server reload-config` applies
-a config edit.
+It takes **two** installs, not one. The Neovim plugin only covers
+nvim → herdr: it shells out to `herdr pane edges` and `herdr pane focus`.
+Crossing the other way — from a shell pane into nvim — needs the herdr-side
+plugin, which registers the `nav-*` and `resize-*` actions the keybindings
+name. `setup.sh` installs it via `install_herdr_plugins`; by hand it is:
+
+```bash
+herdr plugin install lmilojevicc/herdr-splits.nvim --yes
+herdr server reload-config
+```
+
+**Nothing warns you if it is missing.** `herdr config check` reports `config: ok`
+for a binding pointing at a plugin that was never installed, and the keys then
+dead-end — herdr consumes them and no focus change happens. `herdr plugin action
+list` is the real check; it should show eight actions under `herdr-splits`.
+
+The Neovim plugin detects herdr through `HERDR_ENV`, `HERDR_PANE_ID` and
+`HERDR_BIN_PATH`, and needs herdr ≥ 0.7.0. Because its lazy spec is guarded on
+`HERDR_ENV`, it is not even downloaded until nvim first runs inside a herdr
+pane; `core/keymaps.lua` keeps `<C-w>` fallbacks on the same keys for
+everywhere else.
 
 On macOS this is why AeroSpace focuses with `caps+hjkl` rather than `alt+hjkl`:
 alt belongs to the resize half.

@@ -138,6 +138,7 @@ echo
 echo "==> agent tooling"
 install_claude_code
 check_herdr
+install_herdr_plugins
 echo
 
 if [ "$OS_FAMILY" = "linux" ]; then
