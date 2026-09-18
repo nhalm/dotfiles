@@ -5,9 +5,9 @@ Personal configuration for macOS and Arch Linux, linked with GNU stow.
 | Doc | Covers |
 |---|---|
 | [docs/linux.md](docs/linux.md) | Arch: Hyprland, the quickshell bar, notifications, theming, monitors, scripts, zsh |
-| [docs/macos.md](docs/macos.md) | macOS: AeroSpace, sketchybar, Karabiner, fish, GUI applications |
+| [docs/macos.md](docs/macos.md) | macOS: AeroSpace, sketchybar, Karabiner, zsh, GUI applications |
 | [docs/neovim.md](docs/neovim.md) | Neovim: layout, plugins, keymaps — shared by both machines |
-| [docs/tmux.md](docs/tmux.md) | Multiplexers: tmux + sessionizer on macOS, herdr on Linux |
+| [docs/herdr.md](docs/herdr.md) | herdr: the multiplexer on both machines |
 
 ## Install
 
@@ -45,10 +45,10 @@ a password:
 
 `.gitconfig` requires signed commits and rewrites every GitHub https url to ssh.
 Both are deliberate. The rewrite is unconditional, though, and that includes the
-four anonymous clones of public repos setup performs on itself — the zsh
-plugins, wallpapers, TPM and SbarLua. GitHub authenticates every ssh connection
-whether the repo is public or not, so on a machine with no key those four would
-fail. They go through `git_public`, which drops the global config for that one
+three anonymous clones of public repos setup performs on itself — the zsh
+plugins, wallpapers and SbarLua. GitHub authenticates every ssh connection
+whether the repo is public or not, so on a machine with no key those three
+would fail. They go through `git_public`, which drops the global config for that one
 command and re-passes the integrity checks it carries.
 
 So a fresh machine installs in one command. What it cannot do until 1Password is
@@ -115,9 +115,9 @@ arch/                 stow: Arch only
 
 | Package | Holds |
 |---|---|
-| `shared` | nvim, git, ssh, mise, ghostty, lazygit, herdr, psqlrc, gitleaks, ccstatusline, claude |
-| `darwin` | fish, tmux, aerospace, sketchybar, karabiner, kitty |
-| `linux` | zsh, starship, git and zsh OS fragments |
+| `shared` | zsh, nvim, git, ssh, mise, ghostty, lazygit, herdr, psqlrc, gitleaks, ccstatusline, claude, portable matugen templates |
+| `darwin` | aerospace, sketchybar, karabiner, matugen, `.local/scripts`, git and zsh OS fragments |
+| `linux` | git and zsh OS fragments |
 | `arch` | hypr, quickshell, swaync, matugen, fuzzel, gtk, qt, `.local/scripts` |
 
 Linked nearest-last: `shared`, then the OS family, then the distro. Only
@@ -143,12 +143,18 @@ that each package provides, instead of the whole file being duplicated:
 | Shared file | Includes | Provided by |
 |---|---|---|
 | `.gitconfig` | `~/.config/git/os.conf` | 1Password signer path, per OS package |
-| `mise/config.toml` | `mise/conf.d/*.toml` | per-OS runtimes; mise merges additively |
-| `ghostty/config` | `?colors` | matugen on Arch, absent elsewhere |
+| `mise/config.toml` | `mise/conf.d/*.toml` | every tool, per scope; mise merges additively |
+| `ghostty/config` | `?colors` | matugen on both machines; the include is optional, so it is absent until matugen has run |
+| `.zshrc` | `~/.config/zsh/os.zsh` | per-OS agent socket, ls flags, aliases |
 
-`.zshrc` is not shared — `linux/.zshrc` and `darwin/.zshrc` are separate files.
-The Linux one sources `~/.config/zsh/os.zsh` from the same package, then
-`~/.config/zsh/local.zsh` for per-machine overrides.
+`.zshrc` sources its OS fragment *before* `compinit`, so a package can extend
+`fpath` — that is how Homebrew's `site-functions` reach completion on macOS. It
+then sources `~/.config/zsh/local.zsh` last, for per-machine overrides that are
+gitignored.
+
+`.zprofile` is shared too. It guards the one macOS-only line it needs
+(`[[ -x /opt/homebrew/bin/brew ]] && eval "$(brew shellenv)"`) rather than
+carrying a second fragment for a single command.
 
 ### Adding a distro
 
@@ -160,20 +166,21 @@ The Linux one sources `~/.config/zsh/os.zsh` from the same package, then
 
 | | macOS | Arch |
 |---|---|---|
-| Shell | fish + tide | zsh + starship |
-| Multiplexer | tmux + TPM | [herdr](https://herdr.dev) |
+| Shell | zsh + starship | zsh + starship |
+| Multiplexer | [herdr](https://herdr.dev) | [herdr](https://herdr.dev) |
 | Window manager | AeroSpace | Hyprland (Lua config) |
 | Bar | sketchybar | quickshell |
 | Notifications | — | swaync |
 | Launcher | Raycast | hyprlauncher, fuzzel for dmenu pickers |
+| Wallpaper picker | fzf + chafa in a floating Ghostty | quickshell carousel |
 | Display layout | — | nwg-displays |
 | Key remapping | Karabiner | — |
 | Containers | Colima + docker CLI | native docker |
-| Terminal | Ghostty, Kitty | Ghostty |
+| Terminal | Ghostty | Ghostty |
 | Editor | Neovim | Neovim |
-| Theming | static TokyoNight Storm | matugen, derived from the wallpaper |
+| Theming | matugen, derived from an image | matugen, derived from the wallpaper |
 
-Package counts: 50 formulae, 11 casks and 7 font casks on macOS; 106 repo
+Package counts: 50 formulae, 9 casks and 7 font casks on macOS; 106 repo
 packages and 2 AUR packages on Arch. macOS-only: the cloud and infra tooling
 (awscli, aws-vault, helm, kubernetes-cli, terraform), the JVM/PHP stack, and
 ghostscript + tectonic. Arch-only: the whole Hyprland session, the kernel and
@@ -183,19 +190,90 @@ hardware packages, and `arch-audit`.
 
 [mise](https://mise.jdx.dev/) manages runtimes on both machines.
 
-| Scope | Tools |
-|---|---|
-| Shared | Node LTS, Python 3.13, Go, Rust, zoxide, lazygit, herdr, `npm:ccstatusline` |
-| macOS | Lua 5.5 (SbarLua builds against it), Ruby 3.4.1, Bun |
+Every tool lives in `~/.config/mise/conf.d/`, so the full set reads in one
+directory; `config.toml` carries nothing but `[settings]`.
+
+| File | Package | Tools |
+|---|---|---|
+| `conf.d/shared.toml` | `shared` | Node 24, Go 1, Rust 1, zoxide, lazygit, herdr, `npm:ccstatusline` |
+| `conf.d/darwin.toml` | `darwin` | Lua 5.5 (SbarLua builds against it), Ruby 3, Bun, `cargo:matugen`, `npm:carbonyl`, `npm:@mermaid-js/mermaid-cli`, `npm:ccusage` |
+
+The split is not cosmetic: a stow package is what decides which machine gets a
+file. `cargo:matugen` in particular must stay out of `shared` — Arch installs
+matugen from pacman, and a second copy from crates.io would be picked
+inconsistently, because `.zprofile` appends the mise shims (so non-interactive
+callers get pacman's) while `mise activate` prepends them (so interactive
+shells get mise's).
+
+Every tool names a major version rather than `latest` or an exact build, so
+`mise upgrade` picks up patches and minors but never crosses a major. Two
+cannot: `lua` stays on 5.5 because SbarLua builds against it, and `carbonyl`
+names an exact build because it publishes nothing but prereleases, which mise
+filters out of a range.
+
+There is no global python: it shadows the distro interpreter, so it is pinned
+per project instead.
 
 `auto_install` and `not_found_auto_install` are on; `idiomatic_version_file_enable_tools`
 is limited to node. Configs are trusted during setup so shims resolve for
 processes that never source a shell rc — systemd units, GUI launchers,
 sketchybar.
 
-`ccstatusline` comes through mise's npm backend rather than `npm install -g`,
-which would put it in the active node's global prefix and orphan it on a
-`node = "lts"` rollover.
+### Which installer owns a tool
+
+**Never `npm install -g`, bare `cargo install`, or `pip install --user`.** Those
+prefixes belong to the *active* runtime, and mise swaps runtimes per directory
+and on every `lts` rollover, so anything installed that way is orphaned without
+a word. Two questions decide the rest: does the system package manager carry
+it, and do both machines need to agree on the version.
+
+| Kind of thing | Goes to | Examples |
+|---|---|---|
+| Language runtime | mise | node, go, rust, ruby, lua, bun |
+| Same version needed on both machines | shared mise config | herdr, lazygit, zoxide, `npm:ccstatusline` |
+| Compiled tool the system package manager carries | `packages.txt` | ripgrep, fzf, jq, neovim, starship, chafa |
+| Tool it does *not* carry, but a language registry does | mise registry backend, per-OS `conf.d` | `cargo:matugen`, `npm:ccusage` |
+| GUI application | `casks.txt` | ghostty, raycast, 1password |
+
+The second row is why `lazygit` and `zoxide` sit in mise even though brew and
+pacman both package them: pinning there stops one machine drifting a version
+ahead of the other. `starship` is in `packages.txt` instead because only macOS
+needed it — pacman already covers Arch, and prompt drift is harmless.
+
+Prefer the package manager where it has the tool. mise's `npm:` and `cargo:`
+backends resolve or compile at install time — `cargo:matugen` builds for ~25s,
+`npm:@mermaid-js/mermaid-cli` resolves 265 packages — where brew pours a
+prebuilt bottle in about a second.
+
+Two traps in the registry backends:
+
+- They filter prereleases out of `latest`. A package that only ever publishes
+  prereleases resolves to an empty list and fails outright, so it needs an exact
+  version — which is why `carbonyl` is pinned.
+- Scoped npm names work as written (`npm:@mermaid-js/mermaid-cli`).
+
+### Updating
+
+`./setup.sh` upgrades everything: `brew upgrade` on macOS, `pacman -Syu` on
+Arch, and `mise upgrade` for the runtimes. `mise install` alone only fetches
+what is *missing*, which is why the upgrade is a separate call — without it a
+re-run would move the system packages forward and leave every mise tool behind.
+
+By hand:
+
+| Command | Does |
+|---|---|
+| `mise outdated` | what is behind, within its configured range |
+| `mise upgrade` | move those forward; `mise upgrade zoxide` for one |
+| `mise outdated --bump` | what is newer but outside the range — a major bump, e.g. `node = "24"` while 26 is out |
+| `mise upgrade --bump` | rewrites the config to the newer range, then upgrades |
+
+`--bump` edits `config.toml`, which is a symlink into this repo, so it belongs
+in a commit rather than in setup.
+
+mise holds back releases younger than 24h (`minimum_release_age`), so a tool
+published yesterday reports as up to date until the window passes. That is a
+supply-chain guard, not a bug.
 
 ## Git
 
@@ -271,8 +349,7 @@ is a subset of [their collection](https://github.com/mylinuxforwork/wallpaper).
 
 ## Licence
 
-MIT. Vendored `darwin/.config/sketchybar/` (GPL-3.0) and
-`darwin/tmux/plugins/tpm/` (MIT) keep their own.
+MIT. Vendored `darwin/.config/sketchybar/` (GPL-3.0) keeps its own.
 
 ## Machine-specific / private setup
 

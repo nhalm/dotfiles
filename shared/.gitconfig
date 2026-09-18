@@ -118,6 +118,14 @@
 	excludesfile = ~/.gitignore_global
 	hooksPath = ~/.config/git/hooks
 
+# What `git lfs install` would append. Tracked here instead: ~/.gitconfig is a
+# symlink into this repo, so running that command edits the working tree.
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
 [transfer]
 	fsckobjects = true
 [fetch]

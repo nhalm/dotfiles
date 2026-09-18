@@ -1,7 +1,8 @@
 # macOS
 
-fish as the login shell, AeroSpace tiling windows, sketchybar in place of the
-system menu bar, and Karabiner turning caps lock into a modifier. Everything
+zsh as the login shell, herdr as the multiplexer, AeroSpace tiling windows,
+sketchybar in place of the system menu bar, and Karabiner turning caps lock
+into a modifier. Everything
 here is the `darwin` stow package.
 
 GUI applications are not part of `./setup.sh` — several casks prompt for a
@@ -44,25 +45,30 @@ Five workspaces, assigned by app:
 
 | Workspace | Apps |
 |---|---|
-| Q | Ghostty, Claude, ChatGPT |
-| W | Vivaldi, Notion |
-| E | Messages |
-| R | 1Password, Zoom, Spotify, Screen Sharing — all floating — plus Wispr Flow, which tiles |
-| T | Safari |
+| 1 | Ghostty, Claude, ChatGPT |
+| 2 | Vivaldi, Notion |
+| 3 | Messages |
+| 4 | 1Password, Zoom, Spotify, Screen Sharing — all floating — plus Wispr Flow, which tiles |
+| 5 | Safari |
 
 Finder floats without being assigned a workspace.
 
 ### Main mode
 
+Chords mirror Hyprland's, with caps (`Cmd+Ctrl+Opt`) standing in for `SUPER`
+and caps+Shift acting on the window rather than the focus.
+
 | Chord | Action |
 |---|---|
-| `caps+Q/W/E/R/T` | focus workspace |
-| `caps+Shift+Q/W/E/R/T` | move window to workspace |
+| `caps+1..5` | focus workspace |
+| `caps+Shift+1..5` | move window to workspace |
+| `caps+h/j/k/l` | focus window |
+| `caps+Shift+h/j/k/l` | move window |
 | `caps+Tab` | workspace back and forth |
 | `caps+Shift+Tab` | move workspace to next monitor |
 | `caps+M` | move workspace to next monitor |
-| `Alt+h/j/k/l` | focus left/down/up/right |
-| `caps+h/j/k/l` | move window |
+| `caps+w` | wallpaper picker |
+| `Alt+h/j/k/l` | resize nvim splits / herdr panes — herdr-splits.nvim, not AeroSpace |
 | `Alt+minus` / `Alt+equal` | resize smart ∓50 |
 | `Alt+comma` / `Alt+slash` | accordion / tiles layout |
 | `Alt+semicolon` | enter service mode |
@@ -100,67 +106,98 @@ battery, volume, wifi, cpu and weather, each in its own bracket.
 | `cpu` | 42px graph from the compiled `cpu_load` provider; click opens Activity Monitor |
 | `weather` | wttr.in, location from `CoreLocationCLI` cached 30 min, exponential backoff up to 6h on failure; right-click opens Weather |
 
-Colours are hand-written TokyoNight Storm hex in `colors.lua` — not imported
-from a theme file and not related to the Linux side's matugen palette.
+Colours come from `colors.lua`, which `pcall`-requires the matugen-generated
+`matugen-colors.lua` beside it and falls back to a static TokyoNight Storm table
+when no palette has been rendered — the same shape as the Hyprland side's
+`looks.lua`. See Theming below.
 
 This directory is a **GPLv3 fork of NoamFav/sketchybar**, kept under its own
-licence. Its `README.md` and `install.sh` are upstream artifacts that no longer
-describe this fork: `install.sh` has a `yourusername` placeholder repo URL and
-would move the live config aside and then fail. Nothing in `platform/darwin/`
-invokes it.
+licence. Upstream's `README.md`, `install.sh` and unused items have been pruned;
+`LICENCE` stays.
 
-Dead code worth knowing about, since it is present but never loaded:
-`items/apple.lua`, `front_app.lua`, `menus.lua`, `spaces.lua` (which drives
-yabai, not AeroSpace), `media.lua`, `widgets/music.lua`, `widgets/git_toolkit.lua`.
-`items/init.lua` also references a commented-out `items.spotify` that does not
-exist. The `menus` C helper is still compiled on every start and needs
-Accessibility permission plus private SkyLight symbols, though only the dead
-`menus.lua` would use it.
+Only two C helpers are compiled on each start, both live: `cpu_load` feeds the
+cpu graph and `network_load` feeds the wifi throughput readout.
 
-`darwin/.config/sketchybar/.aerospace.toml` is a vendored upstream sample that
-lands where AeroSpace never reads it. It contradicts the real config on almost
-every setting — different modifiers, gaps, 31 workspaces, `start-at-login = false`.
-Ignore it.
+## zsh
 
-## fish
+Both machines run the same `shared/.zshrc` and `shared/.zprofile`. History,
+completion styles, keybindings and the plugin loading order are identical; only
+`~/.config/zsh/os.zsh` differs, and on macOS that comes from the `darwin`
+package:
 
-| Scope | Contents |
+| What | Value |
 |---|---|
-| Always | `brew shellenv`, `~/.local/bin` on PATH, `SSH_AUTH_SOCK` for the 1Password agent under `~/Library/Group Containers/`, `PROJECTS_DIR` |
-| Non-interactive only | mise shims on PATH — for sketchybar and anything else that never sources a shell rc |
-| Interactive | `mise activate`, `zoxide init --cmd cd` (zoxide replaces `cd`), aliases `tmf`, `tmc`, `vim` |
+| `SSH_AUTH_SOCK` | `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock` — Linux uses `~/.1password/agent.sock` |
+| `fpath` | Homebrew's `share/zsh/site-functions` prepended, so brew completions work |
+| Colour flags | `ls -G` / `ls -lahG`; BSD ls rejects GNU's `--color=auto` |
+| Aliases | `tmf` (sessionizer `--windows`), `tmc` (bare) |
 
-Plugins are installed by `post-link.sh`, not declared in `config.fish`: fisher,
-`PatrickF1/fzf.fish`, `jorgebucaran/autopair.fish`, `jorgebucaran/nvm.fish`,
-`ilancosman/tide@v6`, `vitallium/tokyonight-fish`.
+The fragment is sourced *before* `compinit`, which is what lets it extend
+`fpath` in time.
 
-Tide's own settings live in fish universal variables, which are not tracked —
-`.gitignore` keeps `config.fish` and ignores the rest of the fish directory. The
-prompt's exact appearance is therefore not reproducible from this repo, and
-`nvm.fish` sits alongside mise, which already manages node.
+`.zprofile` carries the environment: `EDITOR`, `PROJECTS_DIR`, `GOPATH`,
+`~/.local/bin` and `$GOPATH/bin` on PATH, plus mise shims for processes that
+never source a shell rc — sketchybar being the one that matters here.
+Homebrew's `shellenv` runs from there too, guarded on `/opt/homebrew/bin/brew`
+existing.
 
-`darwin/.zshrc` and `.zprofile` are vestigial from before the fish switch. They
-are still stowed but nothing makes zsh the login shell here; `.zshrc` sources an
-oh-my-zsh that the repo never installs, and the zsh plugins `setup.sh` clones
-are for the Linux side and are never sourced by it.
+Interactive extras come from the shared file, each guarded on the command being
+present: `mise activate`, `zoxide init --cmd cd` (zoxide takes over `cd`),
+`starship init`, and `fzf --zsh`.
+
+Plugins are cloned by `install_zsh_plugins` (`lib/common.sh:114`) into
+`~/.local/share/zsh/plugins`, not installed from brew, so the set is byte-identical
+on both machines: `zsh-autosuggestions`, `zsh-completions`,
+`fast-syntax-highlighting` — loaded in that order, highlighting last.
 
 ## Terminals
 
-Both Ghostty and Kitty are installed as casks. Ghostty's config is shared (see
-the README); Kitty is macOS-only:
+Ghostty is the only terminal, and its config is shared with the Linux side (see
+the README). The only AeroSpace rule for a terminal is Ghostty → workspace 1.
 
-| Setting | Value |
-|---|---|
-| Theme | `tokyonight_storm.conf`, curled from folke/tokyonight.nvim by `post-link.sh` |
-| Font | Monaspace Neon Var, 12pt, inside a generated `BEGIN_KITTY_FONTS` block |
-| Scrollback | 10000 |
-| macOS | no menubar icon, window title in window |
+## Theming
 
-`darwin/.config/kitty/` holds only `kitty.conf`, so stow folds the directory and
-`~/.config/kitty` becomes a symlink into the repo — which means that curled
-theme file lands in the working tree as an untracked file.
+matugen derives a Material palette from an image, the same way the Arch machine
+does. Three templates render here; the other eight are Wayland-only.
 
-Only AeroSpace rule for a terminal is Ghostty → workspace Q.
+```bash
+wallpaper.sh <image>     # a specific image
+wallpaper.sh --restore
+```
+
+Choosing one interactively is `wallpaper-picker.sh`'s job — `caps+w`, which
+AeroSpace launches into a Ghostty window it floats. The picker draws thumbnails with `chafa` over the kitty graphics protocol, and
+shows the palette each image would produce as truecolor swatches beside it,
+from `matugen --dry-run`. Applying calls `wallpaper.sh`.
+
+The float rule matches on window title and must sit above the general Ghostty
+rule, which would otherwise pull the picker to workspace 1.
+
+Wallpapers come from `nhalm/wallpapers`, cloned to `~/Pictures/Wallpapers` by
+`install_wallpapers` in `post-link.sh`. `WALLPAPER_DIR` overrides.
+
+| Template | Package | Output | Consumer | Reload |
+|---|---|---|---|---|
+| `ghostty-colors` | `shared` | `~/.config/ghostty/colors` | `?colors` include | `Cmd+Shift+,` or a new window |
+| `starship.toml` | `shared` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
+| `sketchybar-colors.lua` | `darwin` | `~/.config/sketchybar/matugen-colors.lua` | `colors.lua` | `sketchybar --reload` |
+
+The generated file is a flat dump of every Material role as `0xAARRGGBB`;
+`colors.lua` maps those onto the names the bar's items use.
+
+`wallpaper.sh` retints borders by re-running `borders` with the generated
+`primary` and `outline_variant`, which avoids restarting it. The static values
+in `aerospace.toml` are what run at login.
+
+Light/dark follows the system appearance
+(`defaults read -g AppleInterfaceStyle`). `MATUGEN_MODE` overrides it.
+
+matugen has no Homebrew formula, so it comes from crates.io through mise's
+cargo backend (`conf.d/darwin.toml`).
+
+The desktop picture is set with `osascript`, which reaches every display but
+only the current Space — the other Spaces keep theirs. Reaching them means
+writing Dock's sqlite store, whose shape changes between releases.
 
 ## Packages
 
@@ -169,9 +206,9 @@ Only AeroSpace rule for a terminal is Ghostty → workspace Q.
 | Group | Contents |
 |---|---|
 | Core | bash, git, git-lfs, openssh, openssl, gnupg, moreutils, gnu-sed, coreutils, grep, wget, stow, p7zip, dos2unix, autoconf |
-| Shell | fish, mise |
+| Shell | mise, starship |
 | Editor | neovim, tree-sitter-cli |
-| Search | ack, ripgrep, fd, fzf, tree, bat, glow |
+| Search | ack, ripgrep, fd, fzf, tree, bat, glow, chafa |
 | Data | jq, yq |
 | System | htop |
 | Git | gh |
@@ -182,8 +219,8 @@ Only AeroSpace rule for a terminal is Ghostty → workspace Q.
 | Documents | imagemagick, ghostscript, tectonic |
 | macOS | 1password-cli, karabiner-elements |
 
-`casks.txt`, installed only by `gui.sh`: kitty, ghostty, cursor, brave-browser,
-raycast, cleanshot, spotify, claude, chatgpt, 1password, aerospace.
+`casks.txt`, installed only by `gui.sh`: ghostty, brave-browser, raycast,
+cleanshot, spotify, claude, chatgpt, 1password, aerospace.
 
 `fonts.txt`, installed by `setup.sh`: font-monaspace, font-hack-nerd-font, and
 for sketchybar sf-symbols, font-sf-mono, font-sf-pro, font-victor-mono-nerd-font,
@@ -193,8 +230,8 @@ Installed outside those lists:
 
 | Where | What |
 |---|---|
-| `setup.sh` | nix (used by nothing else in the repo), Homebrew, `brew trust --tap` for felixkratz/nikitabobko/hashicorp, the docker CLI formula, corelocationcli cask |
-| `post-link.sh` | TPM, the docker compose CLI plugin symlink, the kitty theme, fisher and its plugins, npm globals carbonyl / mermaid-cli / ccusage |
+| `setup.sh` | Homebrew, `brew trust --tap` for felixkratz/nikitabobko/hashicorp, the docker CLI formula, corelocationcli cask |
+| `post-link.sh` | wallpapers, the docker compose CLI plugin symlink, then config checks for the stowed sketchybar Lua and aerospace |
 | `gui.sh` | casks, sketchybar, borders, SbarLua from source |
 
 AeroSpace window rules name Vivaldi, Notion, Zoom and Wispr Flow, none of which

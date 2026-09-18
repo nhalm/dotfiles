@@ -1,8 +1,6 @@
 # Homebrew casks. Installed by gui.sh, which is run manually -- several of
 # these prompt for a password, so they stay out of the unattended setup.
-kitty
 ghostty
-cursor
 brave-browser
 raycast
 cleanshot

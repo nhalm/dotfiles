@@ -1,0 +1,18 @@
+# Runtimes for both machines. Pinned to a major version, never an exact build:
+# patches and minors arrive with `mise upgrade`, a major never does.
+[tools]
+node = "24"
+go = "1"
+rust = "1"
+zoxide = "0"
+lazygit = "0"
+# Agent runtime: persistent agent sessions, panes, git worktrees.
+herdr = "0"
+
+# Claude Code's status line. Through mise's npm backend rather than
+# `npm install -g`, which drops binaries into the *active* node's global prefix
+# -- so a node major bump would silently orphan it. The npm backend gives it its
+# own tool directory and shim, and mise orders node before npm: tools.
+"npm:ccstatusline" = "2"
+
+# No global python: it shadows the distro interpreter. Pin it per project.

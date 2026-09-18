@@ -1,10 +1,9 @@
-# herdr — the agent runtime that replaces tmux here.
 # Full default with every option documented: `herdr --default-config`
 # Validate after editing:                    `herdr config check`
 #
-# Only deviations from the defaults belong in this file. herdr's defaults
-# already match the old tmux bindings closely: prefix+h/j/k/l focuses panes,
-# prefix+minus splits horizontally, prefix+z zooms.
+# Only deviations from the defaults belong in this file. The defaults already
+# cover the bindings: prefix+h/j/k/l focuses panes, prefix+minus splits
+# horizontally, prefix+z zooms.
 
 onboarding = false
 
@@ -21,7 +20,6 @@ shell_mode = "login"
 new_cwd = "follow"
 
 [keys]
-# Matches the old tmux prefix rather than herdr's ctrl+b.
 prefix = "ctrl+space"
 
 [[keys.command]]
@@ -30,3 +28,46 @@ type = "popup"
 command = "lazygit"
 width = "90%"
 height = "90%"
+
+# herdr-splits.nvim. herdr sees these first, forwards them into Neovim when the
+# focused pane is running it, and moves pane focus itself otherwise.
+# Run `herdr server reload-config` after editing.
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+
+[[keys.command]]
+key = "alt+h"
+type = "plugin_action"
+command = "herdr-splits.resize-left"
+
+[[keys.command]]
+key = "alt+j"
+type = "plugin_action"
+command = "herdr-splits.resize-down"
+
+[[keys.command]]
+key = "alt+k"
+type = "plugin_action"
+command = "herdr-splits.resize-up"
+
+[[keys.command]]
+key = "alt+l"
+type = "plugin_action"
+command = "herdr-splits.resize-right"

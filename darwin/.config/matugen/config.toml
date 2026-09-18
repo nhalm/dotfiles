@@ -1,0 +1,19 @@
+# Templates live in two packages and land in the same linked directory:
+# ghostty-colors and starship.toml are shared, sketchybar-colors.lua is not.
+
+[config]
+
+[templates.ghostty]
+input_path = '~/.config/matugen/templates/ghostty-colors'
+output_path = '~/.config/ghostty/colors'
+
+# STARSHIP_CONFIG points here, set by .config/zsh/os.zsh.
+[templates.starship]
+input_path = '~/.config/matugen/templates/starship.toml'
+output_path = '~/.local/state/matugen/starship.toml'
+
+# ~/.config/sketchybar is a real directory (stow runs --no-folding), so this
+# write lands outside the repo.
+[templates.sketchybar]
+input_path = '~/.config/matugen/templates/sketchybar-colors.lua'
+output_path = '~/.config/sketchybar/matugen-colors.lua'

@@ -99,6 +99,14 @@ setup_mise() {
 	echo "installing mise tools..."
 	# Don't let one unresolvable tool abort the rest of setup.
 	mise install || echo "  some mise tools failed to install; run 'mise install' for detail"
+
+	# install only fetches what is missing. Without this, re-running setup
+	# upgrades brew and pacman packages but leaves every mise tool behind.
+	# Stays within the configured ranges: a pin like ruby = "3.4.1" does not
+	# move, and nothing rewrites the config -- that is `mise upgrade --bump`,
+	# which is a deliberate edit, not a setup step.
+	echo "upgrading mise tools..."
+	mise upgrade || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
 }
 
 # --------------------------------------------------------- zsh plugins ------
@@ -243,14 +251,37 @@ install_claude_code() {
 	curl -fsSL https://claude.ai/install.sh | bash
 }
 
-# herdr is the agent runtime that replaces tmux here: persistent agent sessions,
-# panes/tabs, and git worktree management. It is pinned in the shared mise
-# config, so `mise install` above already fetched it -- this only reports.
-check_herdr() {
+# Pinned in the shared mise config, so `mise install` above already fetched it.
+# This only reports.
+# Setup runs before any shell has activated mise, so the shims are not on PATH
+# yet. Reach the binary either way.
+_herdr() {
 	if command -v herdr >/dev/null 2>&1; then
-		echo "herdr $(herdr --version 2>/dev/null || echo installed)"
+		herdr "$@"
+	elif command -v mise >/dev/null 2>&1 && mise which herdr >/dev/null 2>&1; then
+		mise exec -- herdr "$@"
 	else
+		return 127
+	fi
+}
+
+check_herdr() {
+	local v
+	# --version prints the name itself, so it is echoed unprefixed.
+	if ! v="$(_herdr --version 2>/dev/null)"; then
 		echo "herdr not on PATH; see https://herdr.dev/docs/install/"
+		return 0
+	fi
+	echo "${v:-herdr installed}"
+
+	# Validate the config stow just linked, so a bad edit surfaces now rather
+	# than at the next herdr start.
+	[ -r "$HOME/.config/herdr/config.toml" ] || return 0
+	if _herdr config check >/dev/null 2>&1; then
+		echo "  config ok"
+	else
+		echo "  config check FAILED:"
+		_herdr config check 2>&1 | sed 's/^/    /'
 	fi
 }
 
@@ -264,27 +295,6 @@ check_vulnerable_packages() {
 		echo "packages with known vulnerabilities that a pacman -Syu would fix:"
 		echo "$out" | sed 's/^/  /'
 	fi
-}
-
-# npm globals, installed against the mise-managed node. `mise exec` is used
-# rather than a bare `npm` because setup runs before any shell has activated
-# mise, so the shims are not on PATH yet.
-install_npm_globals() {
-	[ $# -gt 0 ] || return 0
-	if ! command -v mise >/dev/null 2>&1; then
-		echo "mise not installed, skipping npm globals"
-		return 0
-	fi
-	local pkg
-	for pkg in "$@"; do
-		if mise exec node -- npm list -g "$pkg" >/dev/null 2>&1; then
-			echo "  updating $pkg..."
-			mise exec node -- npm update -g "$pkg" || echo "  $pkg update failed"
-		else
-			echo "  installing $pkg..."
-			mise exec node -- npm install -g "$pkg" || echo "  $pkg install failed"
-		fi
-	done
 }
 
 # Import GitHub's web-flow public key so commits made through the GitHub UI
