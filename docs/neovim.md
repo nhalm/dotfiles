@@ -18,18 +18,17 @@ lua/nhalm/plugins/*.lua     one file per plugin, each returning a lazy spec
 lua/nhalm/plugins/init.lua  specs that need no config of their own
 lua/nhalm/plugins/lsp/*.lua lspconfig, mason — a second explicit import group
 ftplugin/markdown.lua       buffer-local options per filetype
-lazy-lock.json              committed lockfile, 40 plugins
+lazy-lock.json              gitignored; plugin versions resolve at install
 .luacheckrc, stylua.toml    lint and format config for this config
 ```
 
-Keymaps are required before options so `mapleader` is set before lazy loads.
+Keymaps load before options so `mapleader` is set before lazy runs.
 
-Adding a plugin is adding a file under `lua/nhalm/plugins/` that returns a
-table — the directory is imported wholesale, so nothing needs registering.
-LSP-related plugins go in `plugins/lsp/`, which is imported separately because
-the top-level import is not recursive. Global keymaps belong in
-`core/keymaps.lua`; plugin-scoped ones belong in that plugin's spec, under
-`keys =` when it should lazy-load.
+A new plugin is a new file under `lua/nhalm/plugins/` returning a table — the
+directory is imported wholesale. LSP plugins go in `plugins/lsp/`, imported
+separately because the top-level import is not recursive. Global keymaps go in
+`core/keymaps.lua`; plugin-scoped ones in that plugin's spec, under `keys =` to
+lazy-load.
 
 ## Keymaps
 
@@ -59,11 +58,11 @@ the top-level import is not recursive. Global keymaps belong in
 | n | `<leader>tf` | current buffer in a new tab |
 | t | `<C-w>` | leave terminal mode, then window command |
 
-`<C-h/j/k/l>` and `<M-h/j/k/l>` come from herdr-splits.nvim, which only loads
-when `HERDR_ENV=1`. Inside herdr they walk splits and then cross into the
-adjacent pane; Alt resizes whichever is focused. Outside herdr the plugin is
-absent and `core/keymaps.lua` keeps the same navigation keys on plain `<C-w>`
-moves. Both halves need matching `plugin_action` bindings in herdr's config.
+`<C-h/j/k/l>` and `<M-h/j/k/l>` come from herdr-splits.nvim, which loads only
+when `HERDR_ENV=1`: inside herdr they walk splits then cross into the adjacent
+pane, Alt resizes whichever is focused. Outside herdr the plugin is absent and
+`core/keymaps.lua` keeps the same keys on plain `<C-w>` moves. See
+[herdr.md](herdr.md) — the herdr side needs its own plugin.
 
 ### Finding (snacks)
 
@@ -121,10 +120,8 @@ through herdr's send-prefix binding.
 | `<leader>gb` | open in remote |
 | `<leader>gl` | git log |
 
-Gitsigns runs on defaults, so its hunk mappings are the stock buffer-local ones.
-Note `]c` / `[c` are **also** bound globally by treesitter to class movement;
-gitsigns' buffer-local maps win inside a tracked file, and outside one these
-navigate classes.
+Gitsigns runs on defaults. `]c` / `[c` are also treesitter class movement —
+gitsigns' buffer-local maps win inside a tracked file, treesitter outside one.
 
 ### Terminal and Claude Code
 
@@ -181,9 +178,8 @@ Swap:
 | `<leader>n:` / `<leader>p:` | property next / previous |
 | `<leader>nm` / `<leader>pm` | function next / previous |
 
-`;` and `,` repeat the last move forward and backward — and `f`, `F`, `t`, `T`
-are replaced by treesitter's repeatable versions, so `;` repeats those too
-instead of `;`/`,` behaving as vim's stock repeat.
+`;` and `,` repeat the last move. `f`/`F`/`t`/`T` are replaced by treesitter's
+repeatable versions, so `;` repeats those too rather than vim's stock repeat.
 
 ### Plugin defaults, not configured here
 
@@ -195,12 +191,14 @@ instead of `;`/`,` behaving as vim's stock repeat.
 
 ## LSP, formatting, linting
 
-Mason installs 13 servers: ts_ls, html, cssls, tailwindcss, svelte, lua_ls,
-graphql, emmet_ls, prismals, pyright, marksman, gopls, elixirls. All are enabled
-through the `vim.lsp.config` / `vim.lsp.enable` API with a shared `on_attach` and
-cmp capabilities.
+Mason (v2, `mason-org/*`) installs 13 servers: ts_ls, html, cssls, tailwindcss,
+svelte, lua_ls, graphql, emmet_ls, prismals, pyright, marksman, gopls, elixirls.
+All are enabled through `vim.lsp.config` / `vim.lsp.enable` with a shared
+`on_attach` and cmp capabilities. `automatic_enable` is off, because
+`lspconfig.lua` enables them explicitly.
 
-Server specifics worth knowing:
+Mason needs `npm` and `go` on PATH to install most of these; without them every
+npm- and Go-based package fails and is retried on each start.
 
 | Server | Configuration |
 |---|---|
@@ -250,8 +248,7 @@ Perl and Ruby providers are off. `python3_host_prog` is set only if
 
 ## Rough edges
 
-None of these break anything day to day, but they will confuse anyone reading
-the config:
+Harmless day to day, but confusing to read:
 
 - JS and TS have **no formatter**: conform's `javascript`/`typescript`/`*react`
   entries are commented out *and* ts_ls's formatting capabilities are disabled.
@@ -261,10 +258,6 @@ the config:
   plugin provides.
 - lazydev's `luvit-meta/library` and the pyenv `python3_host_prog` both point at
   things nothing installs — the repo manages python through mise.
-- `mason.nvim` is declared twice under different owners — `williamboman/mason.nvim`
-  in `plugins/lsp/mason.lua`, and `mason-org/mason.nvim` pinned to `^1.0.0` in
-  `plugins/mason-workaround.lua`. Nothing records which spec wins or why the pin
-  is there.
 - prettier formats eight filetypes but is not in the mason tool list; golines
   and gotests are installed and unused; luacheck is used and not installed.
 - `lazyvim.json` and `plugins/lsp/none-ls.lua` are dead — LazyVim is not used and

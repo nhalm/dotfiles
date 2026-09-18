@@ -25,14 +25,19 @@ export DOTFILES
 
 LINK_ONLY=false
 DIFF_SYSTEM=false
+RUN_GUI=true
 
 usage() {
 	cat <<-EOF
-		usage: ./setup.sh [--link-only | --diff-system]
+		usage: ./setup.sh [--no-gui | --link-only | --diff-system]
 
-		  (none)          install packages, link configs, set up tools
+		  (none)          everything: packages, GUI apps, links, tools
+		  --no-gui        skip the GUI applications
 		  --link-only     just re-link the stow packages
 		  --diff-system   show what would change under /etc, change nothing
+
+		Re-run with no flags to update: packages, casks and runtimes all move
+		forward together.
 	EOF
 }
 
@@ -42,6 +47,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	--link-only) LINK_ONLY=true ;;
 	--diff-system) DIFF_SYSTEM=true ;;
+	--no-gui) RUN_GUI=false ;;
 	-h | --help)
 		usage
 		exit 0
@@ -110,6 +116,19 @@ echo
 if [ "$LINK_ONLY" = true ]; then
 	echo "done (link only)."
 	exit 0
+fi
+
+# GUI applications. After linking, so a service starts against its stowed
+# config; before post-link, so the checks there have something to talk to.
+if [ "$RUN_GUI" = true ]; then
+	while IFS= read -r dir <&3; do
+		[ -n "$dir" ] || continue
+		if [ -x "$dir/gui.sh" ]; then
+			echo "==> ${dir#"$DOTFILES/platform/"} gui"
+			"$dir/gui.sh"
+			echo
+		fi
+	done 3< <(platform_dirs "$DOTFILES/platform")
 fi
 
 # Platform steps that need the stowed configs in place, or that touch services.
