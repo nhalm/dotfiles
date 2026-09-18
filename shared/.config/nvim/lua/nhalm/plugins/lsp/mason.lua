@@ -48,7 +48,7 @@ return {
 
     mason_tool_installer.setup {
       ensure_installed = {
-        -- "prettier", -- prettier formatter
+        "prettier", -- js/ts/json/yaml/css/html/markdown formatter
         "stylua", -- lua formatter
         "ruff", -- python linter and formatter
         "eslint_d", -- js linter
@@ -57,7 +57,6 @@ return {
         "goimports",
         "gotests",
         "golangci-lint",
-        -- Note: stylua is our Lua formatter (already included above)
       },
     }
   end,

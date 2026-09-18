@@ -197,7 +197,7 @@ package fails and is retried on each start.
 
 | Server | Configuration |
 |---|---|
-| ts_ls | formatting providers disabled |
+| ts_ls | formatting providers disabled — prettier owns JS/TS |
 | gopls | `-tags=integration unit`, completeUnimported, placeholders, unusedparams, staticcheck, gofumpt |
 | pyright | workspace diagnostics, `venvPath = "."`, `venv = ".venv"` |
 | elixirls | dialyzer off, fetchDeps off |
@@ -205,14 +205,14 @@ package fails and is retried on each start.
 | graphql, emmet_ls | restricted to their relevant filetypes |
 | lua_ls | `vim` global, runtime files as workspace library |
 
-mason-tool-installer adds stylua, ruff, eslint_d, gofumpt, golines, goimports,
+mason-tool-installer adds prettier, stylua, ruff, eslint_d, gofumpt, golines, goimports,
 gotests and golangci-lint.
 
 conform, with format-on-save and LSP fallback:
 
 | Filetypes | Formatter |
 |---|---|
-| svelte, css, html, json, yaml, markdown, graphql, liquid | prettier |
+| javascript, typescript, jsx, tsx, svelte, css, html, json, yaml, markdown, graphql, liquid | prettier |
 | lua | stylua |
 | python | ruff_fix, ruff_format, ruff_organize_imports |
 | go | gofumpt, goimports |
@@ -243,16 +243,14 @@ Perl and Ruby providers are off. `python3_host_prog` is set only if
 
 ## Rough edges
 
-- JS and TS have **no formatter**: conform's `javascript`/`typescript`/`*react`
-  entries are commented out and ts_ls's formatting capabilities are disabled.
 - No `go` or `python` treesitter parser, despite full LSP, formatting and
   linting for both.
 - `lazy.setup`'s `install.colorscheme` names `nightfly`, which no installed
   plugin provides.
 - lazydev's `luvit-meta/library` and the pyenv `python3_host_prog` both point at
   things nothing installs — the repo manages python through mise.
-- prettier formats eight filetypes but is not in the mason tool list; golines
-  and gotests are installed and unused; luacheck is used and not installed.
+- golines and gotests are installed and unused; luacheck is used and not
+  installed.
 - `lazyvim.json` is unused, and `plugins/lsp/none-ls.lua` returns an empty spec.
 
 Run `:checkhealth` after a fresh install.
