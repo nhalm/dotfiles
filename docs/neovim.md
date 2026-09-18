@@ -22,13 +22,9 @@ lazy-lock.json              gitignored; plugin versions resolve at install
 .luacheckrc, stylua.toml    lint and format config for this config
 ```
 
-Keymaps load before options so `mapleader` is set before lazy runs.
-
-A new plugin is a new file under `lua/nhalm/plugins/` returning a table — the
-directory is imported wholesale. LSP plugins go in `plugins/lsp/`, imported
-separately because the top-level import is not recursive. Global keymaps go in
-`core/keymaps.lua`; plugin-scoped ones in that plugin's spec, under `keys =` to
-lazy-load.
+A new plugin is a new file under `lua/nhalm/plugins/` returning a table; LSP
+plugins go in `plugins/lsp/`. Global keymaps go in `core/keymaps.lua`,
+plugin-scoped ones in that plugin's spec under `keys =`.
 
 ## Keymaps
 
@@ -58,11 +54,11 @@ lazy-load.
 | n | `<leader>tf` | current buffer in a new tab |
 | t | `<C-w>` | leave terminal mode, then window command |
 
-`<C-h/j/k/l>` and `<M-h/j/k/l>` come from herdr-splits.nvim, which loads only
-when `HERDR_ENV=1`: inside herdr they walk splits then cross into the adjacent
-pane, Alt resizes whichever is focused. Outside herdr the plugin is absent and
-`core/keymaps.lua` keeps the same keys on plain `<C-w>` moves. See
-[herdr.md](herdr.md) — the herdr side needs its own plugin.
+`<C-h/j/k/l>` and `<M-h/j/k/l>` come from herdr-splits.nvim, loaded only when
+`HERDR_ENV=1`: Ctrl walks splits then crosses into the adjacent pane, Alt
+resizes whichever is focused. Outside herdr they fall back to plain `<C-w>`
+moves from `core/keymaps.lua`. The herdr side needs its own plugin — see
+[herdr.md](herdr.md).
 
 ### Finding (snacks)
 
@@ -109,7 +105,7 @@ Buffer-local, attached per server.
 | `<C-e>` | abort |
 | `<CR>` | confirm, without preselect |
 
-`Ctrl+Space` is herdr's prefix, so it does not reach here — send a literal one
+`Ctrl+Space` is herdr's prefix and does not reach here; send a literal one
 through herdr's send-prefix binding.
 
 ### Git
@@ -120,8 +116,8 @@ through herdr's send-prefix binding.
 | `<leader>gb` | open in remote |
 | `<leader>gl` | git log |
 
-Gitsigns runs on defaults. `]c` / `[c` are also treesitter class movement —
-gitsigns' buffer-local maps win inside a tracked file, treesitter outside one.
+Gitsigns runs on defaults. `]c` / `[c` are also treesitter class movement;
+gitsigns' buffer-local maps win inside a tracked file.
 
 ### Terminal and Claude Code
 
@@ -131,8 +127,8 @@ gitsigns' buffer-local maps win inside a tracked file, treesitter outside one.
 | n, t | `<leader>tt` | terminal |
 | n | `<leader>th` / `<leader>tv` | terminal bottom / right |
 
-`claudecode.nvim` runs `claude` in a snacks terminal at the bottom, 80%×40%, and
-its diff view is disabled.
+`claudecode.nvim` runs `claude` in a snacks terminal at the bottom, 80%×40%,
+with its diff view disabled.
 
 ### Folds
 
@@ -178,8 +174,8 @@ Swap:
 | `<leader>n:` / `<leader>p:` | property next / previous |
 | `<leader>nm` / `<leader>pm` | function next / previous |
 
-`;` and `,` repeat the last move. `f`/`F`/`t`/`T` are replaced by treesitter's
-repeatable versions, so `;` repeats those too rather than vim's stock repeat.
+`;` and `,` repeat the last move. `f`/`F`/`t`/`T` are treesitter's repeatable
+versions, so `;` repeats those too.
 
 ### Plugin defaults, not configured here
 
@@ -193,16 +189,15 @@ repeatable versions, so `;` repeats those too rather than vim's stock repeat.
 
 Mason (v2, `mason-org/*`) installs 13 servers: ts_ls, html, cssls, tailwindcss,
 svelte, lua_ls, graphql, emmet_ls, prismals, pyright, marksman, gopls, elixirls.
-All are enabled through `vim.lsp.config` / `vim.lsp.enable` with a shared
-`on_attach` and cmp capabilities. `automatic_enable` is off, because
-`lspconfig.lua` enables them explicitly.
+`lspconfig.lua` enables them with a shared `on_attach` and cmp capabilities;
+mason-lspconfig's `automatic_enable` is off.
 
-Mason needs `npm` and `go` on PATH to install most of these; without them every
-npm- and Go-based package fails and is retried on each start.
+Mason needs `npm` and `go` on PATH; without them every npm- and Go-based
+package fails and is retried on each start.
 
 | Server | Configuration |
 |---|---|
-| ts_ls | formatting providers disabled — prettier owns JS/TS formatting |
+| ts_ls | formatting providers disabled |
 | gopls | `-tags=integration unit`, completeUnimported, placeholders, unusedparams, staticcheck, gofumpt |
 | pyright | workspace diagnostics, `venvPath = "."`, `venv = ".venv"` |
 | elixirls | dialyzer off, fetchDeps off |
@@ -232,7 +227,7 @@ nvim-lint, on BufEnter, BufWritePost and InsertLeave:
 | go | golangcilint |
 | lua | luacheck |
 
-26 treesitter parsers are installed, on the `main` branch (the rewrite).
+26 treesitter parsers are installed, on the `main` branch.
 
 ## Options
 
@@ -248,10 +243,8 @@ Perl and Ruby providers are off. `python3_host_prog` is set only if
 
 ## Rough edges
 
-Harmless day to day, but confusing to read:
-
 - JS and TS have **no formatter**: conform's `javascript`/`typescript`/`*react`
-  entries are commented out *and* ts_ls's formatting capabilities are disabled.
+  entries are commented out and ts_ls's formatting capabilities are disabled.
 - No `go` or `python` treesitter parser, despite full LSP, formatting and
   linting for both.
 - `lazy.setup`'s `install.colorscheme` names `nightfly`, which no installed
@@ -260,7 +253,6 @@ Harmless day to day, but confusing to read:
   things nothing installs — the repo manages python through mise.
 - prettier formats eight filetypes but is not in the mason tool list; golines
   and gotests are installed and unused; luacheck is used and not installed.
-- `lazyvim.json` and `plugins/lsp/none-ls.lua` are dead — LazyVim is not used and
-  none-ls returns an empty spec.
+- `lazyvim.json` is unused, and `plugins/lsp/none-ls.lua` returns an empty spec.
 
 Run `:checkhealth` after a fresh install.

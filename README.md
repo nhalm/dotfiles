@@ -15,10 +15,9 @@ Personal configuration for macOS and Arch Linux, linked with GNU stow.
 bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/bootstrap.sh)
 ```
 
-`bootstrap.sh` installs git, stow and a compiler toolchain, clones to
-`~/dotfiles`, then runs `setup.sh`. Process substitution rather than
-`curl … | bash`: piping occupies stdin and breaks the sudo prompt. Swap `main`
-for a SHA to pin what you execute.
+Installs git, stow and a compiler toolchain, clones to `~/dotfiles`, runs
+`setup.sh`. Swap `main` for a SHA to pin what you execute. Use process
+substitution, not `curl … | bash`, which breaks the sudo prompt.
 
 ```bash
 ./setup.sh                # everything: packages, GUI apps, links, tools
@@ -27,17 +26,10 @@ for a SHA to pin what you execute.
 ./setup.sh --diff-system  # preview writes under /etc, change nothing
 ```
 
-`./setup.sh` is also the update command — packages, casks and runtimes all move
-forward together, so there is no separate `brew upgrade` to remember. Every step
-is idempotent. GUI apps run between linking and post-link, so a service starts
-against its stowed config and the post-link checks have something to talk to.
-Several casks prompt for a password.
+`./setup.sh` is also the update command. Every step is idempotent. Several
+casks prompt for a password.
 
 ### Installing needs no key
-
-The three anonymous clones setup performs on itself — zsh plugins, wallpapers,
-SbarLua — go through `git_public`, which drops the global config so no
-credential is needed, and re-passes its integrity checks.
 
 | | Needs a key |
 |---|---|
@@ -49,8 +41,7 @@ credential is needed, and re-passes its integrity checks.
 setup installs 1Password itself. Sign in, enable its SSH agent, re-run
 `./setup.sh`.
 
-The sshd drop-in is refused while `authorized_keys` is empty: disabling password
-auth with no authorised key locks the account out of ssh.
+The sshd drop-in is refused while `authorized_keys` is empty.
 
 ## Platform detection
 
@@ -59,9 +50,8 @@ auth with no authorised key locks the account out of ssh.
 | `OS_FAMILY` | `darwin`, `linux` | launchd vs systemd, BSD vs GNU coreutils |
 | `DISTRO` | `macos`, `arch`, … | which package manager speaks |
 
-`lib/detect.sh` resolves both from `uname` and `/etc/os-release`. A derivative
-with no entry falls back to its `ID_LIKE`, so EndeavourOS and CachyOS reuse the
-Arch lists with no new files.
+`lib/detect.sh` resolves both from `uname` and `/etc/os-release`; a derivative
+with no entry falls back to its `ID_LIKE`.
 
 ### Layout
 
@@ -87,7 +77,7 @@ shared/  darwin/  linux/  arch/     stow packages
 ```
 
 `setup.sh` sources `platform/<family>/setup.sh` then `<distro>/setup.sh`, links,
-then runs both `post-link.sh` scripts. Family first, so a distro builds on it.
+then runs both `post-link.sh` scripts.
 
 ### Stow packages
 
@@ -101,17 +91,12 @@ then runs both `post-link.sh` scripts. Family first, so a distro builds on it.
 Linked nearest-last: `shared`, then the OS family, then the distro.
 
 `stow_package` moves a real file at a target path to `<path>.dotfiles-backup`
-before linking. `stow --adopt` resolves the conflict the other way round —
-pulling the machine's version into the repo.
+before linking.
 
-Linking uses `--no-folding`, so directories under `~` stay real. A folded
-directory is a symlink *into* the repo, so anything written beside a linked file
-would land in the working tree. This is what lets matugen write its palettes
-next to the configs that read them.
+`--no-folding` keeps directories under `~` real, so generated files written
+beside a linked one do not land in the working tree.
 
 ### Per-file differences
-
-A mostly-shared config includes a per-OS fragment rather than being duplicated:
 
 | Shared file | Fragment | Carries |
 |---|---|---|
@@ -121,16 +106,14 @@ A mostly-shared config includes a per-OS fragment rather than being duplicated:
 | `.zshrc` | `~/.config/zsh/os.zsh` | ls flags, completions, aliases |
 | `.ssh/config` | `~/.ssh/config.os` | `IdentityAgent` — the 1Password socket path |
 
-`.zshrc` sources its fragment **before** `compinit`, so a package can extend
-`fpath` (Homebrew's `site-functions`). `~/.config/zsh/local.zsh` is sourced last
-for per-machine overrides, and is gitignored.
+`.zshrc` sources its fragment **before** `compinit`, so the fragment can extend
+`fpath`. `~/.config/zsh/local.zsh` is sourced last, and is gitignored.
 
 `.ssh/config` includes its fragment **above** `Host *`: ssh_config takes the
 first value it sees for a keyword.
 
-`.zprofile` is shared, guarding its few platform-specific lines on the path
-existing rather than carrying another fragment. `SSH_AUTH_SOCK` lives there, not
-in `os.zsh`, so non-interactive shells reach the agent too.
+`SSH_AUTH_SOCK` lives in the shared `.zprofile`, not `os.zsh`, so
+non-interactive shells reach the agent too.
 
 ### Adding a distro
 
@@ -157,9 +140,8 @@ in `os.zsh`, so non-interactive shells reach the agent too.
 | Theming | matugen | matugen |
 
 51 formulae, 9 casks and 7 font casks on macOS; 106 repo packages and 3 AUR on
-Arch. macOS-only: cloud/infra tooling, the JVM/PHP stack, ghostscript and
-tectonic. Arch-only: the Hyprland session, kernel and hardware packages,
-`arch-audit`.
+Arch. macOS-only: cloud/infra tooling, the JVM/PHP stack, ghostscript and tectonic.
+Arch-only: the Hyprland session, kernel and hardware packages, `arch-audit`.
 
 ## Runtimes
 
@@ -171,26 +153,23 @@ lives in `~/.config/mise/conf.d/`; `config.toml` holds only `[settings]`.
 | `conf.d/shared.toml` | `shared` | Node 24, Go 1, Rust 1, zoxide, lazygit, herdr, `npm:ccstatusline` |
 | `conf.d/darwin.toml` | `darwin` | Lua 5.5, Ruby 3, Bun, `cargo:matugen`, `npm:carbonyl`, `npm:@mermaid-js/mermaid-cli`, `npm:ccusage` |
 
-Tools name a major version, so `mise upgrade` takes patches and minors but never
-crosses a major. Two exceptions: `lua` stays on 5.5 (SbarLua builds against it)
-and `carbonyl` names an exact build — it publishes only prereleases, which mise
-filters out of a range.
+Tools name a major version, so `mise upgrade` never crosses a major. Two
+exceptions: `lua` stays on 5.5 for SbarLua, and `carbonyl` names an exact build
+because it publishes only prereleases, which mise filters out of a range.
 
-`cargo:matugen` must stay out of `shared`: Arch installs matugen from pacman, and
-a second copy would be picked inconsistently, because `.zprofile` appends the
-mise shims while `mise activate` prepends them.
+`cargo:matugen` must stay out of `shared`: Arch installs matugen from pacman,
+and a second copy would be resolved inconsistently.
 
-No global python; it shadows the distro interpreter, so pin it per project.
+No global python; pin it per project.
 
 `auto_install` and `not_found_auto_install` are on, `idiomatic_version_file_enable_tools`
-is node only. Configs are trusted during setup so shims resolve for processes
-that never source a shell rc.
+is node only. Configs are trusted during setup.
 
 ### Which installer owns a tool
 
 **Never `npm install -g`, bare `cargo install`, or `pip install --user`.** Those
-prefixes belong to the *active* runtime, which mise swaps per directory and on
-every major bump — anything installed that way is orphaned silently.
+prefixes belong to the *active* runtime, so anything installed that way is
+orphaned silently on the next major bump.
 
 | Kind of thing | Goes to | Examples |
 |---|---|---|
@@ -200,18 +179,12 @@ every major bump — anything installed that way is orphaned silently.
 | Tool it does *not* carry, but a registry does | `conf.d/<os>.toml` | `cargo:matugen`, `npm:ccusage` |
 | GUI application | `casks.txt` | ghostty, raycast, 1password |
 
-Row two is why `lazygit` and `zoxide` sit in mise despite brew and pacman
-packaging them — it stops one machine drifting ahead. `starship` is in
-`packages.txt` because only macOS needed adding, and prompt drift is harmless.
-
-Prefer the package manager where it has the tool: registry backends resolve or
-compile at install time, brew pours a bottle in about a second.
+Prefer the package manager where it has the tool.
 
 ### Updating
 
 `./setup.sh` upgrades everything: `brew upgrade`, `pacman -Syu`, and
-`mise upgrade`. `mise install` alone only fetches what is *missing*, which is why
-the upgrade is a separate call.
+`mise upgrade`.
 
 | Command | Does |
 |---|---|
@@ -220,11 +193,10 @@ the upgrade is a separate call.
 | `mise outdated --bump` | what is newer but outside the range |
 | `mise upgrade --bump` | rewrite the config to the newer range, then upgrade |
 
-`--bump` edits a file symlinked into this repo, so it belongs in a commit rather
-than in setup.
+`--bump` edits a file symlinked into this repo, so it belongs in a commit.
 
-mise holds back releases younger than 24h (`minimum_release_age`) as a
-supply-chain guard, so a tool published yesterday reports as up to date.
+mise holds back releases younger than 24h (`minimum_release_age`), so a tool
+published yesterday reports as up to date.
 
 ## Git
 
@@ -238,9 +210,8 @@ supply-chain guard, so a tool published yesterday reports as up to date.
 | Integrity | `fsckObjects` on transfer, fetch and receive |
 | LFS | filter tracked in `.gitconfig`, not appended by `git lfs install` |
 
-No top-level `user.email`: it comes only from the `includeIf` rules, so a repo
-outside those four directories has no identity and git refuses to commit. Note
-`~/dev` uses the **work** identity.
+No top-level `user.email`: a repo outside the `includeIf` directories has no
+identity and git refuses to commit.
 
 `core.hooksPath` is global and holds only `pre-commit`, so repo-local
 `commit-msg`, `pre-push` and similar (husky, lefthook) are disabled
@@ -266,8 +237,7 @@ machine-wide. `pre-commit` chains back to a repo-local hook if one exists.
 post-quantum and modern KEX, AEAD ciphers, ETM MACs, ed25519 host keys only, no
 forwarding, `MaxAuthTries 3`, `LoginGraceTime 20`.
 
-`authorize_ssh_keys` writes the agent's public keys to `~/.ssh/authorized_keys`;
-`_system_file_allowed` refuses the drop-in while that file is empty.
+`authorize_ssh_keys` writes the agent's public keys to `~/.ssh/authorized_keys`.
 
 Restrict ssh to the LAN:
 
@@ -281,7 +251,7 @@ sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 1. Install Arch with [nhalm/arch-install](https://github.com/nhalm/arch-install),
    which lays down what this repo assumes: LUKS, btrfs + snapper, pipewire,
    NetworkManager, bluetooth, printing.
-2. Run the one-liner above. No key or account needed.
+2. Run the one-liner above.
 3. Sign in to 1Password, enable its SSH agent, re-run `./setup.sh` for the ssh
    hardening.
 
