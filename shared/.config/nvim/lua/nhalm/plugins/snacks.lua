@@ -47,6 +47,7 @@ return {
     words = { enabled = true },
     dim = { enabled = true },
     bigfile = { enabled = true },
+    bufdelete = { enabled = true },
   },
   keys = {
     -- Dashboard

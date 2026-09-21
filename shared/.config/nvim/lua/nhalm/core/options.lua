@@ -50,16 +50,11 @@ opt.mouse = ""
 -- session options for auto-session
 opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
--- Disable providers we don't use
+-- No plugin here is a remote plugin, so every provider is off.
 vim.g.loaded_perl_provider = 0
 vim.g.loaded_ruby_provider = 0
-
--- Set Python host program (will be configured by setup script)
-local pyenv_root = vim.fn.expand("~/.pyenv")
-local neovim_python = pyenv_root .. "/versions/neovim/bin/python"
-if vim.fn.filereadable(neovim_python) == 1 then
-  vim.g.python3_host_prog = neovim_python
-end
+vim.g.loaded_node_provider = 0
+vim.g.loaded_python3_provider = 0
 
 vim.filetype.add({
   extension = {
