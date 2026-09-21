@@ -45,7 +45,20 @@ local function lines(s)
 	return r
 end
 
-local workspaces = lines(read_sync("aerospace list-workspaces --all 2>/dev/null"))
+-- aerospace launches sketchybar from after-startup-command, before its own
+-- server answers, so a single query returns nothing and no chips get built.
+local function query_workspaces()
+	for _ = 1, 20 do
+		local w = lines(read_sync("aerospace list-workspaces --all 2>/dev/null"))
+		if #w > 0 then
+			return w
+		end
+		os.execute("sleep 0.25")
+	end
+	return {}
+end
+
+local workspaces = query_workspaces()
 
 local items = {}
 local brackets = {}
