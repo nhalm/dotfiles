@@ -46,7 +46,11 @@ command -v matugen >/dev/null 2>&1 || {
 	exit 1
 }
 
-matugen image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null ||
+# -c explicitly: matugen resolves its default config under
+# ~/Library/Application Support on macOS, not ~/.config, so it silently loads
+# zero templates without this.
+matugen -c "$HOME/.config/matugen/config.toml" \
+	image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null ||
 	echo "wallpaper: matugen failed" >&2
 
 mkdir -p "$(dirname "$STATE")"
