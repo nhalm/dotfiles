@@ -32,7 +32,7 @@ which Karabiner skips by default.
 | Setting | Value |
 |---|---|
 | `config-version` | 2 |
-| `persistent-workspaces` | `1`–`5`, explicit — without them a workspace vanishes with its last window, taking its sketchybar chip |
+| `persistent-workspaces` | `1`–`6`, explicit — without them a workspace vanishes with its last window, taking its sketchybar chip |
 | Layout | tiles, orientation auto, accordion padding 30 |
 | Gaps | 20 all round; top 15 on the built-in display, 42 elsewhere (sketchybar is 40 tall) |
 | Normalization | flatten containers, opposite orientation for nested |
@@ -48,6 +48,7 @@ which Karabiner skips by default.
 | 3 | Messages |
 | 4 | 1Password, Zoom, Spotify, Screen Sharing (floating), Wispr Flow (tiles) |
 | 5 | Safari |
+| 6 | unassigned |
 
 Finder floats with no workspace.
 
@@ -57,8 +58,8 @@ caps+Shift acts on the window rather than the focus.
 
 | Chord | Action |
 |---|---|
-| `caps+1..5` | focus workspace |
-| `caps+Shift+1..5` | move window to workspace |
+| `caps+1..6` | focus workspace |
+| `caps+Shift+1..6` | move window to workspace |
 | `caps+h/j/k/l` | focus window |
 | `caps+Shift+h/j/k/l` | move window |
 | `caps+Tab` | workspace back and forth |
