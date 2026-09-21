@@ -39,7 +39,8 @@ if [ "${1:-}" = "--preview" ]; then
 	command -v jq >/dev/null 2>&1 || exit 0
 
 	# --dry-run writes nothing, so scrolling cannot clobber the live palette.
-	matugen image "$file" -m "$(system_mode)" --source-color-index 0 \
+	matugen -c "$HOME/.config/matugen/config.toml" \
+		image "$file" -m "$(system_mode)" --source-color-index 0 \
 		--dry-run --json hex 2>/dev/null |
 		jq -r --arg roles "$PREVIEW_ROLES" '
 			($roles | split(" ")) as $want
