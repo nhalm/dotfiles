@@ -48,6 +48,9 @@ return {
     dim = { enabled = true },
     bigfile = { enabled = true },
     bufdelete = { enabled = true },
+    -- the other half of picker's ui_select: floating vim.ui.input
+    input = { enabled = true },
+    quickfile = { enabled = true },
   },
   keys = {
     -- Dashboard
