@@ -6,6 +6,17 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Cloned over https by git_public, so this needs no key.
 install_wallpapers
 
+# --- ghostty cli --------------------------------------------------------
+# The cask only installs the app bundle, so `ghostty` is not on PATH. Snacks'
+# image support probes for that binary to decide whether the terminal speaks
+# the kitty graphics protocol.
+GHOSTTY_BIN="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+if [ -x "$GHOSTTY_BIN" ]; then
+	mkdir -p "$HOME/.local/bin"
+	ln -sfn "$GHOSTTY_BIN" "$HOME/.local/bin/ghostty"
+	echo "ghostty cli linked"
+fi
+
 # --- docker compose plugin ----------------------------------------------
 if have docker-compose; then
 	mkdir -p "$HOME/.docker/cli-plugins"

@@ -1,8 +1,5 @@
 # macOS-specific interactive setup, sourced by .zshrc before compinit.
 
-# 1Password SSH agent.
-export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-
 # Must land on fpath before .zshrc's compinit, which is why the OS fragment
 # is sourced above it.
 if (( $+commands[brew] )); then

@@ -25,8 +25,8 @@ lid                clamshell
 autostart          what starts with the session
 ```
 
-`programs.lua` is not loaded here — `keybinds.lua` requires it. It is the single
-place terminal, launcher, browser and file manager are named:
+`programs.lua` is required by `keybinds.lua`. It is the single place terminal,
+launcher, browser and file manager are named:
 
 | Key | Value |
 |---|---|
@@ -76,24 +76,15 @@ any of this.
 | Screenshots, annotation, recording | hyprshot, satty, `screenrec.sh` (slurp + wf-recorder) |
 | Display manager | ly (`ly@tty2.service`) |
 
-swaync and the quickshell sidebar both offer DND, Wi-Fi, bluetooth and media
-controls. They are independent panels: `SUPER+N` opens swaync's, `SUPER+A` opens
-quickshell's.
+swaync's panel (`SUPER+N`) and the quickshell sidebar (`SUPER+A`) both offer
+DND, Wi-Fi, bluetooth and media controls, and are independent of each other.
 
-`modules/Network.qml` and `modules/Bluetooth.qml` exist but are not listed in
-`bar.json`, so they never load. Network and bluetooth status come from the
-sidebar only.
+`bar.json` names only the modules in the bar's islands; `shell.qml` instantiates
+`Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly, each reachable
+over `qs ipc call <target> toggle`. `NowPlaying` owns the `media` target.
 
-`bar.json` names only the modules that sit in the bar's islands; `shell.qml`
-instantiates `Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly,
-each reachable over `qs ipc call <target> toggle`. `NowPlaying` owns the `media`
-target for its dropdown, and is in the bar rather than in `shell.qml`.
-
-The overview draws a live thumbnail per window, including windows on workspaces
-that are not on screen — `ScreencopyView` bound to `HyprlandToplevel.wayland`,
-which goes through `hyprland_toplevel_export_v1` rather than plain screencopy.
-Capture only runs while the overview is open. `h`/`l` or the arrows walk the
-tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
+In the overview, `h`/`l` or arrows walk the tiles, `j`/`k` jump a workspace,
+Enter focuses, Escape closes.
 
 ## Keybindings
 
@@ -124,11 +115,9 @@ tiles, `j`/`k` jump a workspace, Enter focuses, Escape closes.
 
 ### Scrolling layout
 
-The session runs Hyprland's `scrolling` layout — windows sit in columns on a
-tape that extends past the screen edge, rather than a dwindle split. It has been
-in core since Hyprland 0.54, so there is no plugin to install. `dwindle` and
-`master` are still configured in `looks.lua`; a workspace rule can put a single
-workspace back on either.
+Hyprland's `scrolling` layout: windows sit in columns on a tape extending past
+the screen edge. `dwindle` and `master` stay configured in `looks.lua` for a
+per-workspace rule.
 
 | Chord | Action |
 |---|---|
@@ -168,8 +157,7 @@ All bound `locked = true`, so they work on the lock screen.
 
 ### Screenshots
 
-`CTRL+SHIFT` + digit, matching CleanShot X on the Mac — `SUPER+SHIFT+<digit>` is
-taken by move-to-workspace. Output goes to `~/Pictures/Screenshots`.
+`CTRL+SHIFT` + digit. Output goes to `~/Pictures/Screenshots`.
 
 | Chord | Action |
 |---|---|
@@ -193,18 +181,15 @@ taken by move-to-workspace. Output goes to `~/Pictures/Screenshots`.
 
 ### The keybind overlay
 
-`SUPER+slash` draws the cheatsheet, and it is not a second copy of
-`keybinds.lua` — `modules/Hotkeys.qml` renders `hyprctl binds -j`. A Lua
-dispatcher reports itself as `__lua` with no argument, so the `description` flag
-is the only thing the overlay has to read:
+`SUPER+slash` renders `hyprctl binds -j`. A Lua dispatcher reports itself as
+`__lua` with no argument, so `description` is all the overlay can read:
 
 ```lua
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(apps.terminal), { description = "Launch: terminal" })
 ```
 
-Descriptions are `"Category: what it does"`. The overlay groups on the prefix and
-packs the groups into three shortest-first columns, so a new category needs no
-change here. A bind with no description does not appear.
+Format is `"Category: what it does"`; the overlay groups on the prefix. A bind
+with no description does not appear.
 
 ## Power
 
@@ -212,44 +197,21 @@ The profile is whatever you last set it to — nothing switches it on plug or
 unplug, and power-profiles-daemon starts every boot on `balanced`.
 `modules/PowerProfile.qml` cycles it from the bar.
 
-That module talks to `org.freedesktop.UPower.PowerProfiles` over `busctl` rather
-than calling `powerprofilesctl get`, which is a python script that imports `gi`
-on every call — 75ms of CPU against busctl's 1.6ms, polled every 10s forever.
-Both work from the session: `.zprofile` appends the mise shims, so the session's
-PATH still finds the system python first.
+It reads `org.freedesktop.UPower.PowerProfiles` over `busctl`.
 
-There is deliberately **no global `python` pin** in `~/.config/mise/config.toml`,
-and that is not a detail. `mise activate` in `.zshrc` prepends its shims, so a
-global pin puts mise's python ahead of the distro's in every interactive shell —
-and every system script shebanged `#!/usr/bin/env python3` that imports a
-packaged module then fails when run by hand. On this machine that was 7 of the
-12 such scripts:
-
-| Script | Needs |
-|---|---|
-| `powerprofilesctl` | `gi`, `shtab` |
-| `run-clang-tidy` | `yaml` |
-| `analyze-build`, `intercept-build`, `scan-build-py` | `libscanbuild` |
-| `libwacom-show-stylus` | `libevdev`, `pyudev` |
-| `lv2specgen.py` | `lxml`, `markdown`, `pygments`, `rdflib` |
-
-`git-clang-format`, `hmaptool`, `libwacom-update-db` and `routel` are stdlib-only
-and were unaffected. Nothing had ever been installed into the mise python, so the
-pin bought nothing and cost those seven. Pin python per project instead —
-`auto_install` fetches it on demand.
+**No global `python` pin** — it would shadow the distro interpreter. Pin per
+project.
 
 ## Input
 
-`kb_layout = "us"` with no remapping — there is no keyd or kanata equivalent of
-the Mac's Karabiner setup. Natural scroll on both mouse and touchpad, sensitivity
-−0.1, tap-to-click `lrm`, disable-while-typing. One gesture: three-finger
-horizontal swipe switches workspace.
+`kb_layout = "us"`, no remapping. Natural scroll on mouse and touchpad,
+sensitivity −0.1, tap-to-click `lrm`, disable-while-typing. One gesture:
+three-finger horizontal swipe switches workspace.
 
-Focus is click-to-focus, not focus-follows-mouse: `follow_mouse = 2`. The value
-matters — `0` also stops the *pointer* following the cursor, which kills hover
-states and scrolling over a window that is not focused. `2` keeps those and moves
-only keyboard focus on click. `float_switch_override_focus = 0` stops focus
-jumping to whatever is under the cursor when a window is floated or re-tiled.
+`follow_mouse = 2` is click-to-focus; `0` would also stop the *pointer*
+following the cursor, killing hover states and scroll over an unfocused window.
+`float_switch_override_focus = 0` stops focus jumping to whatever is under the
+cursor when a window floats or re-tiles.
 
 ## Window rules
 
@@ -300,62 +262,10 @@ left one.
 
 #### NowPlaying
 
-The label is the source, not the track: a title is long enough to push the whole
-island around every time the song changes. MPRIS `identity` is no use for it —
-a browser calls itself "Mozilla zen" whatever is playing — so the name comes
-from the host in `xesam:url`, mapped for the sites worth naming and otherwise
-capitalised from the domain. `identity` is the fallback for a native player like
-Spotify, which reports itself correctly.
-
-Clicking drops down a `PopupWindow` with the art, title, artist, a progress bar
-when the player reports a length, and transport controls; with more than one
-player it also gets a row of chips to pick between them. Middle-clicking the
-label still toggles play/pause without opening anything, and
-`qs ipc call media toggle` opens it for a keybind.
-
-Three services on the session bus are not players, and the module filters them
-out. Spotify is a CEF app, so its embedded Chromium registers a second service
-on the same pid — it mirrors the same track, and once playing it is
-indistinguishable by title, since it reports `"Title • Artist"` where Spotify
-reports `"Title"`. `playerctld` is a proxy over whichever player is active, so
-it duplicates the real one too. The discriminator is `DesktopEntry`: every real
-player sets it, the CEF service does not expose the property at all. `playerctld`
-does report one, so it is excluded by name as well, and a service carrying no
-track at all is dropped for having nothing to show.
-
-Starting a player from the popup pauses the others — two things playing at once
-was never deliberate. Picking a chip only changes which player the card shows;
-playback changes when you press play. `qs ipc call media playpause` carries the
-same rule, unlike the `playerctl play-pause` on the hardware media keys, which
-resumes whatever `playerctld` last saw and leaves the rest playing.
-
-The progress bar needs a length, and only appears for players that report one to
-spec. Spotify sends `mpris:length` as a `t` (uint64) where MPRIS says `x`
-(int64), and quickshell drops it — `length` and `metadata["mpris:length"]` both
-arrive as 0, so there is nothing to fall back to. Zen sends `x` and gets a bar.
-Note also that quickshell reports `position` and `length` in **seconds**, not
-the microseconds on the bus.
-
-It closes when the pointer leaves both it and the label, after a 400ms grace so
-a slow hand does not lose it. Two details make that work: the popup surface
-starts at the label's bottom edge and covers the 8px visual gap with a
-transparent strip, and the `HoverHandler` sits on an item filling that whole
-surface rather than on the card — hover follows items, not paint, so a handler
-on the card alone leaves the gap dead and crossing it reads as a leave. The
-close only arms once the pointer has been inside, so opening over IPC with the
-mouse elsewhere does not immediately close itself.
-
-Two things about that popup are not obvious:
-
-- `grabFocus: true` makes it a toplevel, which cannot attach to a layer surface
-  — Qt refuses with *"the popup is not an xdg_popup"* and nothing maps. It uses
-  `HyprlandFocusGrab` instead, the same way the sidebar does.
-- It centres itself arithmetically: a zero-size `anchor.rect` with a
-  `Bottom | Right` gravity lands the popup's top-left exactly where it is put.
-  Handing the positioner a rect the width of the module and an `Edges.Bottom`
-  gravity instead centres it on that rect's *left edge*. `mapToItem` also does
-  not re-evaluate when an ancestor's layout changes, so the position is taken
-  each time the popup opens rather than bound.
+The label shows the **source**, not the track. Clicking opens a popup with art,
+title, artist, transport controls, and chips to pick between players.
+Middle-click toggles play/pause; `qs ipc call media toggle` opens it for a
+keybind. Starting a player from the popup pauses the others.
 
 ### Sidebar, overview, picker
 
@@ -376,10 +286,8 @@ qs ipc call overview  toggle | close
 qs ipc call wallpaper toggle | open | close
 ```
 
-The sidebar closes on click-away or `Escape`, and nothing in it polls while it
-is closed. The wallpaper picker previews the palette of whatever is highlighted,
-so the whole shell retints as you scroll; applying keeps the previewed colours
-rather than reverting and regenerating them.
+The sidebar closes on click-away or `Escape`. The wallpaper picker previews the
+palette of whatever is highlighted, so the whole shell retints as you scroll.
 
 ## Theming
 
@@ -391,15 +299,12 @@ wallpaper.sh --random
 wallpaper.sh --restore   # what autostart runs
 ```
 
-Choosing one interactively is the carousel's job — `SUPER+W`, or the sidebar's
-Wallpaper button, both of which are `qs ipc call wallpaper toggle`. The script
-takes no interactive mode; with no argument it prints usage and exits 1.
+The script has no interactive mode. It sets the wallpaper with `awww`, runs
+matugen, records the path in `~/.local/state/wallpaper`, then reloads each
+consumer.
 
-It sets the wallpaper with `awww`, runs `matugen image … -m <mode>`, records the
-path in `~/.local/state/wallpaper`, then reloads each consumer:
-
-Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors`
-and `starship.toml`, which are in `shared/` because macOS renders them too.
+Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors` and
+`starship.toml`, which are in `shared/` because macOS renders them too.
 
 | Template | Output | Consumer | Reload |
 |---|---|---|---|
@@ -414,25 +319,15 @@ and `starship.toml`, which are in `shared/` because macOS renders them too.
 | `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
 
-Borders are applied with a single `hyprctl eval` rather than a config reload,
-because a reload re-applies the monitor rules and makes every display flicker.
+Borders go through `hyprctl eval` rather than a config reload: a reload
+re-applies the monitor rules and flickers every display.
 
 Light/dark lives in `~/.local/state/matugen/mode`, written only by
-`theme-mode.sh` (`SUPER+SHIFT+W`). It also writes both `gtk-3.0/settings.ini`
-and `gtk-4.0/settings.ini` — those carry the mode, so a stowed copy would be
-wrong in one of them, and matugen cannot render them because templates see
-colours but not the mode. `gtk-theme-name` stays `Adwaita` in both modes: the
-generated `colors.css` overrides every libadwaita named colour, so the stock
-theme's own palette never shows. Then it re-runs `wallpaper.sh --restore`.
-
-Two hardcoded TokyoNight fallbacks remain, and both exist because something must
-render before matugen has ever run: the property defaults in `Theme.qml`, and
-`hypr/colors.lua` for the border colours. Neither is normally reached — Arch
-post-link seeds a wallpaper, so the generated palette exists from setup onward.
-
-Ghostty's `theme = TokyoNight Storm` is not a fallback: `config-file = ?colors`
-is optional and that file only exists on Arch, so the base theme is what macOS
-actually uses.
+`theme-mode.sh` (`SUPER+SHIFT+W`), which also writes both `gtk-*/settings.ini`
+— untracked, because they carry the mode, so a stowed copy would be wrong in one
+of them — then re-runs `wallpaper.sh --restore`.
+`gtk-theme-name` stays `Adwaita`, since the generated `colors.css` overrides
+every libadwaita named colour.
 
 Wallpapers come from [nhalm/wallpapers](https://github.com/nhalm/wallpapers),
 cloned to `~/Pictures/Wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
@@ -440,11 +335,8 @@ and `WALLPAPER_DIR` override source and destination.
 
 ## Monitors
 
-Placement is never stored. `monitors_default.lua` picks a variant and each
-variant file is a single catch-all rule (`output = ""`) with `position = "auto"`,
-which packs displays left-to-right with no gaps — so an unfamiliar monitor works
-with no rule written for it, and no coordinates can go stale when a scale
-changes.
+Placement is never stored: each variant is one catch-all rule (`output = ""`,
+`position = "auto"`) packing displays left-to-right.
 
 Pick a variant by writing its name to `~/.config/hypr/monitor-variant`; an
 unknown name falls back to `scale-125`:
@@ -456,50 +348,37 @@ unknown name falls back to `scale-125`:
 | `scale-150` | preferred | 1.5 |
 | `highres` | highest available | auto |
 
-The internal panel is then pinned separately, on the last line and
-unconditionally: `eDP-1`, preferred mode, scale 1.25. So the variant only ever
-affects **external** displays — the panel is always 1.25× unless `monitors.lua`
-overrides it. The same value is repeated as `HYPR_INTERNAL_SCALE` in
-`hypr-lid.sh`.
+The internal panel is pinned unconditionally on the last line (`eDP-1`,
+preferred, scale 1.25), so a variant only affects **external** displays. The
+same value is repeated as `HYPR_INTERNAL_SCALE` in `hypr-lid.sh`.
 
-Anything needing a specific arrangement — ordering two identical displays —
-goes in `~/.config/hypr/monitors.lua`, which nwg-displays writes. That file is
-untracked and unstowed; `hyprland.lua` `pcall`s it after the defaults so it
-overrides them and is simply absent on a fresh machine. Tick **"use monitor
-descriptions"** in nwg-displays so its rules match on description rather than
-connector name.
+A specific arrangement goes in `~/.config/hypr/monitors.lua`, written by
+nwg-displays — untracked, `pcall`ed after the defaults so it overrides them.
+Tick **"use monitor descriptions"** there, so rules match on description rather
+than connector name.
 
-`hypr-monitors.sh` re-packs enabled monitors left-to-right from x=0 using each
-one's real logical width, matching on description because connector names are
-not stable across boots. Only the lid-closed path calls it.
+`hypr-monitors.sh` re-packs enabled monitors left-to-right from x=0, matching on
+description — connector names are not stable across boots. Only the lid-closed
+path calls it.
 
 ## Lid and clamshell
 
-Closing the lid disables the internal panel and leaves the externals running,
-but only while another display is connected — otherwise Hyprland would be left
-with no output. That case needs no handling: logind selects
-`HandleLidSwitchDocked` (default `ignore`) whenever more than one display is
-connected, so an undocked lid close still suspends.
+Closing the lid disables the internal panel and leaves externals running, but
+only while another display is connected. Undocked, logind suspends instead
+(`HandleLidSwitchDocked`).
 
-The disable happens twice, deliberately:
+The disable happens in both `lid.lua`, at config parse time, and `hypr-lid.sh`,
+from the `switch:` binds and `sync` at config load. Both are needed: a reload
+re-enables the panel, and reacting afterwards from an async exec loses that
+race.
 
-- `lid.lua`, at config parse time. Every reload re-applies `monitors.lua` and
-  re-enables the panel; reacting afterwards from an async exec loses the race and
-  puts windows back on a shut screen.
-- `hypr-lid.sh`, from the two `switch:` binds and from `sync` at every config
-  load.
+`hypr-lid.sh` reads `/proc/acpi/button/lid/*/state` rather than the switch edge,
+and uses `hyprctl eval`, never `hyprctl keyword`, which a Lua-configured
+Hyprland rejects.
 
-`hypr-lid.sh` reads the kernel lid state from `/proc/acpi/button/lid/*/state`
-rather than trusting which switch edge fired, which has been unreliable for lids
-in the Lua config; the passed argument is only a fallback for when `/proc/acpi`
-is unreadable. It uses `hyprctl eval`, never `hyprctl keyword` — a
-Lua-configured Hyprland rejects `keyword` outright while still exiting 0.
-
-On close it records the panel's workspace, disables the output, re-packs the
-remaining monitors (Hyprland migrates the workspace but leaves the receiving
-monitor showing its own, so windows arrive hidden), re-focuses that workspace,
-and locks the session. On open it runs `hyprctl reload`, which restores the saved
-nwg-displays layout exactly instead of fighting it with `position = auto`.
+On close: record the panel's workspace, disable the output, re-pack the
+remaining monitors, re-focus that workspace, lock. On open: `hyprctl reload`,
+which restores the nwg-displays layout.
 
 | Variable | Default | Effect |
 |---|---|---|
@@ -521,36 +400,13 @@ One line per invocation is logged to `$XDG_RUNTIME_DIR/hypr-lid.log`.
 | 900s | screens off — `wlopm --off '*'`, back on with any activity |
 | 1200s | `suspend-if-on-battery.sh` — only on battery, and only if nothing is playing |
 
-### Why the suspend listener ignores inhibitors
+### Inhibitors
 
-zen raises an `org.freedesktop.ScreenSaver` inhibit whose reason reads
-`Playing video` and keeps it up for as long as a video is *loaded* — paused
-counts — and it releases and re-takes the lock as tabs change. hypridle logs the
-outcome plainly:
+The suspend listener carries `ignore_inhibit = true`; dim, lock and screens-off
+do not. `suspend-if-on-battery.sh` bails if any MPRIS player reports `Playing`;
+a site publishing no MPRIS session is the gap.
 
-```
-[LOG] ScreenSaver inhibit: true dbus message from zen (owner: :1.55) with content Playing video
-[LOG] Idled: rule 564df29fdda0
-[LOG] Ignoring from onIdled(), inhibit locks: 1
-```
-
-A listener fires once when its timeout elapses. If a lock happens to be held at
-that instant the fire is dropped, and nothing retries it until the next idle
-cycle — so whether the machine ever suspended came down to what zen was doing at
-minute 20. Hence `ignore_inhibit = true` on that listener only.
-
-Dim, lock and screens-off still respect inhibitors, which is what you want while
-a video really is playing. The suspend listener asks the players directly
-instead: `suspend-if-on-battery.sh` bails if any MPRIS player reports `Playing`.
-The gap is a video on a site that publishes no MPRIS session — that can be
-suspended out from under you after 20 idle minutes on battery.
-
-Powering the outputs down goes through `wlopm` rather than Hyprland's own
-dispatcher. `hl.dsp.dpms` ignores its argument and toggles every monitor, so a
-monitor that changed state on its own — as happens during lock — desyncs
-permanently with no way back, and `hyprctl dispatch dpms off` is rejected
-outright by the Lua parser. `wlopm` speaks `zwlr_output_power_manager_v1`, which
-Hyprland advertises, and takes an explicit `--off` / `--on`.
+Outputs power down through `wlopm`, not Hyprland's dpms dispatcher.
 
 hyprlock draws a centred input field over the matugen palette, with a large clock
 and date, and sources its colours from
@@ -571,7 +427,7 @@ and date, and sources its colours from
 | `low-battery-notify.sh` | — (60s loop) | autostart; warns once per crossing at 20/10/5% |
 | `suspend-if-on-battery.sh` | — | hypridle at 1800s |
 
-No systemd units ship for these; the long-running ones start from `autostart.lua`.
+No systemd units ship for these.
 
 ## Shell
 
@@ -588,23 +444,21 @@ zsh with a starship prompt. `linux/.zshrc` sources two fragments:
 | Plugins | zsh-autosuggestions, zsh-completions, fast-syntax-highlighting — cloned by `lib/common.sh`, syntax highlighting sourced last |
 | Tools | mise, zoxide (as `cd`), starship, fzf's own `--zsh` integration for `Ctrl+R` / `Ctrl+T` |
 
-`os.zsh` exports `SSH_AUTH_SOCK` for the 1Password agent, sets GNU colour
-aliases, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`.
+`os.zsh` sets GNU colour aliases, points `STARSHIP_CONFIG` at the matugen
+render, and maps `pbcopy`/`pbpaste` onto `wl-copy`/`wl-paste`. The 1Password
+`SSH_AUTH_SOCK` is set in `.zprofile`, so non-interactive shells reach the agent
+too.
 
 `.zprofile` holds environment only: `EDITOR`/`VISUAL` as nvim, `GOPATH`,
 `PROJECTS_DIR`, `~/.local/bin` and the mise shims on `PATH`.
 
-The starship prompt is two lines — directory, repo name when below the repo
-root, branch, git state and status, then right-aligned language versions, docker
-context and command duration over 2s. Exit status shows only through the prompt
-character's colour.
+The prompt is two lines: directory, repo name when below the root, branch, git
+state and status; then right-aligned language versions, docker context and
+command duration over 2s. Exit status shows only through the character's colour.
 
-Its palette comes from the wallpaper: the config lives as a matugen template at
-`shared/.config/matugen/templates/starship.toml` (shared with macOS), renders to
-`~/.local/state/matugen/starship.toml`, and `os.zsh` points `STARSHIP_CONFIG`
-at that file when it exists. Edit the template, never the output. The success
-character keeps a fixed green — Material has no success role, and a
-wallpaper-derived one could land on red, which is the failure colour.
+Its config is a matugen template at
+`shared/.config/matugen/templates/starship.toml` — edit the template, never the
+output. The success character keeps a fixed green.
 
 ## Packages
 
@@ -632,17 +486,13 @@ provide, and omits anything another entry pulls in as a dependency.
 | Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
 
 `aur.txt` holds `1password`, `1password-cli` and `zen-browser-bin`, installed
-through yay with the PKGBUILD diff prompt kept. `firefox` stays in `packages.txt`
-as a second browser; `programs.lua` points `SUPER+B` at zen.
+through yay with the PKGBUILD diff prompt kept.
 
 `network-manager-applet` is installed for `nm-connection-editor`; the applet
 itself is never started.
 
-`spotify-launcher.conf` passes `--ozone-platform=wayland` to Spotify, which is
-an Electron app that otherwise runs on XWayland — it was the only XWayland
-client in `hyprctl clients`, and XWayland at the 1.25 scale is scaled by the
-compositor rather than rendered at it. `spotify-launcher -v --skip-update
---no-exec` prints the assembled command without launching anything.
+`spotify-launcher.conf` passes `--ozone-platform=wayland`, keeping Spotify off
+XWayland.
 
 ## System state set by post-link
 
@@ -662,9 +512,6 @@ compositor rather than rendered at it. `spotify-launcher -v --skip-update
 | firewall | ufw default deny inbound, allow outbound, ssh rate-limited (`limit 22/tcp`) |
 | cache | enable `paccache.timer` |
 
-Two separate ufw blocks run, with the `paccache.timer` step between them; the
-second is the one that rate-limits ssh.
-
 Files installed under `/etc` come from `system/linux/etc/`:
 
 | File | Effect |
@@ -680,23 +527,22 @@ Files installed under `/etc` come from `system/linux/etc/`:
 
 Present in the config and not what a reader would guess:
 
-- **The palette is not file-watched.** `Theme.qml` reads `colors.json` with a
-  `cat` process at startup and on IPC only, so editing that file by hand changes
-  nothing until `qs ipc call theme-manager reload`. quickshell, swaync and
-  hyprland and gtk are each reloaded explicitly; Qt apps only pick up a new
-  palette when they restart.
+- **The palette is not file-watched.** `Theme.qml` reads `colors.json` at
+  startup and on IPC only, so editing that file by hand changes nothing until
+  `qs ipc call theme-manager reload`. Qt apps only pick up a new palette when
+  they restart.
 - **The ghostty palette ignores light mode.** Its matugen template reads
   `.dark.hex` for every colour, so the terminal stays dark when everything else
   flips.
 - **Hardcoded `/home/nick` paths** remain in `qt6ct.conf`, whose
   `color_scheme_path` takes neither `~` nor an env var, and `AllowUsers nick` in
-  the sshd drop-in. These are the files to change first if the repo is reused.
+  the sshd drop-in. Change these first if the repo is reused.
 - **`Config.qml`'s built-in defaults are smaller than `bar.json`** — no Launcher,
-  NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json`
-  therefore yields a visibly reduced bar rather than an error.
-- **`hyprctl` exits 0 even when the Lua call fails**, which is why both
-  `hypr-lid.sh` and `hypr-monitors.sh` parse output for `error*` rather than
-  checking the status. Anything new here must do the same.
+  NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json` yields a
+  visibly reduced bar rather than an error.
+- **`hyprctl` exits 0 even when the Lua call fails**, so `hypr-lid.sh` and
+  `hypr-monitors.sh` parse output for `error*` rather than checking the status.
+  Anything new here must do the same.
 - Both mute keys carry `repeating = true`, so holding one flips the state
   repeatedly.
 - The `move-hyprland-run` window rule matches class `hyprland-run`, which no

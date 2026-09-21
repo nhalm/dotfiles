@@ -1,7 +1,6 @@
 # macOS. Sourced by setup.sh with the lib/ functions available.
 #
-# GUI applications live in gui.sh, which is run by hand -- several casks prompt
-# for a password, so they stay out of the unattended path.
+# GUI applications live in gui.sh, which setup.sh runs unless --no-gui.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
