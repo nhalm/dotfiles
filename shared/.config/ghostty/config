@@ -8,6 +8,7 @@ keybind = shift+enter=text:\x1b\r
 # gtk-tabs-location = hidden
 macos-titlebar-style = hidden
 clipboard-read = allow
+auto-update = off
 # Both machines run zsh; detect covers login vs non-login either way.
 shell-integration = detect
 window-padding-x = 10
