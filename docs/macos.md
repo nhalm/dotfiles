@@ -153,6 +153,7 @@ Wallpapers come from `nhalm/wallpapers`, cloned to `~/.local/share/wallpapers` b
 | `starship.toml` | `shared` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG` | next prompt |
 | `sketchybar-colors.lua` | `darwin` | `~/.config/sketchybar/matugen-colors.lua` | `colors.lua` | `sketchybar --reload` |
 | `zen-colors.css` | `shared` | `~/.local/state/matugen/zen-colors.css` | `userChrome.css` `@import` | live, within 5s |
+| `nvim-colors.lua` | `shared` | `~/.local/state/matugen/nvim-colors.lua` | tokyonight `on_colors` | `:MatugenReload`, sent by `wallpaper.sh` |
 
 `link_zen_theme` runs in post-link: it resolves the profile from `profiles.ini` —
 the `[Install*]` section, not the one marked `Default=1` — symlinks the render

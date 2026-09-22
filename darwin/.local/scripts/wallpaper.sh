@@ -104,4 +104,18 @@ reload_ghostty() {
 }
 reload_ghostty
 
+# nvim re-reads the palette on command; --remote-expr does not disturb the
+# current mode the way sending keys would.
+reload_nvim() {
+	local sock
+	command -v nvim >/dev/null 2>&1 || return 0
+	for sock in "${TMPDIR:-/tmp}"/nvim."$USER"/*/nvim.*.0 \
+		"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim."$USER"/*/nvim.*.0; do
+		[ -S "$sock" ] || continue
+		nvim --server "$sock" --remote-expr 'execute("MatugenReload")' >/dev/null 2>&1 &
+	done
+	return 0
+}
+reload_nvim
+
 echo "palette rendered from $(basename "$IMAGE") ($MODE)"

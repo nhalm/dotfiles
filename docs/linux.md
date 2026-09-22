@@ -319,6 +319,7 @@ Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors`,
 | `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
 | `zen-colors.css` | `~/.local/state/matugen/zen-colors.css` | `userChrome.css` `@import` | live, within 5s |
+| `nvim-colors.lua` | `~/.local/state/matugen/nvim-colors.lua` | tokyonight `on_colors` | `:MatugenReload`, sent by `wallpaper.sh` |
 
 `link_zen_theme` runs in post-link: it resolves the profile from `profiles.ini` —
 the `[Install*]` section, not the one marked `Default=1` — symlinks the render

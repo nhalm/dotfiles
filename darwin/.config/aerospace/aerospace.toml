@@ -168,8 +168,10 @@ run = 'move-node-to-workspace 1'
     # '''
 
     # --command, not -e: Ghostty guards -e with an unskippable confirmation
-    # dialog when it is launched through `open --args`.
-    ctrl-alt-cmd-w = 'exec-and-forget open -na Ghostty --args --title=wallpaper-picker --command=$HOME/.local/scripts/wallpaper-picker.sh'
+    # dialog when it is launched through `open --args`. -e also implies
+    # quit-after-last-window-closed, which --command leaves at its default,
+    # so each launch would otherwise leave a windowless instance behind.
+    ctrl-alt-cmd-w = 'exec-and-forget open -na Ghostty --args --title=wallpaper-picker --command=$HOME/.local/scripts/wallpaper-picker.sh --quit-after-last-window-closed=true'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#layout
     alt-slash = 'layout tiles horizontal vertical'
