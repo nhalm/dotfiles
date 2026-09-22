@@ -63,6 +63,9 @@ if [ ! -s "${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper" ]; then
 	"$HOME/.local/scripts/wallpaper.sh" --random || echo "  no wallpaper set; the picker will do it"
 fi
 
+link_zen_theme
+install_zen_autoconfig
+
 # Writes the gtk settings.ini files, which carry the light/dark mode.
 echo "applying the theme mode..."
 "$HOME/.local/scripts/theme-mode.sh" --apply >/dev/null || echo "  theme mode not applied"

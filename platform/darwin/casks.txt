@@ -2,6 +2,7 @@
 # these prompt for a password, so they stay out of the unattended setup.
 ghostty
 brave-browser
+zen
 raycast
 cleanshot
 spotify

@@ -197,7 +197,7 @@ authorize_ssh_keys() {
 WALLPAPER_REPO="${WALLPAPER_REPO:-https://github.com/nhalm/wallpapers}"
 
 install_wallpapers() {
-	local dir="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+	local dir="${WALLPAPER_DIR:-$HOME/wallpapers}"
 
 	if [ -d "$dir/.git" ]; then
 		echo "updating wallpapers..."
@@ -215,6 +215,130 @@ install_wallpapers() {
 	mkdir -p "$(dirname "$dir")"
 	git_public clone --quiet --depth 1 "$WALLPAPER_REPO" "$dir" ||
 		echo "  clone failed; the picker will be empty until this succeeds"
+}
+
+# ------------------------------------------------------------- zen ----------
+
+# Resolve the profile Zen actually opens. The [Install*] section is
+# authoritative: the profile marked Default=1 can be one Zen never uses.
+zen_profile_dir() {
+	local root="$1" ini="$root/profiles.ini" path
+	[ -r "$ini" ] || return 1
+
+	path="$(awk -F= '
+		/^\[Install/ { ins = 1; next }
+		/^\[/        { ins = 0 }
+		ins && $1 == "Default" { print $2; exit }
+	' "$ini")"
+
+	[ -n "$path" ] || path="$(awk -F= '
+		/^\[/      { path = ""; def = 0 }
+		$1 == "Path"    { path = $2 }
+		$1 == "Default" && $2 == "1" { def = 1 }
+		def && path != "" { print path; exit }
+	' "$ini")"
+
+	[ -n "$path" ] || return 1
+	case "$path" in
+	/*) echo "$path" ;;
+	*) echo "$root/$path" ;;
+	esac
+}
+
+# Zen reads chrome/userChrome.css once, at startup, and only when the legacy
+# stylesheet pref is on. matugen renders the palette to state; this points the
+# profile at it.
+link_zen_theme() {
+	local root profile chrome colors userchrome prefs candidate
+
+	root=""
+	for candidate in "$HOME/Library/Application Support/zen" "$HOME/.zen"; do
+		[ -d "$candidate" ] && { root="$candidate"; break; }
+	done
+	[ -n "$root" ] || { echo "  zen has no profile yet, skipping theme link"; return 0; }
+
+	profile="$(zen_profile_dir "$root")" || {
+		echo "  could not resolve the zen profile, skipping theme link"
+		return 0
+	}
+
+	colors="${XDG_STATE_HOME:-$HOME/.local/state}/matugen/zen-colors.css"
+	chrome="$profile/chrome"
+	mkdir -p "$chrome" "$(dirname "$colors")"
+	ln -sfn "$colors" "$chrome/zen-matugen.css"
+
+	# An @import has to precede every other rule, so it goes on the front of
+	# whatever is already there.
+	userchrome="$chrome/userChrome.css"
+	if [ ! -e "$userchrome" ]; then
+		printf '@import url("zen-matugen.css");\n' >"$userchrome"
+	elif ! grep -q 'zen-matugen.css' "$userchrome"; then
+		{
+			printf '@import url("zen-matugen.css");\n'
+			cat "$userchrome"
+		} >"$userchrome.tmp" && mv "$userchrome.tmp" "$userchrome"
+	fi
+
+	prefs="$profile/user.js"
+	if ! grep -q 'legacyUserProfileCustomizations' "$prefs" 2>/dev/null; then
+		printf 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n' >>"$prefs"
+	fi
+
+	# Zen serves chrome CSS from a startup cache that it does not invalidate
+	# when userChrome.css changes, so a relink without this is invisible until
+	# something else happens to rebuild it. The cache sits outside the profile.
+	local name cache
+	name="$(basename "$profile")"
+	for cache in \
+		"$HOME/Library/Caches/zen/Profiles/$name/startupCache" \
+		"${XDG_CACHE_HOME:-$HOME/.cache}/zen/$name/startupCache"; do
+		[ -d "$cache" ] && rm -rf "$cache"
+	done
+
+	echo "zen theme linked ($(basename "$profile"))"
+}
+
+# The directory Zen reads autoconfig from: the bundle's Resources, or wherever
+# the binary lives.
+zen_app_dir() {
+	[ -d "/Applications/Zen.app/Contents/Resources" ] && {
+		echo "/Applications/Zen.app/Contents/Resources"
+		return 0
+	}
+	local bin
+	bin="$(command -v zen || command -v zen-browser)" || return 1
+	bin="$(readlink -f "$bin" 2>/dev/null || echo "$bin")"
+	dirname "$bin"
+}
+
+# Copy one file into Zen's install directory.
+zen_app_install() {
+	local src="$1" rel="$2" dir run=""
+	dir="$(zen_app_dir)" || return 1
+	[ -w "$dir" ] || run="sudo"
+	$run mkdir -p "$dir/$(dirname "$rel")" 2>/dev/null || return 1
+	$run cp "$src" "$dir/$rel" 2>/dev/null || return 1
+}
+
+# zen-matugen.cfg: without it a palette change only reaches Zen at its next
+# start. policies.json: without it Zen updates itself and takes both files with
+# it, silently ending the live reload.
+install_zen_autoconfig() {
+	local src="$DOTFILES/lib/zen"
+
+	zen_app_dir >/dev/null 2>&1 || {
+		echo "  zen not installed, skipping live reload"
+		return 0
+	}
+
+	if zen_app_install "$src/zen-matugen.cfg" "zen-matugen.cfg" &&
+		zen_app_install "$src/zen-matugen-prefs.js" "defaults/pref/zen-matugen-prefs.js" &&
+		zen_app_install "$src/policies.json" "distribution/policies.json"; then
+		echo "zen live reload installed, updates disabled by policy"
+	else
+		echo "  could not write to Zen's install directory"
+		echo "  grant App Management to the terminal in System Settings > Privacy & Security"
+	fi
 }
 
 # ------------------------------------------------------- login shell --------

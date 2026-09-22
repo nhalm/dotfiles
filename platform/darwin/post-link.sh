@@ -17,6 +17,10 @@ if [ -x "$GHOSTTY_BIN" ]; then
 	echo "ghostty cli linked"
 fi
 
+# --- zen theme ----------------------------------------------------------
+link_zen_theme
+install_zen_autoconfig
+
 # --- docker compose plugin ----------------------------------------------
 if have docker-compose; then
 	mkdir -p "$HOME/.docker/cli-plugins"
