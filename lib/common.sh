@@ -363,7 +363,14 @@ set_login_shell() {
 	local want="$1" path current
 	path="$(command -v "$want" 2>/dev/null)" || { echo "$want not installed, leaving login shell alone"; return 0; }
 
-	current="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)"
+	# getent is glibc, so it does not exist on macOS. Under `set -o pipefail` the
+	# missing command fails the whole pipeline, and the failed assignment then
+	# trips `set -e` -- killing setup before the dscl fallback below is reached.
+	if command -v getent >/dev/null 2>&1; then
+		current="$(getent passwd "$USER" | cut -d: -f7)"
+	else
+		current=""
+	fi
 	[ -n "$current" ] || current="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')"
 
 	if [ "$current" = "$path" ]; then
