@@ -343,7 +343,7 @@ of them — then re-runs `wallpaper.sh --restore`.
 every libadwaita named colour.
 
 Wallpapers come from [nhalm/wallpapers](https://github.com/nhalm/wallpapers),
-cloned to `~/wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
+cloned to `~/.local/share/wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
 and `WALLPAPER_DIR` override source and destination.
 
 ## Monitors
@@ -517,7 +517,7 @@ XWayland.
 | bluetooth | enable `bluetooth.service`; bluez ships it disabled and blueman cannot see the adapter without it |
 | blueman | `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"` — pairing agent without a tray icon |
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
-| wallpapers | clone or update `~/wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
+| wallpapers | clone or update `~/.local/share/wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
 | theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
 | hypridle | restarted if running — it reads its config only at startup, so a re-link alone leaves the old timeouts in place |
 | swaync | `--reload-config` and `--reload-css` if running; it reloads in place, so the notification history survives |

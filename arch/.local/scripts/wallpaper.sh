@@ -18,7 +18,7 @@ set -uo pipefail
 PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
 export PATH
 
-DIR="${WALLPAPER_DIR:-$HOME/wallpapers}"
+DIR="${WALLPAPER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
 MODE="${MATUGEN_MODE:-$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/matugen/mode" 2>/dev/null || echo dark)}"
 

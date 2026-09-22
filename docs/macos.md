@@ -144,7 +144,7 @@ wallpaper.sh --restore   # re-apply the remembered one
 float rule matches on window title and must sit **above** the general Ghostty
 rule, which would otherwise pull it to workspace 1.
 
-Wallpapers come from `nhalm/wallpapers`, cloned to `~/wallpapers` by
+Wallpapers come from `nhalm/wallpapers`, cloned to `~/.local/share/wallpapers` by
 `install_wallpapers`. `WALLPAPER_DIR` overrides.
 
 | Template | Package | Output | Consumer | Reload |

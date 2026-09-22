@@ -197,7 +197,22 @@ authorize_ssh_keys() {
 WALLPAPER_REPO="${WALLPAPER_REPO:-https://github.com/nhalm/wallpapers}"
 
 install_wallpapers() {
-	local dir="${WALLPAPER_DIR:-$HOME/wallpapers}"
+	local dir="${WALLPAPER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers}" legacy state
+
+	legacy="$HOME/Pictures/Wallpapers"
+
+	# ~/Pictures is gated behind a permission prompt on macOS. Move rather than
+	# re-clone, and carry the recorded path over.
+	if [ ! -e "$dir" ] && [ -d "$legacy/.git" ]; then
+		echo "moving wallpapers to $dir..."
+		mkdir -p "$(dirname "$dir")"
+		mv "$legacy" "$dir"
+		state="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
+		if [ -f "$state" ]; then
+			sed -i.bak "s|$legacy/|$dir/|" "$state"
+			rm -f "$state.bak"
+		fi
+	fi
 
 	if [ -d "$dir/.git" ]; then
 		echo "updating wallpapers..."

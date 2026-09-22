@@ -15,7 +15,7 @@ set -uo pipefail
 PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 export PATH
 
-DIR="${WALLPAPER_DIR:-$HOME/wallpapers}"
+DIR="${WALLPAPER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PREVIEW_ROLES='primary secondary tertiary error surface on_surface outline'
