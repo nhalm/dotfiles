@@ -79,3 +79,6 @@ tectonic
 # macOS integration
 1password-cli
 karabiner-elements
+# sets the desktop picture through NSWorkspace, which needs no automation
+# permission -- System Events prompts for one on every new launcher window
+wallpaper

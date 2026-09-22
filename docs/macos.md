@@ -133,7 +133,7 @@ order, highlighting last.
 
 ## Theming
 
-matugen derives a Material palette from an image. Three templates render here.
+matugen derives a Material palette from an image. Four templates render here.
 
 ```bash
 wallpaper.sh <image>     # set and re-render
@@ -144,14 +144,33 @@ wallpaper.sh --restore   # re-apply the remembered one
 float rule matches on window title and must sit **above** the general Ghostty
 rule, which would otherwise pull it to workspace 1.
 
-Wallpapers come from `nhalm/wallpapers`, cloned to `~/Pictures/Wallpapers` by
+Wallpapers come from `nhalm/wallpapers`, cloned to `~/wallpapers` by
 `install_wallpapers`. `WALLPAPER_DIR` overrides.
 
 | Template | Package | Output | Consumer | Reload |
 |---|---|---|---|---|
-| `ghostty-colors` | `shared` | `~/.config/ghostty/colors` | `?colors` include | `Cmd+Shift+,` or a new window |
+| `ghostty-colors` | `shared` | `~/.config/ghostty/colors` | `?colors` include | SIGUSR2, sent by `wallpaper.sh` |
 | `starship.toml` | `shared` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG` | next prompt |
 | `sketchybar-colors.lua` | `darwin` | `~/.config/sketchybar/matugen-colors.lua` | `colors.lua` | `sketchybar --reload` |
+| `zen-colors.css` | `shared` | `~/.local/state/matugen/zen-colors.css` | `userChrome.css` `@import` | live, within 5s |
+
+`link_zen_theme` runs in post-link: it resolves the profile from `profiles.ini` —
+the `[Install*]` section, not the one marked `Default=1` — symlinks the render
+into `chrome/zen-matugen.css`, prepends the `@import` to `userChrome.css`, and
+sets `toolkit.legacyUserProfileCustomizations.stylesheets` in `user.js`.
+
+`install_zen_autoconfig` puts `lib/zen/zen-matugen.cfg` and its prefs file into
+`Zen.app/Contents/Resources`. Zen reads `userChrome.css` only at startup, so
+that script polls the rendered palette every 5s and loads it into open windows
+as a user-origin sheet.
+
+It also installs `distribution/policies.json`, which disables Zen's updater:
+an update replaces the bundle and takes the other two files with it, ending the
+live reload silently. Updating Zen is therefore deliberate -- do it, then re-run
+`./setup.sh`.
+
+Writing into the bundle needs App Management for the terminal, in System
+Settings > Privacy & Security. Without it the install step says so and skips.
 
 Borders are retinted by re-running `borders` with the generated `primary` and
 `outline_variant`. The static values in `aerospace.toml` are what run at login.
@@ -185,7 +204,7 @@ only the current Space.
 `1password-cli` and `karabiner-elements` resolve to casks despite sitting here,
 so they prompt for a password.
 
-`casks.txt`: ghostty, brave-browser, raycast, cleanshot, spotify, claude,
+`casks.txt`: ghostty, brave-browser, zen, raycast, cleanshot, spotify, claude,
 chatgpt, 1password, aerospace.
 
 `fonts.txt`: font-monaspace, font-hack-nerd-font, and for sketchybar
@@ -197,7 +216,7 @@ Installed outside those lists:
 | Where | What |
 |---|---|
 | `setup.sh` | Homebrew, taps (felixkratz, nikitabobko, hashicorp — trusted *and* tapped), the docker CLI formula, corelocationcli |
-| `post-link.sh` | wallpapers, the docker compose plugin symlink, config checks for the stowed sketchybar Lua and aerospace |
+| `post-link.sh` | wallpapers, the docker compose plugin symlink, the Zen theme link, config checks for the stowed sketchybar Lua and aerospace |
 | `gui.sh` | casks, sketchybar, borders, SbarLua from source |
 
 ## Terminal

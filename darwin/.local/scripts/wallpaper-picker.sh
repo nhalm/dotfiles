@@ -9,7 +9,13 @@
 
 set -uo pipefail
 
-DIR="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+# GUI launchers do not run a login shell, so the tools installed by mise and
+# Homebrew are not on PATH. Without this the script sets the picture and then
+# exits at the matugen check.
+PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+DIR="${WALLPAPER_DIR:-$HOME/wallpapers}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PREVIEW_ROLES='primary secondary tertiary error surface on_surface outline'

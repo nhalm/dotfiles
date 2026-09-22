@@ -303,14 +303,14 @@ The script has no interactive mode. It sets the wallpaper with `awww`, runs
 matugen, records the path in `~/.local/state/wallpaper`, then reloads each
 consumer.
 
-Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors` and
-`starship.toml`, which are in `shared/` because macOS renders them too.
+Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors`,
+`starship.toml` and `zen-colors.css`, which are in `shared/`.
 
 | Template | Output | Consumer | Reload |
 |---|---|---|---|
 | `colors.json` | `~/.local/state/matugen/colors.json` | quickshell `Theme.qml` | `qs ipc call theme-manager reload` |
 | `hyprland-colors.lua` | `~/.config/hypr/matugen-colors.lua` | `looks.lua` | borders applied live by `hyprctl eval` |
-| `ghostty-colors` | `~/.config/ghostty/colors` | `config-file = ?colors` | new windows |
+| `ghostty-colors` | `~/.config/ghostty/colors` | `config-file = ?colors` | SIGUSR2, sent by `wallpaper.sh` |
 | `colors.css` | `~/.config/swaync/colors.css` | swaync glass theme | `swaync-client --reload-css` |
 | `gtk-colors.css` | `~/.config/gtk-3.0/colors.css` and `gtk-4.0/colors.css` | both `gtk.css` files | `color-scheme` bounce |
 | `hyprlock-colors.conf` | `~/.local/state/matugen/hyprlock-colors.conf` | `hyprlock.conf` | next lock |
@@ -318,6 +318,19 @@ Templates live in `arch/.config/matugen/templates/`, except `ghostty-colors` and
 | `fuzzel-colors.ini` | `~/.config/fuzzel/colors.ini` | `fuzzel.ini` | next launch |
 | `starship.toml` | `~/.local/state/matugen/starship.toml` | `STARSHIP_CONFIG`, set by `os.zsh` | next prompt |
 | `btop.theme` | `~/.config/btop/themes/matugen.theme` | btop — nothing in the repo selects it | — |
+| `zen-colors.css` | `~/.local/state/matugen/zen-colors.css` | `userChrome.css` `@import` | live, within 5s |
+
+`link_zen_theme` runs in post-link: it resolves the profile from `profiles.ini` —
+the `[Install*]` section, not the one marked `Default=1` — symlinks the render
+into `chrome/zen-matugen.css`, prepends the `@import` to `userChrome.css`, and
+sets `toolkit.legacyUserProfileCustomizations.stylesheets` in `user.js`.
+
+`install_zen_autoconfig` puts `lib/zen/zen-matugen.cfg` and its prefs file beside
+the Zen binary, with sudo. Zen reads `userChrome.css` only at startup, so that
+script polls the rendered palette every 5s and loads it into open windows as a
+user-origin sheet. It also installs `distribution/policies.json`, which disables
+Zen's own updater -- an upgrade replaces these files and ends the live reload.
+After upgrading Zen deliberately, re-run `./setup.sh`.
 
 Borders go through `hyprctl eval` rather than a config reload: a reload
 re-applies the monitor rules and flickers every display.
@@ -330,7 +343,7 @@ of them — then re-runs `wallpaper.sh --restore`.
 every libadwaita named colour.
 
 Wallpapers come from [nhalm/wallpapers](https://github.com/nhalm/wallpapers),
-cloned to `~/Pictures/Wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
+cloned to `~/wallpapers` by the Arch post-link step. `WALLPAPER_REPO`
 and `WALLPAPER_DIR` override source and destination.
 
 ## Monitors
@@ -504,7 +517,7 @@ XWayland.
 | bluetooth | enable `bluetooth.service`; bluez ships it disabled and blueman cannot see the adapter without it |
 | blueman | `gsettings set org.blueman.general plugin-list "['!StatusNotifierItem']"` — pairing agent without a tray icon |
 | directories | `~/Pictures/Screenshots`, `~/Videos/Recordings` |
-| wallpapers | clone or update `~/Pictures/Wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
+| wallpapers | clone or update `~/wallpapers`, then pick one at random if none is recorded, so the generated palette exists before anything reads it |
 | theme mode | `theme-mode.sh --apply`, which writes the two `settings.ini` files |
 | hypridle | restarted if running — it reads its config only at startup, so a re-link alone leaves the old timeouts in place |
 | swaync | `--reload-config` and `--reload-css` if running; it reloads in place, so the notification history survives |
@@ -531,9 +544,6 @@ Present in the config and not what a reader would guess:
   startup and on IPC only, so editing that file by hand changes nothing until
   `qs ipc call theme-manager reload`. Qt apps only pick up a new palette when
   they restart.
-- **The ghostty palette ignores light mode.** Its matugen template reads
-  `.dark.hex` for every colour, so the terminal stays dark when everything else
-  flips.
 - **Hardcoded `/home/nick` paths** remain in `qt6ct.conf`, whose
   `color_scheme_path` takes neither `~` nor an env var, and `AllowUsers nick` in
   the sshd drop-in. Change these first if the repo is reused.

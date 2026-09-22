@@ -14,7 +14,11 @@
 
 set -uo pipefail
 
-DIR="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+# GUI launchers do not run a login shell, so mise's tools are not on PATH.
+PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+export PATH
+
+DIR="${WALLPAPER_DIR:-$HOME/wallpapers}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
 MODE="${MATUGEN_MODE:-$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/matugen/mode" 2>/dev/null || echo dark)}"
 
@@ -46,6 +50,20 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
 fi
 
 matugen image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null || echo "wallpaper: matugen failed" >&2
+
+# SIGUSR2 rereads the config, and with it the palette the include pulls in.
+# Any other signal kills it. pgrep does not match the app bundle's binary.
+reload_ghostty() {
+	local pids
+	pids="$(ps -eo pid=,comm= | awk '$2 ~ /(^|\/)ghostty$/ {print $1}')"
+	[ -n "$pids" ] && kill -USR2 $pids 2>/dev/null
+	return 0
+}
+reload_ghostty
+
+# Zen reads userChrome.css at startup and serves it from a cache it does not
+# invalidate, so the next start would show the previous palette.
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/zen"/*/startupCache 2>/dev/null
 
 mkdir -p "$(dirname "$STATE")"
 printf '%s\n' "$IMAGE" >"$STATE"

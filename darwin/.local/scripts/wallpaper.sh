@@ -8,6 +8,12 @@
 
 set -uo pipefail
 
+# GUI launchers do not run a login shell, so the tools installed by mise and
+# Homebrew are not on PATH. Without this the script sets the picture and then
+# exits at the matugen check.
+PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
 
 # AppleInterfaceStyle only exists while dark mode is on, so a failed read is
@@ -36,10 +42,16 @@ esac
 	exit 1
 }
 
-# "every desktop" is every display, not every Space. Reaching the other Spaces
-# means writing Dock's sqlite store, which changes shape between releases.
-osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$IMAGE\"" \
-	>/dev/null 2>&1 || echo "wallpaper: could not set the desktop picture" >&2
+
+# Both paths reach every display but only the current Space. The other Spaces
+# mean writing Dock's sqlite store, which changes shape between releases.
+set_picture() {
+	command -v wallpaper >/dev/null 2>&1 &&
+		wallpaper set "$IMAGE" >/dev/null 2>&1 && return 0
+	osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$IMAGE\"" \
+		>/dev/null 2>&1
+}
+set_picture || echo "wallpaper: could not set the desktop picture" >&2
 
 command -v matugen >/dev/null 2>&1 || {
 	echo "wallpaper: matugen not installed (mise install)" >&2
@@ -78,5 +90,18 @@ apply_border_colors() {
 }
 apply_border_colors
 
+# Zen reads userChrome.css at startup and serves it from a cache it does not
+# invalidate, so the next start would show the previous palette.
+rm -rf "$HOME/Library/Caches/zen/Profiles"/*/startupCache 2>/dev/null
+
+# SIGUSR2 rereads the config, and with it the palette the include pulls in.
+# Any other signal kills it. pgrep does not match the app bundle's binary.
+reload_ghostty() {
+	local pids
+	pids="$(ps -eo pid=,comm= | awk '$2 ~ /(^|\/)ghostty$/ {print $1}')"
+	[ -n "$pids" ] && kill -USR2 $pids 2>/dev/null
+	return 0
+}
+reload_ghostty
+
 echo "palette rendered from $(basename "$IMAGE") ($MODE)"
-echo "  ghostty: reload with Cmd+Shift+, or open a new window"
