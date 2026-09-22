@@ -98,7 +98,11 @@ setup_mise() {
 
 	echo "installing mise tools..."
 	# Don't let one unresolvable tool abort the rest of setup.
-	mise install || echo "  some mise tools failed to install; run 'mise install' for detail"
+	# --yes: mise is otherwise the one backend that can stop and wait for a human.
+	# Its npm backend gates low-download packages behind a confirm prompt, which
+	# the progress spinner then draws over -- so an unattended run looks hung
+	# rather than blocked. pacman/apt/dnf already pass --noconfirm/-y in pkg.sh.
+	mise install --yes || echo "  some mise tools failed to install; run 'mise install' for detail"
 
 	# install only fetches what is missing. Without this, re-running setup
 	# upgrades brew and pacman packages but leaves every mise tool behind.
@@ -106,7 +110,7 @@ setup_mise() {
 	# move, and nothing rewrites the config -- that is `mise upgrade --bump`,
 	# which is a deliberate edit, not a setup step.
 	echo "upgrading mise tools..."
-	mise upgrade || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
+	mise upgrade --yes || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
 }
 
 # --------------------------------------------------------- zsh plugins ------
