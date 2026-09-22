@@ -98,7 +98,11 @@ setup_mise() {
 
 	echo "installing mise tools..."
 	# Don't let one unresolvable tool abort the rest of setup.
-	mise install || echo "  some mise tools failed to install; run 'mise install' for detail"
+	# --yes: mise is otherwise the one backend that can stop and wait for a human.
+	# Its npm backend gates low-download packages behind a confirm prompt, which
+	# the progress spinner then draws over -- so an unattended run looks hung
+	# rather than blocked. pacman/apt/dnf already pass --noconfirm/-y in pkg.sh.
+	mise install --yes || echo "  some mise tools failed to install; run 'mise install' for detail"
 
 	# install only fetches what is missing. Without this, re-running setup
 	# upgrades brew and pacman packages but leaves every mise tool behind.
@@ -106,7 +110,7 @@ setup_mise() {
 	# move, and nothing rewrites the config -- that is `mise upgrade --bump`,
 	# which is a deliberate edit, not a setup step.
 	echo "upgrading mise tools..."
-	mise upgrade || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
+	mise upgrade --yes || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
 }
 
 # --------------------------------------------------------- zsh plugins ------
@@ -363,7 +367,14 @@ set_login_shell() {
 	local want="$1" path current
 	path="$(command -v "$want" 2>/dev/null)" || { echo "$want not installed, leaving login shell alone"; return 0; }
 
-	current="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)"
+	# getent is glibc, so it does not exist on macOS. Under `set -o pipefail` the
+	# missing command fails the whole pipeline, and the failed assignment then
+	# trips `set -e` -- killing setup before the dscl fallback below is reached.
+	if command -v getent >/dev/null 2>&1; then
+		current="$(getent passwd "$USER" | cut -d: -f7)"
+	else
+		current=""
+	fi
 	[ -n "$current" ] || current="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')"
 
 	if [ "$current" = "$path" ]; then
