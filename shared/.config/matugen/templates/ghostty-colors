@@ -1,5 +1,25 @@
-background = {{colors.background.dark.hex}}
-foreground = {{colors.on_background.dark.hex}}
-cursor-color = {{colors.primary.dark.hex}}
-selection-background = {{colors.primary_container.dark.hex}}
-selection-foreground = {{colors.on_primary_container.dark.hex}}
+# ANSI 1 and 2 are error and tertiary, so red and green follow the wallpaper's
+# hues rather than staying red and green. Diffs and log levels read as tints of
+# the palette, not as their usual colours.
+background = {{colors.surface_container.default.hex}}
+foreground = {{colors.on_surface.default.hex}}
+cursor-color = {{colors.primary.default.hex}}
+selection-background = {{colors.primary_container.default.hex}}
+selection-foreground = {{colors.on_primary_container.default.hex}}
+
+palette = 0={{colors.surface_container_lowest.default.hex}}
+palette = 1={{colors.error.default.hex}}
+palette = 2={{colors.tertiary.default.hex}}
+palette = 3={{colors.secondary.default.hex}}
+palette = 4={{colors.primary.default.hex}}
+palette = 5={{colors.on_tertiary_container.default.hex}}
+palette = 6={{colors.on_secondary_container.default.hex}}
+palette = 7={{colors.on_surface_variant.default.hex}}
+palette = 8={{colors.outline.default.hex}}
+palette = 9={{colors.on_error_container.default.hex}}
+palette = 10={{colors.tertiary_fixed_dim.default.hex}}
+palette = 11={{colors.secondary_fixed_dim.default.hex}}
+palette = 12={{colors.primary_fixed_dim.default.hex}}
+palette = 13={{colors.tertiary_fixed.default.hex}}
+palette = 14={{colors.secondary_fixed.default.hex}}
+palette = 15={{colors.on_surface.default.hex}}

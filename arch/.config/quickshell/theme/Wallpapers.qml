@@ -7,7 +7,7 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string dir: Quickshell.env("WALLPAPER_DIR") || (home + "/Pictures/Wallpapers")
+    readonly property string dir: Quickshell.env("WALLPAPER_DIR") || (Quickshell.env("XDG_DATA_HOME") || (home + "/.local/share")) + "/wallpapers"
     readonly property string script: home + "/.local/scripts/wallpaper.sh"
 
     property list<string> paths: []

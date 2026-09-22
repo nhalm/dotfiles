@@ -7,7 +7,8 @@ return {
     -- configure lualine with modified theme
     lualine.setup {
       options = {
-        theme = "tokyonight-storm",
+        -- auto follows the colorscheme, including the matugen overrides.
+        theme = "auto",
       },
       sections = {
         lualine_x = {

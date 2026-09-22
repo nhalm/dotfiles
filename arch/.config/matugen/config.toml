@@ -43,3 +43,13 @@ output_path = '~/.local/state/matugen/hyprlock-colors.conf'
 [templates.qtct]
 input_path = '~/.config/matugen/templates/qtct-colors.conf'
 output_path = '~/.local/state/matugen/qtct-colors.conf'
+
+# Symlinked into the Zen profile's chrome/ by link_zen_theme.
+[templates.zen]
+input_path = '~/.config/matugen/templates/zen-colors.css'
+output_path = '~/.local/state/matugen/zen-colors.css'
+
+# Read by the tokyonight config; :MatugenReload re-reads it.
+[templates.nvim]
+input_path = '~/.config/matugen/templates/nvim-colors.lua'
+output_path = '~/.local/state/matugen/nvim-colors.lua'
