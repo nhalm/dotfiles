@@ -327,6 +327,7 @@ zen_app_dir() {
 		echo "/Applications/Zen.app/Contents/Resources"
 		return 0
 	}
+	[ "$(uname)" = Darwin ] && return 1
 	local bin
 	bin="$(command -v zen || command -v zen-browser)" || return 1
 	bin="$(readlink -f "$bin" 2>/dev/null || echo "$bin")"
@@ -340,6 +341,30 @@ zen_app_install() {
 	[ -w "$dir" ] || run="sudo"
 	$run mkdir -p "$dir/$(dirname "$rel")" 2>/dev/null || return 1
 	$run cp "$src" "$dir/$rel" 2>/dev/null || return 1
+}
+
+# Gatekeeper rejects a modified bundle on first launch, so launch it untouched first.
+zen_first_launch() {
+	local app="/Applications/Zen.app" i
+	[ "$(uname)" = Darwin ] && [ -d "$app" ] || return 0
+	[ -e "$app/Contents/Resources/zen-matugen.cfg" ] && return 0
+	pgrep -x zen >/dev/null && return 0
+
+	xattr -dr com.apple.FinderInfo "$app" 2>/dev/null
+	xattr -dr com.apple.quarantine "$app" 2>/dev/null
+
+	echo "launching zen once so Gatekeeper records it..."
+	open -g -j "$app" || return 1
+	for i in $(seq 1 30); do
+		pgrep -x zen >/dev/null && [ -r "$HOME/Library/Application Support/zen/profiles.ini" ] && break
+		sleep 1
+	done
+	sleep 5
+	pkill -x zen
+	for i in $(seq 1 15); do
+		pgrep -x zen >/dev/null || break
+		sleep 1
+	done
 }
 
 # zen-matugen.cfg: without it a palette change only reaches Zen at its next
