@@ -32,7 +32,7 @@ which Karabiner skips by default.
 | Setting | Value |
 |---|---|
 | `config-version` | 2 |
-| `persistent-workspaces` | `1`–`6`, explicit — without them a workspace vanishes with its last window, taking its sketchybar chip |
+| `persistent-workspaces` | `1`–`6`, explicit — without them a workspace vanishes with its last window, taking its sketchybar item |
 | Layout | tiles, orientation auto, accordion padding 30 |
 | Gaps | 20 all round; top 15 on the built-in display, 42 elsewhere (sketchybar is 40 tall) |
 | Normalization | flatten containers, opposite orientation for nested |
@@ -92,17 +92,21 @@ which is why `conf.d/darwin.toml` pins it. `helpers/` recompiles its C
 providers on every start, so sketchybar must launch with the config directory
 as cwd.
 
-Bar is 40px: workspace chips on the left, everything else on the right.
+Black full-width bar: 32px on the built-in display (the notch's height, so it
+disappears), 36px elsewhere. Workspaces on the left, everything else on the
+right.
 
 | Item | Detail |
 |---|---|
-| `aerospace_workspaces` | one chip per workspace, refreshed on the `aerospace_workspace_change`, `front_app_switched`, `display_change` and `system_woke` events. Click focuses, right-click moves the window |
+| `aerospace_workspaces` | numbers with one fixed-width slot per app icon, `│` between workspaces; the focused window's icon is lit. Refreshed on `aerospace_workspace_change`, `front_app_switched`, `display_change` and `system_woke`. Click focuses, right-click moves the window |
 | `calendar` | `%a. %d %b.` + `%H:%M`, 30s; click opens Calendar |
-| `battery` | `pmset -g batt` every 180s, colour by level, popup shows time remaining |
-| `volume` | percent + icon; popup has a slider and one row per output device via `SwitchAudioSource`; scroll adjusts, right-click opens Sound preferences |
-| `wifi` | throughput from the compiled `network_load` provider on `en0`; popup shows SSID, hostname, IP, subnet, router, each row copying itself on click |
-| `cpu` | 42px graph from the compiled `cpu_load` provider; click opens Activity Monitor |
 | `weather` | wttr.in, location from `CoreLocationCLI` cached 30 min, exponential backoff to 6h on failure; right-click opens Weather |
+| `battery` | icon only, red at 20% or below; popup shows charge and time remaining |
+| `volume` | icon only; popup has a slider and one row per output device via `SwitchAudioSource`; scroll adjusts, right-click opens Sound preferences |
+| `wifi` | icon only; popup shows SSID, hostname, IP, subnet, router and throughput from the compiled `network_load` provider, each address row copying itself on click |
+
+Popups close once the mouse leaves the icon and the popup. The SSID needs
+`ipconfig setverbose 1`, which post-link sets.
 
 `colors.lua` falls back to a static TokyoNight Storm table when the
 matugen-generated `matugen-colors.lua` beside it does not exist.

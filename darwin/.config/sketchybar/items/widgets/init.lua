@@ -1,5 +1,12 @@
-require("items.widgets.battery")
-require("items.widgets.volume")
-require("items.widgets.wifi")
-require("items.widgets.cpu")
+local function gap()
+	sbar.add("item", { position = "right", width = 16, padding_left = 0, padding_right = 0 })
+end
+
+gap()
 require("items.widgets.weather")
+gap()
+require("items.widgets.battery")
+gap()
+require("items.widgets.volume")
+gap()
+require("items.widgets.wifi")

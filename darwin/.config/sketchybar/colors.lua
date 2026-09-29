@@ -67,8 +67,8 @@ return {
 
 	-- Bar / popups / backgrounds
 	bar = {
-		-- Deliberately transparent: the brackets carry the colour.
-		bg = 0x00000000,
+		-- Pure black so the notch blends in.
+		bg = 0xff000000,
 		border = p.bar_border,
 	},
 	popup = {

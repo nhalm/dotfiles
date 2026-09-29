@@ -4,21 +4,31 @@ local settings = require("settings")
 
 local popup_width = 250
 
+-- Hidden, but it carries the volume_change subscription, so it must update
+-- while not drawn.
 local volume_percent = sbar.add("item", "widgets.volume1", {
   position = "right",
+  drawing = false,
+  updates = true,
+  padding_left = 0,
+  padding_right = 0,
   icon = { drawing = false },
   label = {
     string = "??%",
-    padding_left = -1,
+    padding_left = 0,
+    padding_right = 0,
     font = { family = settings.font.numbers }
   },
 })
 
 local volume_icon = sbar.add("item", "widgets.volume2", {
   position = "right",
-  padding_right = -1,
+  padding_left = 0,
+  padding_right = 0,
   icon = {
     string = icons.volume._100,
+    padding_left = 0,
+    padding_right = 0,
     width = 0,
     align = "left",
     color = colors.grey,
@@ -28,8 +38,10 @@ local volume_icon = sbar.add("item", "widgets.volume2", {
     },
   },
   label = {
-    width = 25,
+    width = 20,
     align = "left",
+    padding_left = 0,
+    padding_right = 0,
     font = {
       style = settings.font.style_map["Regular"],
       size = 14.0,
@@ -41,14 +53,10 @@ local volume_bracket = sbar.add("bracket", "widgets.volume.bracket", {
   volume_icon.name,
   volume_percent.name
 }, {
-  background = { color = colors.bg1 },
+  background = { drawing = false },
   popup = { align = "center" }
 })
 
-sbar.add("item", "widgets.volume.padding", {
-  position = "right",
-  width = settings.group_paddings
-})
 
 local volume_slider = sbar.add("slider", popup_width, {
   position = "popup." .. volume_bracket.name,
@@ -68,8 +76,7 @@ local volume_slider = sbar.add("slider", popup_width, {
   click_script = 'osascript -e "set volume output volume $PERCENTAGE"'
 })
 
-volume_percent:subscribe("volume_change", function(env)
-  local volume = tonumber(env.INFO)
+local function show_volume(volume)
   local icon = icons.volume._0
   if volume > 60 then
     icon = icons.volume._100
@@ -89,6 +96,16 @@ volume_percent:subscribe("volume_change", function(env)
   volume_icon:set({ label = icon })
   volume_percent:set({ label = lead .. volume .. "%" })
   volume_slider:set({ slider = { percentage = volume } })
+end
+
+volume_percent:subscribe("volume_change", function(env)
+  show_volume(tonumber(env.INFO))
+end)
+
+-- volume_change only fires on a change, so read the starting level once.
+sbar.exec("osascript -e 'output volume of (get volume settings)'", function(out)
+  local volume = tonumber(out)
+  if volume then show_volume(volume) end
 end)
 
 local function volume_collapse_details()
@@ -97,6 +114,11 @@ local function volume_collapse_details()
   volume_bracket:set({ popup = { drawing = false } })
   sbar.remove('/volume.device\\.*/')
 end
+
+local watch_popup = require("helpers.close_on_leave")(
+  { volume_icon, volume_percent, volume_slider },
+  volume_collapse_details
+)
 
 local current_audio_device = "None"
 local function volume_toggle_details(env)
@@ -120,14 +142,14 @@ local function volume_toggle_details(env)
           if current == device then
             color = colors.white
           end
-          sbar.add("item", "volume.device." .. counter, {
+          watch_popup(sbar.add("item", "volume.device." .. counter, {
             position = "popup." .. volume_bracket.name,
             width = popup_width,
             align = "center",
             label = { string = device, color = color },
             click_script = 'SwitchAudioSource -s "' .. device .. '" && sketchybar --set /volume.device\\.*/ label.color=' .. colors.grey .. ' --set $NAME label.color=' .. colors.white
 
-          })
+          }))
           counter = counter + 1
         end
       end)

@@ -5,16 +5,17 @@ local settings = require("settings")
 -- === Compact chip (icon + temp) ===
 local weather = sbar.add("item", "widgets.weather", {
 	position = "right",
-	icon = { string = "􀇃" }, -- default cloud.sun
-	label = { string = "…°", font = { style = settings.font.style_map["Bold"], size = 12 } },
-	padding_left = 6,
-	padding_right = 6,
+	-- Weather symbols run taller than the other icons at the same size.
+	icon = { string = "􀇃", padding_left = 0, font = { size = 12.0 } }, -- default cloud.sun
+	label = { string = "…°", padding_right = 0, font = { style = settings.font.style_map["Regular"], size = 12 } },
+	padding_left = 0,
+	padding_right = 0,
 	update_freq = 600, -- 10 min
 })
 
 -- === Popup bracket container ===
 local weather_bracket = sbar.add("bracket", "widgets.weather.bracket", { weather.name }, {
-	background = { color = colors.bg1 },
+	background = { drawing = false },
 	popup = { align = "center", height = 35 },
 })
 
@@ -239,9 +240,6 @@ weather:subscribe("system_woke", function()
 	location_cache = nil
 	refresh_chip()
 end)
-
--- Spacing after widget
-sbar.add("item", { position = "right", width = settings.group_paddings })
 
 -- Initial paint
 refresh_chip()

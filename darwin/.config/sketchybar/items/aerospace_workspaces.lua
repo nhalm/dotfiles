@@ -1,4 +1,4 @@
--- AeroSpace workspace chips for SketchyBar.
+-- AeroSpace workspaces for SketchyBar, with a separator between each.
 --
 -- Design follows the canonical FelixKratz pattern (SketchyBar discussion #599
 -- and SbarLua example/items/spaces.lua):
@@ -17,13 +17,11 @@ local app_icons = require("helpers.app_icons")
 sbar.add("event", "aerospace_workspace_change")
 
 local STYLE = {
-	chip_bg = colors.bg1,
-	chip_border = colors.black,
-	chip_height = 26,
-	bracket_border = colors.bg2,
-	active_bracket_border = colors.grey,
+	highlight_height = 22,
+	focused_bg = colors.bg2,
+	focused_app_color = colors.white,
+	separator_color = colors.grey,
 	active_icon_highlight = colors.red,
-	active_label_highlight = colors.white,
 	inactive_icon_color = colors.white,
 	inactive_label_color = colors.grey,
 }
@@ -61,68 +59,131 @@ end
 local workspaces = query_workspaces()
 
 local items = {}
-local brackets = {}
+local slots = {}
+local highlights = {}
+local separators = {}
+local parts = {}
 local pinned_display = {}
 
-for _, ws in ipairs(workspaces) do
+-- Each app glyph gets its own fixed-width slot, since the glyphs' own widths vary.
+-- A glyph is about 16px, so a slot leaves about 3px each side; GAP is the space
+-- between every neighbour: number, glyphs and separators.
+local MAX_APPS = 6
+local SLOT_WIDTH = 22
+local SLOT_SLACK = 3
+local GAP = 6
+
+-- Puts the first number as far from the edge as the calendar's text on the right.
+sbar.add("item", { position = "left", width = 12, padding_left = 0, padding_right = 0 })
+
+for i, ws in ipairs(workspaces) do
+	if i > 1 then
+		local sep = sbar.add("item", "aws.sep." .. ws, {
+			position = "left",
+			display = "active",
+			padding_left = 0,
+			padding_right = 0,
+			icon = { drawing = false },
+			label = {
+				string = "│",
+				color = STYLE.separator_color,
+				padding_left = 3,
+				padding_right = 3,
+			},
+		})
+		separators[ws] = sep
+	end
+
+	local click = "aerospace workspace " .. ws
 	local item = sbar.add("item", "aws." .. ws, {
 		position = "left",
 		display = "active",
+		padding_left = 0,
+		padding_right = 0,
 		icon = {
 			font = { family = settings.font.numbers },
 			string = ws,
-			padding_left = 15,
-			padding_right = 8,
+			padding_left = GAP,
+			padding_right = GAP - SLOT_SLACK,
 			color = STYLE.inactive_icon_color,
-			highlight_color = STYLE.active_icon_highlight,
 		},
-		label = {
-			padding_right = 20,
-			color = STYLE.inactive_label_color,
-			highlight_color = STYLE.active_label_highlight,
-			font = "sketchybar-app-font:Regular:16.0",
-			y_offset = -1,
-			string = " —",
-		},
-		padding_left = 1,
-		padding_right = 1,
-		background = {
-			color = STYLE.chip_bg,
-			border_width = 1,
-			height = STYLE.chip_height,
-			border_color = STYLE.chip_border,
-		},
-		click_script = "aerospace workspace " .. ws,
+		label = { drawing = false },
+		click_script = click,
 	})
+	local ws_parts = { item }
 
-	local bracket = sbar.add("bracket", "aws.bracket." .. ws, { item.name }, {
+	slots[ws] = {}
+	for k = 1, MAX_APPS do
+		local slot = sbar.add("item", "aws.app." .. ws .. "." .. k, {
+			position = "left",
+			display = "active",
+			drawing = k == 1,
+			padding_left = 0,
+			padding_right = 0,
+			width = SLOT_WIDTH,
+			icon = { drawing = false },
+			label = {
+				font = "sketchybar-app-font:Regular:16.0",
+				y_offset = -1,
+				width = SLOT_WIDTH,
+				align = "center",
+				padding_left = 0,
+				padding_right = 0,
+				color = STYLE.inactive_label_color,
+				string = k == 1 and "—" or "",
+			},
+			click_script = click,
+		})
+		slots[ws][k] = slot
+		ws_parts[#ws_parts + 1] = slot
+	end
+
+	local tail = sbar.add("item", "aws.end." .. ws, {
+		position = "left",
+		display = "active",
+		width = GAP - SLOT_SLACK,
+		padding_left = 0,
+		padding_right = 0,
+		icon = { drawing = false },
+		label = { drawing = false },
+		click_script = click,
+	})
+	ws_parts[#ws_parts + 1] = tail
+
+	local names = {}
+	for _, part in ipairs(ws_parts) do
+		names[#names + 1] = part.name
+		part:subscribe("mouse.clicked", function(env)
+			if env.BUTTON == "right" then
+				sbar.exec("aerospace move-node-to-workspace " .. ws)
+			end
+		end)
+	end
+
+	highlights[ws] = sbar.add("bracket", "aws.hl." .. ws, names, {
 		background = {
 			color = colors.transparent,
-			border_color = STYLE.bracket_border,
-			height = STYLE.chip_height + 2,
-			border_width = 2,
+			border_width = 0,
+			height = STYLE.highlight_height,
+			corner_radius = 7,
 		},
 	})
 
-	item:subscribe("mouse.clicked", function(env)
-		if env.BUTTON == "right" then
-			sbar.exec("aerospace move-node-to-workspace " .. ws)
-		end
-	end)
-
 	items[ws] = item
-	brackets[ws] = bracket
+	parts[ws] = ws_parts
 	pinned_display[ws] = "active"
 end
 
 sbar.add("item", { position = "left", width = settings.group_paddings })
 
--- Two bulk exec calls per refresh:
---   1) list-workspaces gives us monitor-id + focused/visible flags for every
---      workspace (including empty ones).
---   2) list-windows gives us the app icons. Empty workspaces don't appear
---      here, which is why (1) is needed too.
--- Nested so we have a single coherent snapshot when we paint.
+local function glyph(app)
+	return app_icons[app] or app_icons["Default"] or "·"
+end
+
+local focused_ws = nil
+
+-- Three bulk exec calls per refresh: workspace metadata (including empty
+-- workspaces), every window's app for the icons, and the focused window.
 local function refresh()
 	sbar.exec(
 		[[aerospace list-workspaces --all --format '%{workspace}	%{monitor-id}	%{workspace-is-focused}	%{workspace-is-visible}' 2>/dev/null]],
@@ -140,66 +201,104 @@ local function refresh()
 			end
 
 			sbar.exec(
-				[[aerospace list-windows --all --format '%{workspace}	%{app-name}' 2>/dev/null]],
+				[[aerospace list-windows --all --format '%{workspace}	%{app-name}' 2>/dev/null; echo '--focused'; aerospace list-windows --focused --format '%{app-name}' 2>/dev/null]],
 				function(win_out)
 					local apps_by_ws = {}
+					local focused_app = nil
+					local in_focused = false
 					for line in (win_out or ""):gmatch("[^\r\n]+") do
-						local ws, app = line:match("^(%S+)\t(.+)$")
-						if ws and app then
-							local bucket = apps_by_ws[ws]
-							if not bucket then
-								bucket = { seen = {}, list = {} }
-								apps_by_ws[ws] = bucket
-							end
-							app = app:gsub("^%s+", ""):gsub("%s+$", "")
-							if app ~= "" and not bucket.seen[app] then
-								bucket.seen[app] = true
-								bucket.list[#bucket.list + 1] = app
+						if line == "--focused" then
+							in_focused = true
+						elseif in_focused then
+							focused_app = line:gsub("^%s+", ""):gsub("%s+$", "")
+						else
+							local ws, app = line:match("^(%S+)\t(.+)$")
+							if ws and app then
+								local bucket = apps_by_ws[ws]
+								if not bucket then
+									bucket = { seen = {}, list = {} }
+									apps_by_ws[ws] = bucket
+								end
+								app = app:gsub("^%s+", ""):gsub("%s+$", "")
+								if app ~= "" and not bucket.seen[app] then
+									bucket.seen[app] = true
+									bucket.list[#bucket.list + 1] = app
+								end
 							end
 						end
 					end
 
-					for ws, item in pairs(items) do
+					local new_focus = nil
+					for ws, m in pairs(meta) do
+						if m.focused then
+							new_focus = ws
+						end
+					end
+					local focus_moved = new_focus ~= focused_ws
+					focused_ws = new_focus
+
+					-- A separator draws only when a shown workspace precedes it on the same display.
+					local shown_on = {}
+					for _, ws in ipairs(workspaces) do
 						local m = meta[ws] or { display = 1, focused = false, visible = false }
 						local bucket = apps_by_ws[ws]
 						local apps = bucket and bucket.list or {}
-						local icons_str = ""
-						for _, app in ipairs(apps) do
-							icons_str = icons_str .. (app_icons[app] or app_icons["Default"] or "·")
-						end
-
 						local selected = m.focused
-						local has_apps = #apps > 0
-						local show = m.visible or has_apps
-						if icons_str == "" then
-							icons_str = " —"
-						end
+						local show = m.visible or #apps > 0
 
 						-- Only re-set display when it actually changed; sketchybar
 						-- treats display changes as expensive layout events.
 						if pinned_display[ws] ~= m.display then
 							pinned_display[ws] = m.display
-							item:set({ display = m.display })
-							brackets[ws]:set({ display = m.display })
+							for _, part in ipairs(parts[ws]) do
+								part:set({ display = m.display })
+							end
+							if separators[ws] then
+								separators[ws]:set({ display = m.display })
+							end
 						end
 
 						local drawing = show and "on" or "off"
-						item:set({
-							drawing = drawing,
-							icon = { highlight = selected },
-							label = { string = icons_str, highlight = selected },
-							background = {
-								border_color = selected and STYLE.active_bracket_border
-									or STYLE.chip_border,
-							},
-						})
-						brackets[ws]:set({
-							drawing = drawing,
-							background = {
-								border_color = selected and STYLE.active_bracket_border
-									or STYLE.bracket_border,
-							},
-						})
+						items[ws]:set({ drawing = drawing })
+						parts[ws][#parts[ws]]:set({ drawing = drawing })
+						highlights[ws]:set({ drawing = drawing })
+						for k, slot in ipairs(slots[ws]) do
+							local app = apps[k]
+							local label = app and glyph(app) or (k == 1 and "—" or "")
+							slot:set({
+								drawing = (show and (app or k == 1)) and "on" or "off",
+								label = { string = label },
+							})
+						end
+
+						local function paint()
+							items[ws]:set({
+								icon = {
+									color = selected and STYLE.active_icon_highlight or STYLE.inactive_icon_color,
+								},
+							})
+							for k, slot in ipairs(slots[ws]) do
+								local lit = selected and apps[k] ~= nil and apps[k] == focused_app
+								slot:set({
+									label = { color = lit and STYLE.focused_app_color or STYLE.inactive_label_color },
+								})
+							end
+							highlights[ws]:set({
+								background = { color = selected and STYLE.focused_bg or colors.transparent },
+							})
+						end
+						if focus_moved then
+							sbar.animate("tanh", 12, paint)
+						else
+							paint()
+						end
+
+						if separators[ws] then
+							separators[ws]:set({ drawing = (show and shown_on[m.display]) and "on" or "off" })
+						end
+						if show then
+							shown_on[m.display] = true
+						end
 					end
 				end
 			)
