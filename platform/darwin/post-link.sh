@@ -17,6 +17,18 @@ if [ -x "$GHOSTTY_BIN" ]; then
 	echo "ghostty cli linked"
 fi
 
+# --- launchd PATH -------------------------------------------------------
+# GUI apps and launchd jobs get launchd's PATH, not the shell's, so without this
+# they resolve ssh (and every other brew tool) to the macOS copy. Read at boot,
+# so a change needs a restart.
+LAUNCHD_PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
+LAUNCHD_PLIST="/private/var/db/com.apple.xpc.launchd/config/user.plist"
+if [ "$(plutil -extract PathEnvironmentVariable raw "$LAUNCHD_PLIST" 2>/dev/null)" = "$LAUNCHD_PATH" ]; then
+	echo "launchd PATH ok"
+elif sudo launchctl config user path "$LAUNCHD_PATH"; then
+	echo "launchd PATH set, restart to apply"
+fi
+
 # --- zen theme ----------------------------------------------------------
 link_zen_theme
 install_zen_autoconfig
