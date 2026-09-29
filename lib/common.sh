@@ -110,7 +110,10 @@ setup_mise() {
 	# move, and nothing rewrites the config -- that is `mise upgrade --bump`,
 	# which is a deliberate edit, not a setup step.
 	echo "upgrading mise tools..."
-	mise upgrade --yes || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
+	# carbonyl is pinned to an exact prerelease build, so there is nothing to
+	# upgrade it to -- mise prints "Error getting latest version" every run
+	# looking for one. Excluding a tool the config does not have is a no-op.
+	mise upgrade --yes -x npm:carbonyl || echo "  some mise tools failed to upgrade; run 'mise upgrade' for detail"
 }
 
 # --------------------------------------------------------- zsh plugins ------

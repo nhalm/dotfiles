@@ -13,6 +13,6 @@ bun = "1"
 # the active node's prefix, so a node major bump orphans them.
 # carbonyl publishes nothing but prereleases, which mise filters out of a range,
 # so it is the one tool that has to name an exact build.
-"npm:carbonyl" = "0.0.2-next.bacf3db"
+"npm:carbonyl" = "0.0.3-next.ab80a27"
 "npm:@mermaid-js/mermaid-cli" = "11"
 "npm:ccusage" = "20"
