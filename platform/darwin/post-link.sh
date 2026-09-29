@@ -29,6 +29,13 @@ elif sudo launchctl config user path "$LAUNCHD_PATH"; then
 	echo "launchd PATH set, restart to apply"
 fi
 
+# --- wifi name ----------------------------------------------------------
+# macOS redacts the SSID from ipconfig unless verbose is on; sketchybar's wifi
+# popup reads it from there.
+if ipconfig getsummary en0 2>/dev/null | grep -q ' SSID : <redacted>'; then
+	sudo ipconfig setverbose 1 && echo "wifi name unredacted"
+fi
+
 # --- zen theme ----------------------------------------------------------
 zen_first_launch
 link_zen_theme

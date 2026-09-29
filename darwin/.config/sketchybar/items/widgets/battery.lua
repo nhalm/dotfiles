@@ -4,15 +4,33 @@ local settings = require("settings")
 
 local battery = sbar.add("item", "widgets.battery", {
   position = "right",
+  padding_left = 0,
+  padding_right = 0,
   icon = {
+    padding_left = 0,
+    padding_right = 0,
     font = {
       style = settings.font.style_map["Regular"],
-      size = 19.0,
+      size = 15.0,
     }
   },
-  label = { font = { family = settings.font.numbers } },
+  label = { drawing = false },
   update_freq = 180,
   popup = { align = "center" }
+})
+
+local charge_row = sbar.add("item", {
+  position = "popup." .. battery.name,
+  icon = {
+    string = "Charge:",
+    width = 100,
+    align = "left"
+  },
+  label = {
+    string = "??%",
+    width = 100,
+    align = "right"
+  },
 })
 
 local remaining_time = sbar.add("item", {
@@ -41,7 +59,7 @@ battery:subscribe({"routine", "power_source_change", "system_woke"}, function()
       label = charge .. "%"
     end
 
-    local color = colors.green
+    local color = colors.white
     local charging, _, _ = batt_info:find("AC Power")
 
     if charging then
@@ -55,16 +73,10 @@ battery:subscribe({"routine", "power_source_change", "system_woke"}, function()
         icon = icons.battery._50
       elseif found and charge > 20 then
         icon = icons.battery._25
-        color = colors.orange
       else
         icon = icons.battery._0
         color = colors.red
       end
-    end
-
-    local lead = ""
-    if found and charge < 10 then
-      lead = "0"
     end
 
     battery:set({
@@ -72,9 +84,13 @@ battery:subscribe({"routine", "power_source_change", "system_woke"}, function()
         string = icon,
         color = color
       },
-      label = { string = lead .. label },
     })
+    charge_row:set({ label = label })
   end)
+end)
+
+require("helpers.close_on_leave")({ battery, charge_row, remaining_time }, function()
+  battery:set({ popup = { drawing = false } })
 end)
 
 battery:subscribe("mouse.clicked", function(env)
@@ -91,10 +107,6 @@ battery:subscribe("mouse.clicked", function(env)
 end)
 
 sbar.add("bracket", "widgets.battery.bracket", { battery.name }, {
-  background = { color = colors.bg1 }
+  background = { drawing = false }
 })
 
-sbar.add("item", "widgets.battery.padding", {
-  position = "right",
-  width = settings.group_paddings
-})
