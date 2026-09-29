@@ -26,9 +26,9 @@
       "Bash(find:*)",
       "Bash(cat:*)",
       "Read(/Users/nhalm/.claude/**)",
-      "Write(/Users/nhalm/.claude/**)",
+      "Edit(/Users/nhalm/.claude/**)",
       "Read(/home/nick/.claude/**)",
-      "Write(/home/nick/.claude/**)"
+      "Edit(/home/nick/.claude/**)"
     ],
     "deny": [
       "Read(~/.ssh/id_*)",
@@ -54,9 +54,8 @@
       "Bash(cat ~/.ssh/id_*)",
       "Bash(cat ~/.gnupg/*)",
       "Bash(cat ~/.aws/*)",
-      "Write(~/.ssh/**)",
-      "Write(~/.gnupg/**)",
-      "Write(**/.git/hooks/**)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.gnupg/**)",
       "Edit(**/.git/hooks/**)",
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)",
