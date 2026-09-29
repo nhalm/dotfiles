@@ -30,6 +30,7 @@ elif sudo launchctl config user path "$LAUNCHD_PATH"; then
 fi
 
 # --- zen theme ----------------------------------------------------------
+zen_first_launch
 link_zen_theme
 install_zen_autoconfig
 

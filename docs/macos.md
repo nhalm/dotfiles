@@ -170,6 +170,9 @@ an update replaces the bundle and takes the other two files with it, ending the
 live reload silently. Updating Zen is therefore deliberate -- do it, then re-run
 `./setup.sh`.
 
+`zen_first_launch` opens and quits Zen before either step, since Gatekeeper
+reports a bundle modified before its first launch as damaged.
+
 Writing into the bundle needs App Management for the terminal, in System
 Settings > Privacy & Security. Without it the install step says so and skips.
 
