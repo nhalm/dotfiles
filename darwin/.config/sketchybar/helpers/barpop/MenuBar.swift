@@ -8,9 +8,10 @@ enum MenuBar {
 	private typealias Connection = @convention(c) () -> Int32
 	private typealias SetAlpha = @convention(c) (Int32, Double, Double, Float) -> Int32
 
+	// AppKit already loads SkyLight, so RTLD_DEFAULT finds its symbols.
 	static func setAlpha(_ alpha: Float) {
-		guard let lib = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY),
-			let conn = dlsym(lib, "SLSMainConnectionID"), let set = dlsym(lib, "SLSSetMenuBarInsetAndAlpha")
+		let lib = UnsafeMutableRawPointer(bitPattern: -2)
+		guard let conn = dlsym(lib, "SLSMainConnectionID"), let set = dlsym(lib, "SLSSetMenuBarInsetAndAlpha")
 		else { return }
 		let connection = unsafeBitCast(conn, to: Connection.self)
 		_ = unsafeBitCast(set, to: SetAlpha.self)(connection(), 0, 1, alpha)

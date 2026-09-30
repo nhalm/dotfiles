@@ -1,10 +1,12 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 	let palette = Palette()
 	let audio = Audio()
 	private var panel: PopupPanel?
+	private var screen: NSScreen?
 	private var anchor = NSRect.zero
 	private var mouseTimer: Timer?
 	private var outsideSince: Date?
@@ -14,42 +16,81 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		MenuBar.setAlpha(0)
 		Messages.observe(.show) { [weak self] info in self?.show(info) }
 		Messages.observe(.hide) { [weak self] _ in self?.hide() }
+		NSWorkspace.shared.notificationCenter.addObserver(
+			forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
+		) { [weak self] _ in MainActor.assumeIsolated { self?.reset() } }
+		trackDevices()
+	}
+
+	// Display changes and sleep can bring the native menu bar back.
+	func applicationDidChangeScreenParameters(_ notification: Notification) { reset() }
+
+	private func reset() {
+		MenuBar.setAlpha(0)
+		hide()
 	}
 
 	private func view(for popup: String) -> AnyView? {
 		switch popup {
-		case "volume": return AnyView(VolumeView().environmentObject(palette).environmentObject(audio))
+		case "volume": return AnyView(VolumeView().environment(palette).environment(audio))
 		default: return nil
 		}
 	}
 
-	// x and width are the item's sketchybar bounds, relative to the display
-	// the click came from.
 	private func show(_ info: [String: String]) {
-		guard let name = info["popup"], let content = view(for: name),
-			let x = Double(info["x"] ?? ""), let width = Double(info["width"] ?? "")
+		guard let name = info["popup"], let content = view(for: name) else { return }
+		let mouse = NSEvent.mouseLocation
+		let distance = { (r: NSRect) in
+			hypot(max(r.minX - mouse.x, 0, mouse.x - r.maxX), max(r.minY - mouse.y, 0, mouse.y - r.maxY))
+		}
+		guard let rect = rects(info["rects"] ?? "").min(by: { distance($0) < distance($1) }),
+			let screen = NSScreen.screens.first(where: { $0.frame.intersects(rect) })
 		else { return }
-		if panel?.isVisible == true && panel?.name == name {
+		if panel?.name == name && anchor == rect {
 			hide()
 			return
 		}
 		hide()
 
-		let mouse = NSEvent.mouseLocation
-		guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
-		else { return }
-		let barHeight: CGFloat = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 36
-		anchor = NSRect(
-			x: screen.frame.minX + x, y: screen.frame.maxY - barHeight, width: width, height: barHeight)
-
+		anchor = rect
 		let panel = PopupPanel(name: name, content: content)
-		let size = panel.contentView?.fittingSize ?? NSSize(width: 300, height: 200)
-		var origin = NSPoint(x: anchor.midX - size.width / 2, y: anchor.minY - 6 - size.height)
-		origin.x = min(max(origin.x, screen.frame.minX + 8), screen.frame.maxX - 8 - size.width)
-		panel.setFrame(NSRect(origin: origin, size: size), display: true)
+		panel.onCancel = { [weak self] in self?.hide() }
+		place(panel, on: screen)
 		panel.orderFrontRegardless()
 		self.panel = panel
+		self.screen = screen
 		startTracking()
+	}
+
+	// sketchybar reports the item's rect on each display in global
+	// CoreGraphics coordinates, top-left of the primary display at 0,0.
+	private func rects(_ spec: String) -> [NSRect] {
+		guard let top = NSScreen.screens.first?.frame.maxY else { return [] }
+		return spec.split(separator: ";").compactMap { part in
+			let v = part.split(separator: ",").compactMap { Double($0) }
+			guard v.count == 4 else { return nil }
+			return NSRect(x: v[0], y: top - v[1] - v[3], width: v[2], height: v[3])
+		}
+	}
+
+	// The card keeps 8pt from the screen edges; the transparent margin around
+	// it may overhang them.
+	private func place(_ panel: PopupPanel, on screen: NSScreen) {
+		let size = panel.fittingSize
+		let edge = 8 - PopupPanel.margin
+		let x = min(max(anchor.midX - size.width / 2, screen.frame.minX + edge), screen.frame.maxX - edge - size.width)
+		panel.setFrame(
+			NSRect(x: x, y: anchor.minY - 6 - size.height, width: size.width, height: size.height), display: true)
+	}
+
+	private func trackDevices() {
+		withObservationTracking { _ = audio.devices } onChange: { [weak self] in
+			Task { @MainActor in
+				guard let self else { return }
+				if let panel = self.panel, let screen = self.screen { self.place(panel, on: screen) }
+				self.trackDevices()
+			}
+		}
 	}
 
 	private func hide() {
@@ -58,49 +99,71 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		if let m = clickMonitor { NSEvent.removeMonitor(m) }
 		clickMonitor = nil
 		outsideSince = nil
-		panel?.orderOut(nil)
-		panel = nil
+		guard let panel else { return }
+		self.panel = nil
+		panel.ignoresMouseEvents = true
+		NSAnimationContext.runAnimationGroup { ctx in
+			ctx.duration = 0.12
+			panel.animator().alphaValue = 0
+		} completionHandler: {
+			MainActor.assumeIsolated { panel.orderOut(nil) }
+		}
+	}
+
+	private func startTracking() {
+		let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
+			MainActor.assumeIsolated { self?.track() }
+		}
+		RunLoop.main.add(timer, forMode: .common)
+		mouseTimer = timer
+		clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
+			[weak self] _ in MainActor.assumeIsolated { self?.clicked() }
+		}
 	}
 
 	// Polling the pointer needs no permission, unlike a global mouse-moved
 	// monitor. The strip between the item and the panel counts as inside, so
-	// crossing it does not close anything.
-	private func startTracking() {
-		mouseTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-			guard let self, let panel = self.panel else { return }
-			let bridge = NSRect(
-				x: min(self.anchor.minX, panel.frame.minX), y: panel.frame.maxY,
-				width: max(self.anchor.maxX, panel.frame.maxX) - min(self.anchor.minX, panel.frame.minX),
-				height: self.anchor.minY - panel.frame.maxY)
-			let inside = [self.anchor, panel.frame, bridge].contains {
-				NSMouseInRect(NSEvent.mouseLocation, $0.insetBy(dx: -2, dy: -2), false)
-			}
-			if inside {
-				self.outsideSince = nil
-			} else if let since = self.outsideSince {
-				if Date().timeIntervalSince(since) > 0.3 { self.hide() }
-			} else {
-				self.outsideSince = Date()
-			}
+	// crossing it does not close anything, and so does a drag that strays out.
+	private func track() {
+		guard let panel else { return }
+		let bridge = NSRect(
+			x: min(anchor.minX, panel.frame.minX), y: panel.frame.maxY,
+			width: max(anchor.maxX, panel.frame.maxX) - min(anchor.minX, panel.frame.minX),
+			height: anchor.minY - panel.frame.maxY)
+		let mouse = NSEvent.mouseLocation
+		let inside = NSEvent.pressedMouseButtons != 0 || [anchor, panel.frame, bridge].contains {
+			NSMouseInRect(mouse, $0.insetBy(dx: -2, dy: -2), false)
 		}
-		clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
-			[weak self] _ in
-			guard let self, let panel = self.panel else { return }
-			if !NSMouseInRect(NSEvent.mouseLocation, panel.frame, false)
-				&& !NSMouseInRect(NSEvent.mouseLocation, self.anchor, false)
-			{
-				self.hide()
-			}
+		if inside {
+			outsideSince = nil
+		} else if let since = outsideSince {
+			if Date().timeIntervalSince(since) > 0.3 { hide() }
+		} else {
+			outsideSince = Date()
 		}
+	}
+
+	private func clicked() {
+		guard let panel else { return }
+		let mouse = NSEvent.mouseLocation
+		if !NSMouseInRect(mouse, panel.frame, false) && !NSMouseInRect(mouse, anchor, false) { hide() }
 	}
 }
 
 // Non-activating, so opening it never steals focus from the app you're in.
+@MainActor
 final class PopupPanel: NSPanel {
+	// Room around the card for its shadow.
+	static let margin: CGFloat = 20
+
 	let name: String
+	var onCancel: (() -> Void)?
+	private let host: NSHostingController<AnyView>
 
 	init(name: String, content: AnyView) {
 		self.name = name
+		host = NSHostingController(rootView: AnyView(content.padding(Self.margin)))
+		host.sizingOptions = []
 		super.init(
 			contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
 		isFloatingPanel = true
@@ -110,10 +173,13 @@ final class PopupPanel: NSPanel {
 		isOpaque = false
 		hasShadow = false
 		hidesOnDeactivate = false
-		let host = NSHostingView(rootView: content)
-		host.sizingOptions = [.intrinsicContentSize]
-		contentView = host
+		contentView = host.view
 	}
 
+	// Sized by the caller, so the top edge stays put when the content grows.
+	var fittingSize: NSSize { host.sizeThatFits(in: NSSize(width: 10_000, height: 10_000)) }
+
 	override var canBecomeKey: Bool { true }
+
+	override func cancelOperation(_ sender: Any?) { onCancel?() }
 }

@@ -1,14 +1,16 @@
 import SwiftUI
 
 struct VolumeView: View {
-	@EnvironmentObject var palette: Palette
-	@EnvironmentObject var audio: Audio
+	@Environment(Palette.self) private var palette
+	@Environment(Audio.self) private var audio
 	@State private var appeared = false
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 16) {
 			header
-			LevelSlider(value: Binding(get: { audio.muted ? 0 : audio.volume }, set: audio.setVolume))
+			LevelSlider(value: Binding(get: { audio.muted ? 0 : audio.volume }, set: { audio.setVolume($0) }))
+				.disabled(!audio.hasVolume)
+				.opacity(audio.hasVolume ? 1 : 0.4)
 			Rectangle().fill(palette.outline).frame(height: 1)
 			devices
 		}
@@ -20,7 +22,6 @@ struct VolumeView: View {
 		.scaleEffect(appeared ? 1 : 0.94, anchor: .top)
 		.opacity(appeared ? 1 : 0)
 		.offset(y: appeared ? 0 : -8)
-		.padding(20)
 		.onAppear {
 			withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) { appeared = true }
 		}
@@ -43,7 +44,10 @@ struct VolumeView: View {
 				.frame(width: 48, height: 48)
 			}
 			.buttonStyle(.plain)
+			.disabled(!audio.hasMute)
+			.opacity(audio.hasMute ? 1 : 0.4)
 			.help(audio.muted ? "Unmute" : "Mute")
+			.accessibilityLabel(audio.muted ? "Unmute" : "Mute")
 
 			VStack(alignment: .leading, spacing: 2) {
 				Text(audio.currentName.uppercased())
@@ -90,16 +94,19 @@ struct VolumeView: View {
 	}
 }
 
+// While dragging, the knob follows the pointer rather than the device, which
+// quantizes each write and echoes it back; writes are throttled to ~30Hz.
 struct LevelSlider: View {
-	@EnvironmentObject var palette: Palette
+	@Environment(Palette.self) private var palette
 	@Binding var value: Double
 	@State private var hovering = false
-	@State private var dragging = false
+	@State private var drag: Double?
+	@State private var written = Date.distantPast
 
 	var body: some View {
 		GeometryReader { geo in
-			let knob: CGFloat = dragging ? 22 : 18
-			let x = CGFloat(value) * (geo.size.width - knob)
+			let knob: CGFloat = drag != nil ? 22 : 18
+			let x = CGFloat(drag ?? value) * (geo.size.width - knob)
 			ZStack(alignment: .leading) {
 				Capsule().fill(palette.containerHigh)
 				Capsule()
@@ -111,26 +118,43 @@ struct LevelSlider: View {
 					.shadow(color: .black.opacity(0.35), radius: 3, y: 1)
 					.offset(x: x)
 			}
-			.frame(height: hovering || dragging ? 14 : 10)
+			.frame(height: hovering || drag != nil ? 14 : 10)
 			.frame(maxHeight: .infinity)
 			.contentShape(Rectangle())
 			.gesture(
 				DragGesture(minimumDistance: 0)
 					.onChanged { g in
-						dragging = true
-						value = Double(min(max((g.location.x - knob / 2) / (geo.size.width - knob), 0), 1))
+						let v = Double(min(max((g.location.x - knob / 2) / (geo.size.width - knob), 0), 1))
+						drag = v
+						if Date().timeIntervalSince(written) >= 1.0 / 30 {
+							value = v
+							written = Date()
+						}
 					}
-					.onEnded { _ in dragging = false }
+					.onEnded { _ in
+						if let drag { value = drag }
+						drag = nil
+					}
 			)
 			.onHover { hovering = $0 }
-			.animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovering || dragging)
+			.animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovering || drag != nil)
 		}
 		.frame(height: 24)
+		.accessibilityElement()
+		.accessibilityLabel("Volume")
+		.accessibilityValue("\(Int((value * 100).rounded()))%")
+		.accessibilityAdjustableAction { direction in
+			switch direction {
+			case .increment: value = min(value + 0.05, 1)
+			case .decrement: value = max(value - 0.05, 0)
+			@unknown default: break
+			}
+		}
 	}
 }
 
 struct DeviceRow: View {
-	@EnvironmentObject var palette: Palette
+	@Environment(Palette.self) private var palette
 	let device: OutputDevice
 	let selected: Bool
 	let action: () -> Void

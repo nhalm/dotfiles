@@ -3,8 +3,13 @@ local icons = require("icons")
 local settings = require("settings")
 
 -- The popup is drawn by barpop, a SwiftUI app in helpers/ that sketchybar
--- starts like its event providers.
-sbar.exec("pkill -x barpop 2>/dev/null; $CONFIG_DIR/helpers/barpop/bin/barpop daemon &")
+-- starts like its event providers. The old one must be gone before the new
+-- one takes its lock. $PPID is this lua process; barpop exits with its
+-- parent, sketchybar.
+sbar.exec(
+  "pkill -x barpop 2>/dev/null; while pgrep -qx barpop; do sleep 0.05; done; "
+    .. "$CONFIG_DIR/helpers/barpop/bin/barpop daemon $(ps -o ppid= -p $PPID) &"
+)
 
 -- Hidden, but it carries the volume_change subscription, so it must update
 -- while not drawn.
@@ -87,10 +92,12 @@ local function volume_click(env)
     sbar.exec("open /System/Library/PreferencePanes/Sound.prefpane")
     return
   end
-  local rect = volume_icon:query().bounding_rects
-  for _, r in pairs(rect or {}) do
-    sbar.exec(string.format("$CONFIG_DIR/helpers/barpop/bin/barpop show volume %d %d", r.origin[1], r.size[1]))
-    return
+  local rects = {}
+  for _, r in pairs(volume_icon:query().bounding_rects or {}) do
+    table.insert(rects, string.format("%g,%g,%g,%g", r.origin[1], r.origin[2], r.size[1], r.size[2]))
+  end
+  if #rects > 0 then
+    sbar.exec("$CONFIG_DIR/helpers/barpop/bin/barpop show volume '" .. table.concat(rects, ";") .. "'")
   end
 end
 

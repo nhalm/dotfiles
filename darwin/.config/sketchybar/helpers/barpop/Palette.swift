@@ -1,22 +1,25 @@
+import Observation
 import SwiftUI
 
 // Rendered by matugen from templates/barpop.json; the fallback matches the
 // bar's static TokyoNight table.
-final class Palette: ObservableObject {
-	static let path = NSString(string: "~/.local/state/matugen/barpop.json").expandingTildeInPath
+@MainActor
+@Observable
+final class Palette {
+	nonisolated static let path = NSString(string: "~/.local/state/matugen/barpop.json").expandingTildeInPath
 
-	@Published var surface = Color(hex: 0x1a1b26)
-	@Published var container = Color(hex: 0x1f2335)
-	@Published var containerHigh = Color(hex: 0x24283b)
-	@Published var onSurface = Color(hex: 0xc0caf5)
-	@Published var onSurfaceVariant = Color(hex: 0x565f89)
-	@Published var primary = Color(hex: 0x7aa2f7)
-	@Published var onPrimary = Color(hex: 0x1a1b26)
-	@Published var primaryContainer = Color(hex: 0x3d59a1)
-	@Published var tertiary = Color(hex: 0xbb9af7)
-	@Published var outline = Color(hex: 0x292e42)
+	var surface = Color(hex: 0x1a1b26)
+	var container = Color(hex: 0x1f2335)
+	var containerHigh = Color(hex: 0x24283b)
+	var onSurface = Color(hex: 0xc0caf5)
+	var onSurfaceVariant = Color(hex: 0x565f89)
+	var primary = Color(hex: 0x7aa2f7)
+	var onPrimary = Color(hex: 0x1a1b26)
+	var primaryContainer = Color(hex: 0x3d59a1)
+	var tertiary = Color(hex: 0xbb9af7)
+	var outline = Color(hex: 0x292e42)
 
-	private var source: DispatchSourceFileSystemObject?
+	@ObservationIgnored private var source: DispatchSourceFileSystemObject?
 
 	init() {
 		load()
@@ -41,20 +44,21 @@ final class Palette: ObservableObject {
 	}
 
 	// matugen replaces the file, so the watch is re-armed on the new inode.
+	// Until the file exists, its directory is watched for it to appear.
 	private func watch() {
 		source?.cancel()
-		let fd = open(Palette.path, O_EVTONLY)
-		guard fd >= 0 else {
-			DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in self?.watch() }
-			return
-		}
+		source = nil
+		var fd = open(Palette.path, O_EVTONLY)
+		let missing = fd < 0
+		if missing { fd = open((Palette.path as NSString).deletingLastPathComponent, O_EVTONLY) }
+		guard fd >= 0 else { return }
 		let src = DispatchSource.makeFileSystemObjectSource(
-			fileDescriptor: fd, eventMask: [.write, .delete, .rename], queue: .main)
+			fileDescriptor: fd, eventMask: missing ? .write : [.write, .extend, .attrib, .delete, .rename], queue: .main)
 		src.setEventHandler { [weak self] in
-			guard let self else { return }
-			self.load()
-			if src.data.contains(.delete) || src.data.contains(.rename) {
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { self.watch(); self.load() }
+			MainActor.assumeIsolated {
+				guard let self else { return }
+				if missing || !src.data.isDisjoint(with: [.delete, .rename]) { self.watch() }
+				self.load()
 			}
 		}
 		src.setCancelHandler { close(fd) }

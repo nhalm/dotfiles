@@ -9,11 +9,12 @@ enum Messages: String {
 			Notification.Name(message.rawValue), object: nil, userInfo: info, deliverImmediately: true)
 	}
 
-	static func observe(_ message: Messages, _ handler: @escaping ([String: String]) -> Void) {
+	static func observe(_ message: Messages, _ handler: @escaping @MainActor ([String: String]) -> Void) {
 		DistributedNotificationCenter.default().addObserver(
 			forName: Notification.Name(message.rawValue), object: nil, queue: .main
 		) { note in
-			handler(note.userInfo as? [String: String] ?? [:])
+			let info = note.userInfo as? [String: String] ?? [:]
+			MainActor.assumeIsolated { handler(info) }
 		}
 	}
 }
