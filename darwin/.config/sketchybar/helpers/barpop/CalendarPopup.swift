@@ -6,7 +6,7 @@ struct CalendarPopup: View {
 	@Environment(Presentation.self) private var presentation
 
 	private static let clocks = [
-		("Seattle", "America/Los_Angeles"), ("London", "Europe/London"), ("Tokyo", "Asia/Tokyo"),
+		("NYC", "America/New_York"), ("SF", "America/Los_Angeles"), ("UTC", "UTC"),
 	]
 
 	var body: some View {
