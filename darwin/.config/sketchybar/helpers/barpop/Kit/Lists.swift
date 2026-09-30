@@ -83,7 +83,8 @@ struct ListItem: View {
 	// A trailing glyph, e.g. a lock; hoverChip replaces it while hovered.
 	var trailingSymbol: String?
 	var hoverChip: String?
-	// A figure on the right, e.g. a process's CPU share.
+	// A figure on the right, e.g. a process's CPU share. It changes without a
+	// transition: rows of live figures would keep the card redrawing.
 	var value: String?
 	// nil shows the row without a hover pill.
 	var action: (() -> Void)?
@@ -116,7 +117,6 @@ struct ListItem: View {
 					Image(systemName: trailingSymbol).font(Theme.Font.body).foregroundStyle(theme.textSecondary)
 				} else if let value {
 					Text(value).font(Theme.Font.body).monospacedDigit().foregroundStyle(theme.textSecondary)
-						.contentTransition(.numericText())
 				}
 			}
 			.frame(minHeight: 44)
@@ -125,7 +125,6 @@ struct ListItem: View {
 		.buttonStyle(RowStyle(hovering: hovering))
 		.disabled(action == nil)
 		.onHover { hovering = action != nil && $0 }
-		.animation(Motion.numeric, value: value)
 		.animation(Motion.hover, value: hovering)
 		.animation(Motion.select, value: isSelected)
 	}

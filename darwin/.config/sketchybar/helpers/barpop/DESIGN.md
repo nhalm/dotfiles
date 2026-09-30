@@ -65,7 +65,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `Chip(_:tone:pulsing:)` | Pulsing chip for something under way ("Applying…"); still under Reduce Motion |
 | `BarStrip([BarGroup(label:values:)])` | Levels 0…1 as 36pt vertical bars (accent fill on a `raised` track), equal widths 3pt apart; groups 12pt apart, captioned below (e.g. efficiency / performance cores) |
 | `SegmentedToggle(_ options:selection:)` | Two or three ways to show the same list (sort by CPU / memory) in a `Section` trailing accessory; 20pt segments on a `raised` capsule, chosen one `accentSoft` |
-| `Sparkline(…scale:height:)` · `ListItem(value:)` · `ListItem(action: nil)` | Fixed top value (100 for a percentage) and a taller chart; a trailing figure; a row with nothing to do shows no hover pill |
+| `Sparkline(…scale:height:)` · `ListItem(value:)` · `ListItem(action: nil)` | Fixed top value (100 for a percentage) and a taller chart; a trailing figure, changing without a transition; a row with nothing to do shows no hover pill |
 
 ## Sky (`Kit/Sky.swift`)
 
