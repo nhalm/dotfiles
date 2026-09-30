@@ -61,7 +61,14 @@ final class Media {
 
 	@ObservationIgnored private var process: Process?
 
-	init() { start() }
+	// A stream outlives a barpop that is killed, orphaned and idle until its
+	// next write; one left by an earlier barpop goes before this one starts.
+	init() {
+		Task {
+			_ = await Shell.output("pkill", "-P", "1", "-f", "mediaremote-adapter\\.pl .* stream")
+			start()
+		}
+	}
 
 	func togglePlayPause() { Shell.spawn("media-control", "toggle-play-pause") }
 	func next() { Shell.spawn("media-control", "next-track") }
