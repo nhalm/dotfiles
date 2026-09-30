@@ -59,6 +59,8 @@ return {
 	red = p.red,
 	green = p.green,
 	blue = p.blue,
+	-- barpop's accent: an item lights up in it while its popup is open.
+	accent = p.blue,
 	yellow = p.yellow,
 	orange = p.orange,
 	magenta = p.magenta,

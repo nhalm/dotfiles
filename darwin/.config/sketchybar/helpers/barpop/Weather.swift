@@ -86,34 +86,12 @@ final class Weather {
 
 	private nonisolated static func locate() async -> (lat: String, lon: String, place: String?)? {
 		let script = NSString(string: "~/.config/sketchybar/helpers/location.sh").expandingTildeInPath
-		let out = await run(script)
+		let out = await Shell.output(script)
 		let parts = out.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: "|", maxSplits: 1)
 		let ll = parts.first?.split(separator: ",") ?? []
 		guard ll.count == 2, Double(ll[0]) != nil, Double(ll[1]) != nil else { return nil }
 		let place = parts.count == 2 && parts[1] != ", " ? String(parts[1]) : nil
 		return (String(ll[0]), String(ll[1]), place)
-	}
-
-	private nonisolated static func run(_ args: String...) async -> String {
-		await withCheckedContinuation { cont in
-			let p = Process()
-			p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-			p.arguments = args
-			var env = ProcessInfo.processInfo.environment
-			env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:" + (env["PATH"] ?? "/usr/bin:/bin")
-			p.environment = env
-			let pipe = Pipe()
-			p.standardOutput = pipe
-			p.standardError = FileHandle.nullDevice
-			p.terminationHandler = { _ in
-				cont.resume(returning: String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self))
-			}
-			do { try p.run() } catch {
-				cont.resume(returning: "")
-				return
-			}
-			DispatchQueue.global().asyncAfter(deadline: .now() + 15) { if p.isRunning { p.terminate() } }
-		}
 	}
 
 	private nonisolated static func fetch(lat: String, lon: String) async -> Forecast? {

@@ -1,5 +1,7 @@
 -- ~/.config/sketchybar/items/widgets/weather.lua
+local colors = require("colors")
 local settings = require("settings")
+local barpop = require("helpers.barpop")
 
 -- === Compact chip (icon + temp) ===
 local weather = sbar.add("item", "widgets.weather", {
@@ -84,19 +86,17 @@ local function refresh_chip()
 end
 
 -- === Click behavior ===
--- Left click opens barpop's weather card under the item (see volume.lua).
 weather:subscribe("mouse.clicked", function(env)
 	if env.BUTTON == "right" then
 		sbar.exec([[open -a "Weather"]]) -- right click opens app
-		return
+	else
+		barpop.open(weather, "weather")
 	end
-	local rects = {}
-	for _, r in pairs(weather:query().bounding_rects or {}) do
-		table.insert(rects, string.format("%g,%g,%g,%g", r.origin[1], r.origin[2], r.size[1], r.size[2]))
-	end
-	if #rects > 0 then
-		sbar.exec("$CONFIG_DIR/helpers/barpop/bin/barpop show weather '" .. table.concat(rects, ";") .. "'")
-	end
+end)
+
+barpop.watch(weather, function(open)
+	local color = open and colors.accent or colors.white
+	weather:set({ icon = { color = color }, label = { color = color } })
 end)
 
 -- === Periodic updates ===

@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let weather = Weather()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
+	private var item = ""
 	private var mouseTimer: Timer?
 	private var outsideSince: Date?
 	private var clickMonitor: Any?
@@ -56,6 +57,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		hide()
 
 		anchor = rect
+		item = info["item"] ?? ""
+		Shell.trigger("barpop_popup", ["ITEM": item, "OPEN": "1"])
 		let panel = PopupPanel(name: name, content: content, palette: palette)
 		panel.presentation.close = { [weak self] in self?.hide() }
 		panel.onResize = { [weak self, weak panel] in
@@ -100,6 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		outsideSince = nil
 		guard let panel else { return }
 		self.panel = nil
+		Shell.trigger("barpop_popup", ["ITEM": item, "OPEN": "0"])
 		panel.ignoresMouseEvents = true
 		panel.presentation.dismiss { panel.orderOut(nil) }
 	}

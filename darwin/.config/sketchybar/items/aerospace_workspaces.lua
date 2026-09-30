@@ -1,4 +1,6 @@
--- AeroSpace workspaces for SketchyBar, with a separator between each.
+-- AeroSpace workspaces for SketchyBar: each number with its apps' glyphs,
+-- spaced apart like the items on the right. The focused one lights in the
+-- accent, as a bar item does while its popup is open.
 --
 -- Design follows the canonical FelixKratz pattern (SketchyBar discussion #599
 -- and SbarLua example/items/spaces.lua):
@@ -17,11 +19,8 @@ local app_icons = require("helpers.app_icons")
 sbar.add("event", "aerospace_workspace_change")
 
 local STYLE = {
-	highlight_height = 22,
-	focused_bg = colors.bg2,
-	focused_app_color = colors.white,
-	separator_color = colors.grey,
-	active_icon_highlight = colors.red,
+	focused_color = colors.accent,
+	active_app_color = colors.white,
 	inactive_icon_color = colors.white,
 	inactive_label_color = colors.grey,
 }
@@ -60,40 +59,23 @@ local workspaces = query_workspaces()
 
 local items = {}
 local slots = {}
-local highlights = {}
-local separators = {}
 local parts = {}
 local pinned_display = {}
 
 -- Each app glyph gets its own fixed-width slot, since the glyphs' own widths vary.
 -- A glyph is about 16px, so a slot leaves about 3px each side; GAP is the space
--- between every neighbour: number, glyphs and separators.
+-- between the number and its glyphs, SPACING the space between workspaces
+-- (the right side's gap between items).
 local MAX_APPS = 6
 local SLOT_WIDTH = 22
 local SLOT_SLACK = 3
 local GAP = 6
+local SPACING = 16
 
 -- Puts the first number as far from the edge as the calendar's text on the right.
-sbar.add("item", { position = "left", width = 12, padding_left = 0, padding_right = 0 })
+sbar.add("item", { position = "left", width = 18, padding_left = 0, padding_right = 0 })
 
-for i, ws in ipairs(workspaces) do
-	if i > 1 then
-		local sep = sbar.add("item", "aws.sep." .. ws, {
-			position = "left",
-			display = "active",
-			padding_left = 0,
-			padding_right = 0,
-			icon = { drawing = false },
-			label = {
-				string = "│",
-				color = STYLE.separator_color,
-				padding_left = 3,
-				padding_right = 3,
-			},
-		})
-		separators[ws] = sep
-	end
-
+for _, ws in ipairs(workspaces) do
 	local click = "aerospace workspace " .. ws
 	local item = sbar.add("item", "aws." .. ws, {
 		position = "left",
@@ -103,7 +85,7 @@ for i, ws in ipairs(workspaces) do
 		icon = {
 			font = { family = settings.font.numbers },
 			string = ws,
-			padding_left = GAP,
+			padding_left = 0,
 			padding_right = GAP - SLOT_SLACK,
 			color = STYLE.inactive_icon_color,
 		},
@@ -138,36 +120,13 @@ for i, ws in ipairs(workspaces) do
 		ws_parts[#ws_parts + 1] = slot
 	end
 
-	local tail = sbar.add("item", "aws.end." .. ws, {
-		position = "left",
-		display = "active",
-		width = GAP - SLOT_SLACK,
-		padding_left = 0,
-		padding_right = 0,
-		icon = { drawing = false },
-		label = { drawing = false },
-		click_script = click,
-	})
-	ws_parts[#ws_parts + 1] = tail
-
-	local names = {}
 	for _, part in ipairs(ws_parts) do
-		names[#names + 1] = part.name
 		part:subscribe("mouse.clicked", function(env)
 			if env.BUTTON == "right" then
 				sbar.exec("aerospace move-node-to-workspace " .. ws)
 			end
 		end)
 	end
-
-	highlights[ws] = sbar.add("bracket", "aws.hl." .. ws, names, {
-		background = {
-			color = colors.transparent,
-			border_width = 0,
-			height = STYLE.highlight_height,
-			corner_radius = 7,
-		},
-	})
 
 	items[ws] = item
 	parts[ws] = ws_parts
@@ -237,7 +196,7 @@ local function refresh()
 					local focus_moved = new_focus ~= focused_ws
 					focused_ws = new_focus
 
-					-- A separator draws only when a shown workspace precedes it on the same display.
+					-- Spacing goes before a workspace only when a shown one precedes it on the same display.
 					local shown_on = {}
 					for _, ws in ipairs(workspaces) do
 						local m = meta[ws] or { display = 1, focused = false, visible = false }
@@ -253,15 +212,13 @@ local function refresh()
 							for _, part in ipairs(parts[ws]) do
 								part:set({ display = m.display })
 							end
-							if separators[ws] then
-								separators[ws]:set({ display = m.display })
-							end
 						end
 
 						local drawing = show and "on" or "off"
-						items[ws]:set({ drawing = drawing })
-						parts[ws][#parts[ws]]:set({ drawing = drawing })
-						highlights[ws]:set({ drawing = drawing })
+						items[ws]:set({
+							drawing = drawing,
+							icon = { padding_left = shown_on[m.display] and SPACING or 0 },
+						})
 						for k, slot in ipairs(slots[ws]) do
 							local app = apps[k]
 							local label = app and glyph(app) or (k == 1 and "—" or "")
@@ -274,18 +231,16 @@ local function refresh()
 						local function paint()
 							items[ws]:set({
 								icon = {
-									color = selected and STYLE.active_icon_highlight or STYLE.inactive_icon_color,
+									color = selected and STYLE.focused_color or STYLE.inactive_icon_color,
 								},
 							})
 							for k, slot in ipairs(slots[ws]) do
-								local lit = selected and apps[k] ~= nil and apps[k] == focused_app
-								slot:set({
-									label = { color = lit and STYLE.focused_app_color or STYLE.inactive_label_color },
-								})
+								local color = STYLE.inactive_label_color
+								if selected and apps[k] ~= nil then
+									color = apps[k] == focused_app and STYLE.focused_color or STYLE.active_app_color
+								end
+								slot:set({ label = { color = color } })
 							end
-							highlights[ws]:set({
-								background = { color = selected and STYLE.focused_bg or colors.transparent },
-							})
 						end
 						if focus_moved then
 							sbar.animate("tanh", 12, paint)
@@ -293,9 +248,6 @@ local function refresh()
 							paint()
 						end
 
-						if separators[ws] then
-							separators[ws]:set({ drawing = (show and shown_on[m.display]) and "on" or "off" })
-						end
 						if show then
 							shown_on[m.display] = true
 						end
