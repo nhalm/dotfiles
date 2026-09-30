@@ -79,6 +79,10 @@ struct ListItem: View {
 	// An app's own icon, in place of the symbol tile.
 	var icon: NSImage?
 	var isSelected = false
+	var variableValue: Double?
+	// A trailing glyph, e.g. a lock; hoverChip replaces it while hovered.
+	var trailingSymbol: String?
+	var hoverChip: String?
 	let action: () -> Void
 	@State private var hovering = false
 
@@ -88,7 +92,8 @@ struct ListItem: View {
 				if let icon {
 					AppIcon(image: icon)
 				} else {
-					IconTile(symbol: symbol, tone: isSelected ? .accent : .neutral, lifted: hovering)
+					IconTile(
+						symbol: symbol, tone: isSelected ? .accent : .neutral, lifted: hovering, variableValue: variableValue)
 				}
 				VStack(alignment: .leading, spacing: 1) {
 					Text(title).font(Theme.Font.body).foregroundStyle(theme.text).lineLimit(1)
@@ -102,6 +107,10 @@ struct ListItem: View {
 						.font(Theme.Font.caption)
 						.foregroundStyle(theme.accent)
 						.transition(.scale(scale: 0.6).combined(with: .opacity))
+				} else if hovering, let hoverChip {
+					Chip(hoverChip)
+				} else if let trailingSymbol {
+					Image(systemName: trailingSymbol).font(Theme.Font.body).foregroundStyle(theme.textSecondary)
 				}
 			}
 			.frame(minHeight: 44)
@@ -138,9 +147,10 @@ struct IconTile: View {
 	var tone = Tone.neutral
 	// Inside a hovered row the neutral tile steps up so it stays visible.
 	var lifted = false
+	var variableValue: Double?
 
 	var body: some View {
-		Image(systemName: symbol)
+		Image(systemName: symbol, variableValue: variableValue)
 			.font(.system(size: 13))
 			.foregroundStyle(tone == .accent ? theme.onAccentSoft : theme.textSecondary)
 			.frame(width: 28, height: 28)
@@ -187,7 +197,7 @@ private struct DividedKey: ContainerValueKey {
 }
 
 extension ContainerValues {
-	fileprivate var divided: Bool {
+	var divided: Bool {
 		get { self[DividedKey.self] }
 		set { self[DividedKey.self] = newValue }
 	}

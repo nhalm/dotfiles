@@ -95,11 +95,14 @@ extension HeroHeader where Accessory == EmptyView {
 struct HeaderToggle: View {
 	@Environment(\.theme) private var theme
 	@Environment(\.isEnabled) private var isEnabled
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 	let symbol: String
 	var variableValue: Double?
 	let isOn: Bool
 	// Off, but the user should turn it on: a critical ring that pulses.
 	var attention = false
+	// Looking for something to connect to.
+	var searching = false
 	let label: String
 	let action: () -> Void
 
@@ -113,6 +116,9 @@ struct HeaderToggle: View {
 				.foregroundStyle(isOn ? theme.onAccent : (alert ? theme.critical : theme.textSecondary))
 				.symbolEffect(.bounce, value: isOn)
 				.symbolEffect(.pulse, isActive: alert)
+				.symbolEffect(
+					.variableColor.iterative.dimInactiveLayers.reversing, options: .repeating,
+					isActive: searching && !reduceMotion)
 				.contentTransition(.symbolEffect(.replace))
 				.frame(width: 40, height: 40)
 				.background(Circle().fill(isOn ? theme.accent : theme.raised))

@@ -55,6 +55,10 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `HeroHeader(…eyebrowImage:)` | An app icon (14pt) beside the eyebrow, e.g. what is playing |
 | `Artwork(image:placeholder:)` | Cover art the content width, own aspect clamped 16:9…1:1, r.tile, hairline; placeholder glyph on raised 16:9 |
 | `ScrubBar(duration:isPlaying:elapsed:seek:) { controls }` | Track position: symbol-less `LevelSlider` (symbols now optional), elapsed / −remaining caption, controls centred; ticks while playing, seeks when a drag settles |
+| `Sparkline(values:tone: .accent / .alt)` | Recent values as a 28pt line and 12% area, 0 at the bottom; a `StatTile` `footer:` |
+| `CopyRow(_:value:symbol:variableValue:)` | A `ValueRow` copied on click: copy glyph on hover, "Copied" in accent for 1.2s, pill covers adjacent hairlines |
+| `.whileOpen { … }` | Runs async work (live sampling) from open until the popup starts closing |
+| `HeaderToggle(searching:)` · `ListItem(variableValue:trailingSymbol:hoverChip:)` · `IconTile(variableValue:)` · `StatTile(…) {} footer: {}` | Searching animates the symbol's layers; a trailing glyph (lock) swaps for a chip ("Join") on hover |
 
 ## Sky (`Kit/Sky.swift`)
 

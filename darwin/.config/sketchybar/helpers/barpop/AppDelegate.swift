@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let agenda = Agenda()
 	let bluetooth = Bluetooth()
 	let media = Media()
+	let wifi = Wifi()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var item = ""
@@ -51,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 			bluetooth.refresh()
 			return AnyView(BluetoothPopup().environment(bluetooth))
 		case "media": return AnyView(MediaPopup().environment(media))
+		case "wifi": return AnyView(WifiPopup().environment(wifi))
 		default: return nil
 		}
 	}

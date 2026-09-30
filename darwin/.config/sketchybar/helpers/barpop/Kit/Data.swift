@@ -1,8 +1,9 @@
 import Charts
 import SwiftUI
 
-// A changing number with its label, on a raised tile.
-struct StatTile<Accessory: View>: View {
+// A changing number with its label, on a raised tile; the footer (a
+// Sparkline) runs along the bottom.
+struct StatTile<Accessory: View, Footer: View>: View {
 	@Environment(\.theme) private var theme
 	let label: String
 	var symbol: String?
@@ -10,6 +11,7 @@ struct StatTile<Accessory: View>: View {
 	var unit: String?
 	var detail: String?
 	@ViewBuilder var accessory: Accessory
+	@ViewBuilder var footer: Footer
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: Space.s1) {
@@ -30,6 +32,7 @@ struct StatTile<Accessory: View>: View {
 			if let detail {
 				Text(detail).font(Theme.Font.caption).foregroundStyle(theme.textSecondary).lineLimit(1)
 			}
+			footer.padding(.top, Space.s2)
 		}
 		.padding(Space.s3)
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -37,7 +40,18 @@ struct StatTile<Accessory: View>: View {
 	}
 }
 
-extension StatTile where Accessory == EmptyView {
+extension StatTile where Footer == EmptyView {
+	init(
+		label: String, symbol: String? = nil, value: String, unit: String? = nil, detail: String? = nil,
+		@ViewBuilder accessory: () -> Accessory
+	) {
+		self.init(
+			label: label, symbol: symbol, value: value, unit: unit, detail: detail, accessory: accessory,
+			footer: { EmptyView() })
+	}
+}
+
+extension StatTile where Accessory == EmptyView, Footer == EmptyView {
 	init(label: String, symbol: String? = nil, value: String, unit: String? = nil, detail: String? = nil) {
 		self.init(label: label, symbol: symbol, value: value, unit: unit, detail: detail, accessory: { EmptyView() })
 	}
