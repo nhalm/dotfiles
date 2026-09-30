@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	private var clickMonitor: Any?
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
+		MenuBar.showBackground()
 		MenuBar.setAlpha(0)
 		Messages.observe(.show) { [weak self] info in self?.show(info) }
 		Messages.observe(.hide) { [weak self] _ in self?.hide() }
