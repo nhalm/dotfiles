@@ -53,6 +53,8 @@ final class Performance {
 	@ObservationIgnored private let sampler = Sampler()
 	@ObservationIgnored private var monitors = 0
 	@ObservationIgnored private let boot = Performance.bootTime()
+	// By pid, so a row keeps the same icon image from one sample to the next.
+	@ObservationIgnored private var apps: [pid_t: NSRunningApplication?] = [:]
 
 	init() {
 		NotificationCenter.default.addObserver(
@@ -67,7 +69,7 @@ final class Performance {
 					history = Array((history + [cpu.total]).suffix(Self.history))
 					if monitors == 0 { load = cpu }
 				}
-				memory = mem
+				if monitors == 0 { memory = mem }
 				try? await Task.sleep(for: .seconds(5))
 			}
 		}
@@ -83,12 +85,14 @@ final class Performance {
 		while !Task.isCancelled {
 			async let top = Self.top(sort)
 			let s = await sampler.live()
+			let rows = await top
+			// Assigned together, so each sample runs one round of number transitions.
 			load = s.load
 			cores = s.cores
 			loadAverage = s.loadAverage
 			memory = s.memory
 			uptime = boot.map { Date().timeIntervalSince($0) }
-			publish(await top)
+			publish(rows)
 			try? await Task.sleep(for: .seconds(1.5))
 		}
 	}
@@ -118,8 +122,13 @@ final class Performance {
 	// A list for a sort the user has since changed is dropped.
 	private func publish(_ top: (sort: Sort, rows: [Row])) {
 		guard top.sort == sort else { return }
+		apps = Dictionary(
+			top.rows.map { r in
+				(r.pid, apps[r.pid] ?? NSRunningApplication(processIdentifier: r.pid).flatMap { $0.activationPolicy == .regular ? $0 : nil })
+			}
+		) { a, _ in a }
 		processes = top.rows.map { r in
-			let app = NSRunningApplication(processIdentifier: r.pid).flatMap { $0.activationPolicy == .regular ? $0 : nil }
+			let app = apps[r.pid] ?? nil
 			return TopProcess(
 				id: r.pid, name: app?.localizedName ?? r.comm, cpu: r.cpu, memory: r.rss, icon: app?.icon, isApp: app != nil)
 		}
