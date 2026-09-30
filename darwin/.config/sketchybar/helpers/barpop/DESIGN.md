@@ -51,6 +51,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `MonthGrid(month:today:selected:marked:onSelect:)` | Month in locale weeks; today accent, selected accentSoft, marked midnights get an `accentAlt` dot, out-of-month `textTertiary` |
 | `StripItem(title:subtitle:tone:chip:action:)` | `ListItem` for categorised things (events): 3pt `accent`/`accentAlt` strip leads, optional `Chip` trails |
 | `ClockFace(date:timeZone:)` | 28pt analogue clock for a tile accessory; `text` dial by day, `deep` dial 18–06 |
+| `Image(symbol:variableValue:)` | An SF Symbol by name, falling back to the ones macOS keeps private (`bluetooth`); `HeaderToggle` draws with it |
 
 ## Sky (`Kit/Sky.swift`)
 

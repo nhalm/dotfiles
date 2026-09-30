@@ -104,7 +104,7 @@ struct HeaderToggle: View {
 		Button {
 			withAnimation(Motion.toggle) { action() }
 		} label: {
-			Image(systemName: symbol, variableValue: variableValue)
+			Image(symbol: symbol, variableValue: variableValue)
 				.font(.system(size: 17))
 				.foregroundStyle(isOn ? theme.onAccent : (alert ? theme.critical : theme.textSecondary))
 				.symbolEffect(.bounce, value: isOn)

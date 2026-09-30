@@ -28,6 +28,11 @@ local icons = {
       _0 = "􀛪",
       charging = "􀢋"
     },
+    -- Nerd Font glyphs: SF Pro has no Bluetooth symbol.
+    bluetooth = {
+      on = "󰂯",
+      off = "󰂲",
+    },
     wifi = {
       upload = "􀄨",
       download = "􀄩",
@@ -69,6 +74,10 @@ local icons = {
       _25 = "",
       _0 = "",
       charging = ""
+    },
+    bluetooth = {
+      on = "󰂯",
+      off = "󰂲",
     },
     wifi = {
       upload = "",
