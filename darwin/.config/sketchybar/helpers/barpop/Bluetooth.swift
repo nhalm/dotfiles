@@ -116,7 +116,8 @@ final class Bluetooth {
 	}
 }
 
-// IOBluetooth calls back on the thread that registered, the main one here.
+// IOBluetooth calls back on its own queues when CoreBluetooth reports LE
+// links, so every event hops to the main actor.
 private final class Observer: NSObject, Sendable {
 	enum Event: Sendable {
 		case power, connected, disconnected
@@ -128,7 +129,8 @@ private final class Observer: NSObject, Sendable {
 	init(_ send: @escaping @MainActor @Sendable (Event) -> Void) { self.send = send }
 
 	private func post(_ event: Event) {
-		MainActor.assumeIsolated { send(event) }
+		let send = send
+		Task { @MainActor in send(event) }
 	}
 
 	@objc func power(_ note: Notification) { post(.power) }
