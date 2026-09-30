@@ -12,14 +12,15 @@ enum Shell {
 			let p = process(args)
 			let pipe = Pipe()
 			p.standardOutput = pipe
-			p.terminationHandler = { _ in
-				cont.resume(returning: String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self))
-			}
 			do { try p.run() } catch {
 				cont.resume(returning: "")
 				return
 			}
 			DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { if p.isRunning { p.terminate() } }
+			// Read while it runs: a tool that fills the pipe blocks until it is drained.
+			DispatchQueue.global().async {
+				cont.resume(returning: String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self))
+			}
 		}
 	}
 
