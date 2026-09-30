@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let palette = Palette()
 	let audio = Audio()
 	let weather = Weather()
+	let battery = Battery()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var item = ""
@@ -37,6 +38,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		case "weather":
 			weather.refreshIfStale()
 			return AnyView(WeatherPopup().environment(weather))
+		case "battery":
+			battery.sampleEnergy()
+			return AnyView(BatteryPopup().environment(battery))
 		default: return nil
 		}
 	}

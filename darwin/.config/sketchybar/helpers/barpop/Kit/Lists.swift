@@ -62,6 +62,8 @@ struct ListItem: View {
 	let title: String
 	var subtitle: String?
 	let symbol: String
+	// An app's own icon, in place of the symbol tile.
+	var icon: NSImage?
 	var isSelected = false
 	let action: () -> Void
 	@State private var hovering = false
@@ -69,7 +71,11 @@ struct ListItem: View {
 	var body: some View {
 		Button(action: action) {
 			HStack(spacing: Space.s3) {
-				IconTile(symbol: symbol, tone: isSelected ? .accent : .neutral, lifted: hovering)
+				if let icon {
+					AppIcon(image: icon)
+				} else {
+					IconTile(symbol: symbol, tone: isSelected ? .accent : .neutral, lifted: hovering)
+				}
 				VStack(alignment: .leading, spacing: 1) {
 					Text(title).font(Theme.Font.body).foregroundStyle(theme.text).lineLimit(1)
 					if let subtitle {
@@ -204,18 +210,30 @@ struct EmptyState: View {
 }
 
 struct Chip: View {
+	enum Tone { case neutral, accent, critical }
+
 	@Environment(\.theme) private var theme
 	let text: String
+	let tone: Tone
 
-	init(_ text: String) { self.text = text }
+	init(_ text: String, tone: Tone = .accent) {
+		self.text = text
+		self.tone = tone
+	}
 
 	var body: some View {
+		let (fg, bg): (Color, Color) =
+			switch tone {
+			case .neutral: (theme.textSecondary, theme.raised)
+			case .accent: (theme.onAccentSoft, theme.accentSoft)
+			case .critical: (theme.critical, theme.critical.opacity(0.18))
+			}
 		Text(text)
 			.font(Theme.Font.caption)
-			.foregroundStyle(theme.onAccentSoft)
+			.foregroundStyle(fg)
 			.padding(.horizontal, Space.s2 + 2)
 			.frame(height: 20)
-			.background(Capsule().fill(theme.accentSoft))
+			.background(Capsule().fill(bg))
 	}
 }
 
