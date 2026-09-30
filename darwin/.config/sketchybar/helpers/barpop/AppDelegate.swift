@@ -6,7 +6,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let palette = Palette()
 	let audio = Audio()
 	private var panel: PopupPanel?
-	private var screen: NSScreen?
 	private var anchor = NSRect.zero
 	private var mouseTimer: Timer?
 	private var outsideSince: Date?
@@ -20,7 +19,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		NSWorkspace.shared.notificationCenter.addObserver(
 			forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
 		) { [weak self] _ in MainActor.assumeIsolated { self?.reset() } }
-		trackDevices()
 	}
 
 	// Display changes and sleep can bring the native menu bar back.
@@ -33,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 	private func view(for popup: String) -> AnyView? {
 		switch popup {
-		case "volume": return AnyView(VolumeView().environment(palette).environment(audio))
+		case "volume": return AnyView(VolumePopup().environment(audio))
 		default: return nil
 		}
 	}
@@ -54,12 +52,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		hide()
 
 		anchor = rect
-		let panel = PopupPanel(name: name, content: content)
-		panel.onCancel = { [weak self] in self?.hide() }
+		let panel = PopupPanel(name: name, content: content, palette: palette)
+		panel.presentation.close = { [weak self] in self?.hide() }
+		panel.onResize = { [weak self, weak panel] in
+			guard let self, let panel, panel === self.panel else { return }
+			self.place(panel, on: screen)
+		}
 		place(panel, on: screen)
 		panel.orderFrontRegardless()
 		self.panel = panel
-		self.screen = screen
 		startTracking()
 	}
 
@@ -75,23 +76,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	// The card keeps 8pt from the screen edges; the transparent margin around
-	// it may overhang them.
+	// it may overhang them. The panel's top meets the item's rect, so the
+	// card's top margin is the gap below the bar.
 	private func place(_ panel: PopupPanel, on screen: NSScreen) {
 		let size = panel.fittingSize
-		let edge = 8 - PopupPanel.margin
-		let x = min(max(anchor.midX - size.width / 2, screen.frame.minX + edge), screen.frame.maxX - edge - size.width)
-		panel.setFrame(
-			NSRect(x: x, y: anchor.minY - 6 - size.height, width: size.width, height: size.height), display: true)
-	}
-
-	private func trackDevices() {
-		withObservationTracking { _ = audio.devices } onChange: { [weak self] in
-			Task { @MainActor in
-				guard let self else { return }
-				if let panel = self.panel, let screen = self.screen { self.place(panel, on: screen) }
-				self.trackDevices()
-			}
-		}
+		let m = PopupPanel.margin
+		let x = min(
+			max(anchor.midX - size.width / 2, screen.frame.minX + 8 - m.leading),
+			screen.frame.maxX - 8 + m.trailing - size.width)
+		panel.setFrame(NSRect(x: x, y: anchor.minY - size.height, width: size.width, height: size.height), display: true)
+		panel.presentation.anchorX = anchor.midX - x - m.leading
 	}
 
 	private func hide() {
@@ -103,12 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		guard let panel else { return }
 		self.panel = nil
 		panel.ignoresMouseEvents = true
-		NSAnimationContext.runAnimationGroup { ctx in
-			ctx.duration = 0.12
-			panel.animator().alphaValue = 0
-		} completionHandler: {
-			MainActor.assumeIsolated { panel.orderOut(nil) }
-		}
+		panel.presentation.dismiss { panel.orderOut(nil) }
 	}
 
 	private func startTracking() {
@@ -154,19 +143,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 // Non-activating, so opening it never steals focus from the app you're in.
 @MainActor
 final class PopupPanel: NSPanel {
-	// Room around the card for its shadow.
-	static let margin: CGFloat = 20
+	// Room around the card for its shadow. The top is the card's gap below
+	// the item: the bar's 4pt beyond its items plus 6pt, which the opening
+	// tab spans to touch the bar.
+	static let margin = EdgeInsets(top: 10, leading: 16, bottom: 24, trailing: 16)
 
 	let name: String
-	var onCancel: (() -> Void)?
-	private let host: NSHostingController<AnyView>
+	let presentation = Presentation()
+	var onResize: (() -> Void)?
+	private var host: NSHostingController<AnyView>?
 
-	init(name: String, content: AnyView) {
+	init(name: String, content: AnyView, palette: Palette) {
 		self.name = name
-		host = NSHostingController(rootView: AnyView(content.padding(Self.margin)))
-		host.sizingOptions = []
 		super.init(
 			contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+		let root = Themed { content }
+			.environment(palette)
+			.environment(presentation)
+			.fixedSize()
+			.onGeometryChange(for: CGSize.self) { $0.size } action: { [weak self] _ in self?.onResize?() }
+			.padding(Self.margin)
+		let host = NSHostingController(rootView: AnyView(root))
+		host.sizingOptions = []
+		self.host = host
 		isFloatingPanel = true
 		level = .popUpMenu
 		collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
@@ -178,9 +177,9 @@ final class PopupPanel: NSPanel {
 	}
 
 	// Sized by the caller, so the top edge stays put when the content grows.
-	var fittingSize: NSSize { host.sizeThatFits(in: NSSize(width: 10_000, height: 10_000)) }
+	var fittingSize: NSSize { host?.sizeThatFits(in: NSSize(width: 10_000, height: 10_000)) ?? .zero }
 
 	override var canBecomeKey: Bool { true }
 
-	override func cancelOperation(_ sender: Any?) { onCancel?() }
+	override func cancelOperation(_ sender: Any?) { presentation.close() }
 }

@@ -18,6 +18,21 @@ struct OutputDevice: Identifiable, Equatable {
 		default: return "hifispeaker"
 		}
 	}
+
+	var kind: String {
+		switch transport {
+		case kAudioDeviceTransportTypeBuiltIn: return "Built-in"
+		case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE: return "Bluetooth"
+		case kAudioDeviceTransportTypeHDMI: return "HDMI"
+		case kAudioDeviceTransportTypeDisplayPort: return "DisplayPort"
+		case kAudioDeviceTransportTypeThunderbolt: return "Thunderbolt"
+		case kAudioDeviceTransportTypeUSB: return "USB"
+		case kAudioDeviceTransportTypeAirPlay: return "AirPlay"
+		case kAudioDeviceTransportTypeVirtual: return "Virtual device"
+		case kAudioDeviceTransportTypeAggregate: return "Aggregate device"
+		default: return "Output"
+		}
+	}
 }
 
 // The default output device's volume and mute, and the devices to pick from.
