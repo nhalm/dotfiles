@@ -33,8 +33,8 @@ struct Forecast: Sendable {
 	let days: [Day]
 }
 
-// Location from CoreLocationCLI (its Location permission, and macOS's place
-// names), forecast from Open-Meteo. The last good forecast is kept through
+// Location from helpers/location.sh (CoreLocationCLI, with its last good fix
+// when macOS has none), forecast from Open-Meteo. The last good forecast is kept through
 // failures.
 @MainActor
 @Observable
@@ -85,7 +85,8 @@ final class Weather {
 	}
 
 	private nonisolated static func locate() async -> (lat: String, lon: String, place: String?)? {
-		let out = await run("CoreLocationCLI", "--format", "%latitude,%longitude|%locality, %administrativeArea")
+		let script = NSString(string: "~/.config/sketchybar/helpers/location.sh").expandingTildeInPath
+		let out = await run(script)
 		let parts = out.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: "|", maxSplits: 1)
 		let ll = parts.first?.split(separator: ",") ?? []
 		guard ll.count == 2, Double(ll[0]) != nil, Double(ll[1]) != nil else { return nil }

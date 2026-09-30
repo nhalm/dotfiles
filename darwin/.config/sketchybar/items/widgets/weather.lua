@@ -23,8 +23,8 @@ local function get_location(callback)
 		callback(location_cache)
 		return
 	end
-	sbar.exec([[CoreLocationCLI --format "%latitude,%longitude" 2>/dev/null | tr -d '\n' || echo ""]], function(out)
-		location_cache = (out or ""):match("^(%-?[%d%.]+,%-?[%d%.]+)$") or ""
+	sbar.exec("$CONFIG_DIR/helpers/location.sh", function(out)
+		location_cache = (out or ""):match("^(%-?[%d%.]+,%-?[%d%.]+)|") or ""
 		location_cache_ts = os.time()
 		callback(location_cache)
 	end)
