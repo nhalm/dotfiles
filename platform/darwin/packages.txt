@@ -82,3 +82,6 @@ karabiner-elements
 # sets the desktop picture through NSWorkspace, which needs no automation
 # permission -- System Events prompts for one on every new launcher window
 wallpaper
+# now playing for the bar, through MediaRemote, which macOS 15.4+ closed
+# to other callers
+media-control

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // The popup's headline: what it is, its one value, and an optional
@@ -11,6 +12,8 @@ struct HeroHeader<Accessory: View>: View {
 	let eyebrow: String
 	var eyebrowSymbol: String?
 	var eyebrowChip: Chip?
+	// An app's icon beside the eyebrow, e.g. the source of what is playing.
+	var eyebrowImage: NSImage?
 	let value: String
 	var unit: String?
 	var subtitle: String?
@@ -40,6 +43,7 @@ struct HeroHeader<Accessory: View>: View {
 			VStack(alignment: .leading, spacing: Space.s1) {
 				HStack(spacing: Space.s1 + 2) {
 					if let eyebrowSymbol { Image(systemName: eyebrowSymbol).imageScale(.small) }
+					if let eyebrowImage { Image(nsImage: eyebrowImage).resizable().frame(width: 14, height: 14) }
 					Text(eyebrow).lineLimit(1)
 					if let eyebrowChip { eyebrowChip.padding(.leading, Space.s1) }
 				}

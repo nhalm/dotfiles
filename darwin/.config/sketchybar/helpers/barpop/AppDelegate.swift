@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let battery = Battery()
 	let agenda = Agenda()
 	let bluetooth = Bluetooth()
+	let media = Media()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var item = ""
@@ -49,6 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		case "bluetooth":
 			bluetooth.refresh()
 			return AnyView(BluetoothPopup().environment(bluetooth))
+		case "media": return AnyView(MediaPopup().environment(media))
 		default: return nil
 		}
 	}

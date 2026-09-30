@@ -6,8 +6,8 @@ struct LevelSlider: View {
 	@Environment(\.theme) private var theme
 	let label: String
 	@Binding var value: Double
-	let minSymbol: String
-	let maxSymbol: String
+	var minSymbol: String?
+	var maxSymbol: String?
 	var isEnabled = true
 	// Shown, still adjustable, but not in effect (muted).
 	var dimmed = false
@@ -17,9 +17,9 @@ struct LevelSlider: View {
 
 	var body: some View {
 		HStack(spacing: Space.s3) {
-			Image(systemName: minSymbol)
+			if let minSymbol { Image(systemName: minSymbol) }
 			track
-			Image(systemName: maxSymbol)
+			if let maxSymbol { Image(systemName: maxSymbol) }
 		}
 		.font(.system(size: 13))
 		.foregroundStyle(theme.textSecondary)

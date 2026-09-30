@@ -52,6 +52,9 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `StripItem(title:subtitle:tone:chip:action:)` | `ListItem` for categorised things (events): 3pt `accent`/`accentAlt` strip leads, optional `Chip` trails |
 | `ClockFace(date:timeZone:)` | 28pt analogue clock for a tile accessory; `text` dial by day, `deep` dial 18–06 |
 | `Image(symbol:variableValue:)` | An SF Symbol by name, falling back to the ones macOS keeps private (`bluetooth`); `HeaderToggle` draws with it |
+| `HeroHeader(…eyebrowImage:)` | An app icon (14pt) beside the eyebrow, e.g. what is playing |
+| `Artwork(image:placeholder:)` | Cover art the content width, own aspect clamped 16:9…1:1, r.tile, hairline; placeholder glyph on raised 16:9 |
+| `ScrubBar(duration:isPlaying:elapsed:seek:) { controls }` | Track position: symbol-less `LevelSlider` (symbols now optional), elapsed / −remaining caption, controls centred; ticks while playing, seeks when a drag settles |
 
 ## Sky (`Kit/Sky.swift`)
 
