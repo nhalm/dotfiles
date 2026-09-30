@@ -45,7 +45,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `FooterLink(_:detail:action:)` | Last line, hairline above; closes the popup |
 | `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising |
 | `AppIcon(image:)` | An app's own icon at `IconTile` size; `ListItem(icon:)` shows it in place of the tile |
-| `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.neutral` / `.accent` / `.critical` |
+| `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.accent` / `.critical` |
 | `Section(_:content:trailing:)` / `SectionLabel(_:accessory:)` | Section whose label trails views (e.g. `IconButton`s) instead of text |
 | `IconButton(symbol:label:action:)` | 24pt glyph-only action, `pressed` circle on hover |
 | `MonthGrid(month:today:selected:marked:onSelect:)` | Month in locale weeks; today accent, selected accentSoft, marked midnights get an `accentAlt` dot, out-of-month `textTertiary` |
@@ -53,8 +53,8 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `ClockFace(date:timeZone:)` | 28pt analogue clock for a tile accessory; `text` dial by day, `deep` dial 18–06 |
 | `Image(symbol:variableValue:)` | An SF Symbol by name, falling back to the ones macOS keeps private (`bluetooth`); `HeaderToggle` draws with it |
 | `HeroHeader(…eyebrowImage:)` | An app icon (14pt) beside the eyebrow, e.g. what is playing |
-| `Artwork(image:placeholder:)` | Cover art the content width, own aspect clamped 16:9…1:1, r.tile, hairline; placeholder glyph on raised 16:9 |
-| `ScrubBar(duration:isPlaying:elapsed:seek:) { controls }` | Track position: symbol-less `LevelSlider` (symbols now optional), elapsed / −remaining caption, controls centred; ticks while playing, seeks when a drag settles |
+| `Artwork(image:)` | Cover art the content width, own aspect clamped 16:9…1:1, r.tile, hairline; music note on raised 16:9 when there is none |
+| `ScrubBar(duration:isPlaying:elapsed:seek:) { controls }` | Track position: symbol-less `LevelSlider`, elapsed / −remaining caption, controls centred; ticks while playing, seeks when a drag settles |
 | `Sparkline(values:tone: .accent / .alt)` | Recent values as a 28pt line and 12% area, 0 at the bottom; a `StatTile` `footer:` |
 | `CopyRow(_:value:symbol:variableValue:)` | A `ValueRow` copied on click: copy glyph on hover, "Copied" in accent for 1.2s, pill covers adjacent hairlines |
 | `.whileOpen { … }` | Runs async work (live sampling) from open until the popup starts closing |

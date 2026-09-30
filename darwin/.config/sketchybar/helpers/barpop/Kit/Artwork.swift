@@ -7,7 +7,6 @@ import SwiftUI
 struct Artwork: View {
 	@Environment(\.theme) private var theme
 	let image: NSImage?
-	var placeholder = "music.note"
 
 	var body: some View {
 		let aspect = image.map { min(max($0.size.width / max($0.size.height, 1), 1), 16 / 9) } ?? 16 / 9
@@ -18,7 +17,7 @@ struct Artwork: View {
 				if let image {
 					Image(nsImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fill)
 				} else {
-					Image(systemName: placeholder).font(.system(size: 28)).foregroundStyle(theme.textTertiary)
+					Image(systemName: "music.note").font(.system(size: 28)).foregroundStyle(theme.textTertiary)
 				}
 			}
 			.background(theme.raised)
