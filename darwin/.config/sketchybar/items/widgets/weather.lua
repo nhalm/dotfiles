@@ -68,23 +68,24 @@ local h6 = add_row("widgets.weather.row.h6", "Next 6h", "—")
 -- Location Services is denied (falls back to a multi-second prompt path).
 local LOCATION_TTL = 1800
 local location_cache = nil
+local place_cache = nil
 local location_cache_ts = 0
 
 local function get_location(callback)
 	if location_cache ~= nil and (os.time() - location_cache_ts) < LOCATION_TTL then
-		callback(location_cache)
+		callback(location_cache, place_cache)
 		return
 	end
+	-- The place name comes from macOS's reverse geocoding: wttr.in names the
+	-- nearest weather area instead, often a different town.
 	sbar.exec(
-		[[CoreLocationCLI -format "%latitude,%longitude" 2>/dev/null | tr ' ' ',' | tr -d '\n' || echo ""]],
+		[[CoreLocationCLI --format "%latitude,%longitude|%locality, %administrativeArea" 2>/dev/null | tr -d '\n' || echo ""]],
 		function(out)
-			if out and out ~= "" and out:match("^%-?[%d%.]+,%-?[%d%.]+$") then
-				location_cache = out
-			else
-				location_cache = ""
-			end
+			local coords, place = (out or ""):match("^(%-?[%d%.]+,%-?[%d%.]+)|(.*)$")
+			location_cache = coords or ""
+			place_cache = (place and place ~= ", ") and place or nil
 			location_cache_ts = os.time()
-			callback(location_cache)
+			callback(location_cache, place_cache)
 		end
 	)
 end
@@ -144,7 +145,7 @@ end
 
 -- === POPUP REFRESH (details) — harden PATH for jq when launched by services
 local function refresh_popup()
-	get_location(function(loc)
+	get_location(function(loc, place)
 		local url = string.format("https://wttr.in/%s?format=j1&lang=en&u", loc)
 		local cmd = [[/bin/bash -lc '
     export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
@@ -181,7 +182,7 @@ local function refresh_popup()
 				lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7], lines[8], lines[9]
 
 			header:set({
-				icon = { string = location },
+				icon = { string = place or location },
 				label = { string = tostring(tempF) .. "°F" },
 			})
 			cond:set({ label = { string = desc } })

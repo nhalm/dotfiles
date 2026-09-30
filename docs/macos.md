@@ -102,11 +102,18 @@ right.
 | `calendar` | `%a. %d %b.` + `%H:%M`, 30s; click opens Calendar |
 | `weather` | wttr.in, location from `CoreLocationCLI` cached 30 min, exponential backoff to 6h on failure; right-click opens Weather |
 | `battery` | icon only, red at 20% or below; popup shows charge and time remaining |
-| `volume` | icon only; popup has a slider and one row per output device via `SwitchAudioSource`; scroll adjusts, right-click opens Sound preferences |
+| `volume` | icon only; click opens the barpop volume card (level, mute, output devices); scroll adjusts, right-click opens Sound preferences |
 | `wifi` | icon only; popup shows SSID, hostname, IP, subnet, router and throughput from the compiled `network_load` provider, each address row copying itself on click |
 
 Popups close once the mouse leaves the icon and the popup. The SSID needs
 `ipconfig setverbose 1`, which post-link sets.
+
+`helpers/barpop` is a small SwiftUI app for popups sketchybar cannot draw.
+The helpers makefile builds it with `swiftc` and the volume item starts it;
+`barpop show <popup> <x> <width>` opens one under an item. It reads its colours
+from matugen's `barpop.json`, and while running it keeps the native menu bar
+invisible when the pointer reaches the top edge (SkyLight's
+`SLSSetMenuBarInsetAndAlpha`, as yabai's `menubar_opacity`).
 
 `colors.lua` falls back to a static TokyoNight Storm table when the
 matugen-generated `matugen-colors.lua` beside it does not exist.

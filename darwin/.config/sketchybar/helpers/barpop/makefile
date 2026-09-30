@@ -1,0 +1,7 @@
+SOURCES := $(wildcard *.swift)
+
+bin/barpop: $(SOURCES) | bin
+	swiftc -O -swift-version 5 -o bin/barpop $(SOURCES)
+
+bin:
+	mkdir -p bin

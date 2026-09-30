@@ -72,7 +72,7 @@ return {
 		border = p.bar_border,
 	},
 	popup = {
-		bg = with_alpha(p.popup_bg, 0.75),
+		bg = p.popup_bg,
 		border = p.popup_border,
 	},
 
