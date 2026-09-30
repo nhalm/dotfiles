@@ -45,6 +45,7 @@ local icons = {
       forward = "􀊌",
       play_pause = "􀊈",
     },
+    wallpaper = "􀏫", -- photo.on.rectangle
   },
 
   -- Alternative NerdFont icons
@@ -91,6 +92,7 @@ local icons = {
       forward = "",
       play_pause = "",
     },
+    wallpaper = "",
   },
 }
 

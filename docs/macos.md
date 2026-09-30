@@ -64,7 +64,7 @@ caps+Shift acts on the window rather than the focus.
 | `caps+Shift+h/j/k/l` | move window |
 | `caps+Tab` | workspace back and forth |
 | `caps+Shift+Tab`, `caps+M` | move workspace to next monitor |
-| `caps+w` | wallpaper picker |
+| `caps+w` | wallpaper popup |
 | `Alt+h/j/k/l` | resize nvim splits / herdr panes — herdr-splits.nvim, not AeroSpace |
 | `Alt+minus` / `Alt+equal` | resize smart ∓50 |
 | `Alt+comma` / `Alt+slash` | accordion / tiles layout |
@@ -104,13 +104,17 @@ right.
 | `battery` | icon only, red at 20% or below; popup shows charge and time remaining |
 | `volume` | icon only; click opens the barpop volume card (level, mute, output devices); scroll adjusts, right-click opens Sound preferences |
 | `wifi` | icon only; popup shows SSID, hostname, IP, subnet, router and throughput from the compiled `network_load` provider, each address row copying itself on click |
+| `wallpaper` | icon only; click or `caps+w` opens the barpop wallpaper popup (see Theming); right-click opens the folder |
 
-Popups close once the mouse leaves the icon and the popup. The SSID needs
+Popups close once the mouse leaves the icon and the popup; one opened by a
+shortcut stays until the pointer has been over it. The SSID needs
 `ipconfig setverbose 1`, which post-link sets.
 
 `helpers/barpop` is a small SwiftUI app for popups sketchybar cannot draw.
 The helpers makefile builds it with `swiftc` and the volume item starts it;
-`barpop show <popup> <x> <width>` opens one under an item. It reads its colours
+`barpop show <popup> <rects> <item> [keyboard]` opens one under an item, and
+`sketchybar --trigger barpop_open POPUP=<popup>` does it for an item that
+calls `barpop.shortcut`. It reads its colours
 from matugen's `barpop.json`, and while running it keeps the native menu bar
 invisible when the pointer reaches the top edge (SkyLight's
 `SLSSetMenuBarInsetAndAlpha`, as yabai's `menubar_opacity`).
@@ -151,9 +155,10 @@ wallpaper.sh <image>     # set and re-render
 wallpaper.sh --restore   # re-apply the remembered one
 ```
 
-`caps+w` opens `wallpaper-picker.sh` in a Ghostty window AeroSpace floats. The
-float rule matches on window title and must sit **above** the general Ghostty
-rule, which would otherwise pull it to workspace 1.
+`caps+w`, or the bar's wallpaper item, opens barpop's wallpaper popup: type to
+filter, arrows to move, return or a click to apply through `wallpaper.sh`.
+Hovering one previews its palette (`matugen --dry-run`, nothing written). The
+shortcut sends `sketchybar --trigger barpop_open POPUP=wallpaper`.
 
 Wallpapers come from `nhalm/wallpapers`, cloned to `~/.local/share/wallpapers` by
 `install_wallpapers`. `WALLPAPER_DIR` overrides.
@@ -205,7 +210,7 @@ only the current Space.
 | Core | bash, git, git-lfs, openssh, openssl, gnupg, moreutils, gnu-sed, coreutils, grep, wget, stow, p7zip, dos2unix, autoconf |
 | Shell | mise, starship |
 | Editor | neovim, tree-sitter-cli |
-| Search | ack, ripgrep, fd, fzf, tree, bat, glow, chafa |
+| Search | ack, ripgrep, fd, fzf, tree, bat, glow |
 | Data | jq, yq |
 | System | htop |
 | Git | gh |

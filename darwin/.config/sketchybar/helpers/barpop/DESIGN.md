@@ -59,6 +59,10 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `CopyRow(_:value:symbol:variableValue:)` | A `ValueRow` copied on click: copy glyph on hover, "Copied" in accent for 1.2s, pill covers adjacent hairlines |
 | `.whileOpen { … }` | Runs async work (live sampling) from open until the popup starts closing |
 | `HeaderToggle(searching:)` · `ListItem(variableValue:trailingSymbol:hoverChip:)` · `IconTile(variableValue:)` · `StatTile(…) {} footer: {}` | Searching animates the symbol's layers; a trailing glyph (lock) swaps for a chip ("Join") on hover |
+| `SearchField(text:prompt:onMove:onSubmit:)` | 32pt filter on `raised`, r.row, `accent` 70% ring while focused; takes the keyboard on appear (makes the non-activating panel key), arrows → `onMove`, return → `onSubmit`, esc closes |
+| `ThumbGrid(columns:) { Thumbnail(image:label:isCurrent:isHighlighted:onHover:action:) }` | Pictures to choose, 8pt apart; 16:10, r.row, hairline; hover/highlight scales 1.03 with a `text` ring, current has an `accent` ring 2pt out and a check badge |
+| `SwatchStrip(_ swatches: [Swatch])` | Colours in equal columns: 28pt r.icon chip, role caption, mono hex; animates with `Motion.palette` |
+| `Chip(_:tone:pulsing:)` | Pulsing chip for something under way ("Applying…"); still under Reduce Motion |
 
 ## Sky (`Kit/Sky.swift`)
 
@@ -75,7 +79,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 2. All text on the 20pt content edge; hover pills bleed outward, nothing indents.
 3. Card padding 20 · top-level children 20 apart · last section → footer 16.
 4. Accent fill means on / now / current; never decoration.
-5. Choosable → `ListItem`; facts → `ValueRow`; changing numbers → `StatTile`; spans of time → `ArcProgress` / `TrendChart`. `.regular` for lists, `.wide` for charts and grids.
+5. Choosable → `ListItem`; images → `ThumbGrid`; facts → `ValueRow`; changing numbers → `StatTile`; spans of time → `ArcProgress` / `TrendChart`. `.regular` for lists, `.wide` for charts and grids.
 
 ## Motion (`Motion`)
 

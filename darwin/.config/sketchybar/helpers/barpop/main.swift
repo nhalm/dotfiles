@@ -3,9 +3,10 @@ import AppKit
 // barpop draws sketchybar's richer popups in its own panel, and keeps the
 // native menu bar from showing over the bar.
 //   barpop daemon <pid>              run the app until sketchybar (pid) exits
-//   barpop show <name> <rects> <item>
+//   barpop show <name> <rects> <item> [keyboard]
 //                                    open a popup under a sketchybar item; rects
-//                                    are its "x,y,w,h;..." bounding_rects
+//                                    are its "x,y,w,h;..." bounding_rects;
+//                                    keyboard: opened by a shortcut
 //   barpop hide
 let args = CommandLine.arguments
 var delegate: AppDelegate?
@@ -26,10 +27,11 @@ case "daemon" where args.count >= 3:
 	app.setActivationPolicy(.accessory)
 	app.run()
 case "show" where args.count >= 5:
-	Messages.post(.show, ["popup": args[2], "rects": args[3], "item": args[4]])
+	Messages.post(
+		.show, ["popup": args[2], "rects": args[3], "item": args[4], "keyboard": args.count > 5 && args[5] == "keyboard" ? "1" : "0"])
 case "hide":
 	Messages.post(.hide, [:])
 default:
-	FileHandle.standardError.write(Data("usage: barpop daemon <pid> | show <name> <rects> <item> | hide\n".utf8))
+	FileHandle.standardError.write(Data("usage: barpop daemon <pid> | show <name> <rects> <item> [keyboard] | hide\n".utf8))
 	exit(1)
 }

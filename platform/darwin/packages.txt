@@ -33,8 +33,6 @@ fzf
 tree
 bat
 glow
-# terminal image rendering, for the wallpaper picker's thumbnails
-chafa
 
 # data
 jq

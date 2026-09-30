@@ -131,7 +131,7 @@ non-interactive shells reach the agent too.
 | Bar | sketchybar | quickshell |
 | Notifications | — | swaync |
 | Launcher | Raycast | hyprlauncher, fuzzel for dmenu pickers |
-| Wallpaper picker | fzf + chafa in a floating Ghostty | quickshell carousel |
+| Wallpaper picker | barpop popup from sketchybar | quickshell carousel |
 | Display layout | — | nwg-displays |
 | Key remapping | Karabiner | — |
 | Containers | Colima + docker CLI | native docker |
@@ -175,7 +175,7 @@ orphaned silently on the next major bump.
 |---|---|---|
 | Language runtime | mise | node, go, rust, ruby, lua, bun |
 | Same version on both machines | `conf.d/shared.toml` | herdr, lazygit, zoxide, ccstatusline |
-| Compiled tool the package manager carries | `packages.txt` | ripgrep, fzf, jq, neovim, starship, chafa |
+| Compiled tool the package manager carries | `packages.txt` | ripgrep, fzf, jq, neovim, starship |
 | Tool it does *not* carry, but a registry does | `conf.d/<os>.toml` | `cargo:matugen`, `npm:ccusage` |
 | GUI application | `casks.txt` | ghostty, raycast, 1password |
 

@@ -11,11 +11,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let bluetooth = Bluetooth()
 	let media = Media()
 	let wifi = Wifi()
+	let wallpapers = Wallpapers()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var item = ""
 	private var mouseTimer: Timer?
 	private var outsideSince: Date?
+	// Opened by a shortcut, it closes on leaving only once the pointer has
+	// been over it.
+	private var awaitingPointer = false
 	private var clickMonitor: Any?
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
@@ -53,6 +57,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 			return AnyView(BluetoothPopup().environment(bluetooth))
 		case "media": return AnyView(MediaPopup().environment(media))
 		case "wifi": return AnyView(WifiPopup().environment(wifi))
+		case "wallpaper":
+			wallpapers.open()
+			return AnyView(WallpaperPopup().environment(wallpapers))
 		default: return nil
 		}
 	}
@@ -74,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 		anchor = rect
 		item = info["item"] ?? ""
+		awaitingPointer = info["keyboard"] == "1"
 		Shell.trigger("barpop_popup", ["ITEM": item, "OPEN": "1"])
 		let panel = PopupPanel(name: name, content: content, palette: palette)
 		panel.presentation.close = { [weak self] in self?.hide() }
@@ -150,6 +158,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 		if inside {
 			outsideSince = nil
+			awaitingPointer = false
+		} else if awaitingPointer {
+			return
 		} else if let since = outsideSince {
 			if Date().timeIntervalSince(since) > 0.3 { hide() }
 		} else {

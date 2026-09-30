@@ -1,7 +1,7 @@
 import Foundation
 
 // Runs tools from the bar's environment; launched from sketchybar or open(1),
-// barpop's PATH may lack Homebrew.
+// barpop's PATH may lack Homebrew and mise (matugen).
 enum Shell {
 	nonisolated static func output(_ args: String..., timeout: TimeInterval = 15) async -> String {
 		await output(args, timeout: timeout)
@@ -59,7 +59,9 @@ enum Shell {
 		p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
 		p.arguments = args
 		var env = ProcessInfo.processInfo.environment
-		env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:" + (env["PATH"] ?? "/usr/bin:/bin")
+		env["PATH"] =
+			NSString(string: "~/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:").expandingTildeInPath
+			+ (env["PATH"] ?? "/usr/bin:/bin")
 		p.environment = env
 		p.standardError = FileHandle.nullDevice
 		return p

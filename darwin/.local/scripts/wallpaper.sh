@@ -4,7 +4,8 @@
 #   wallpaper.sh <image>    set a specific image
 #   wallpaper.sh --restore  re-apply the remembered one
 #
-# Choosing one interactively is wallpaper-picker.sh's job (caps+w).
+# Choosing one interactively is barpop's wallpaper popup (caps+w, or the
+# bar's wallpaper item).
 
 set -uo pipefail
 

@@ -237,12 +237,16 @@ struct Chip: View {
 	enum Tone { case neutral, accent, critical }
 
 	@Environment(\.theme) private var theme
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 	let text: String
 	let tone: Tone
+	// Something under way, e.g. "Applying…".
+	let pulsing: Bool
 
-	init(_ text: String, tone: Tone = .accent) {
+	init(_ text: String, tone: Tone = .accent, pulsing: Bool = false) {
 		self.text = text
 		self.tone = tone
+		self.pulsing = pulsing
 	}
 
 	var body: some View {
@@ -252,12 +256,17 @@ struct Chip: View {
 			case .accent: (theme.onAccentSoft, theme.accentSoft)
 			case .critical: (theme.critical, theme.critical.opacity(0.18))
 			}
-		Text(text)
+		let chip = Text(text)
 			.font(Theme.Font.caption)
 			.foregroundStyle(fg)
 			.padding(.horizontal, Space.s2 + 2)
 			.frame(height: 20)
 			.background(Capsule().fill(bg))
+		if pulsing && !reduceMotion {
+			PhaseAnimator([1, 0.5]) { chip.opacity($0) } animation: { _ in .easeInOut(duration: 0.8) }
+		} else {
+			chip
+		}
 	}
 }
 
