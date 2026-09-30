@@ -1,11 +1,10 @@
 -- barpop (helpers/barpop) draws the richer popups. The first require starts
--- it: the old one must be gone before the new one takes its lock, and $PPID
--- is this lua process, so barpop exits with sketchybar. It runs as an app so
--- macOS asks for permissions in its own name.
-sbar.exec(
-	"pkill -x barpop 2>/dev/null; while pgrep -qx barpop; do sleep 0.05; done; "
-		.. "open -g $CONFIG_DIR/helpers/barpop/bin/barpop.app --args daemon $(ps -o ppid= -p $PPID)"
-)
+-- it: the old one must be gone before the new one takes its lock, and it
+-- exits with sketchybar. It runs as an app so macOS asks for permissions in
+-- its own name.
+-- pgrep skips its own ancestors, sketchybar among them, without -a.
+local launch = "open -g $CONFIG_DIR/helpers/barpop/bin/barpop.app --args daemon $(pgrep -axn sketchybar)"
+sbar.exec("pkill -x barpop 2>/dev/null; while pgrep -qx barpop; do sleep 0.05; done; " .. launch)
 
 -- barpop triggers this with ITEM and OPEN=1/0 as a popup opens and closes.
 sbar.add("event", "barpop_popup")
@@ -19,8 +18,10 @@ function M.open(item, popup)
 		table.insert(rects, string.format("%g,%g,%g,%g", r.origin[1], r.origin[2], r.size[1], r.size[2]))
 	end
 	if #rects > 0 then
+		-- If barpop has died, start it again before asking it for the popup.
 		sbar.exec(string.format(
-			"$CONFIG_DIR/helpers/barpop/bin/barpop show %s '%s' %s",
+			"pgrep -qx barpop || { %s; sleep 1; }; $CONFIG_DIR/helpers/barpop/bin/barpop show %s '%s' %s",
+			launch,
 			popup,
 			table.concat(rects, ";"),
 			item.name
