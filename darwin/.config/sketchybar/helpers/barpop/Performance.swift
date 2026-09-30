@@ -138,7 +138,10 @@ final class Performance {
 		let out = await Shell.output("ps", "-Aceo", "pid=,pcpu=,rss=,comm=", sort == .cpu ? "-r" : "-m")
 		let rows = out.split(separator: "\n").lazy.compactMap { line -> Row? in
 			let cols = line.split(separator: " ", maxSplits: 3, omittingEmptySubsequences: true)
-			guard cols.count == 4, let pid = pid_t(cols[0]), let cpu = Double(cols[1]), let rss = UInt64(cols[2]) else {
+			// ps writes %cpu in the locale's decimal separator.
+			guard cols.count == 4, let pid = pid_t(cols[0]), let cpu = Double(cols[1].replacing(",", with: ".")),
+				let rss = UInt64(cols[2])
+			else {
 				return nil
 			}
 			return Row(pid: pid, cpu: cpu, rss: rss * 1024, comm: String(cols[3]))
