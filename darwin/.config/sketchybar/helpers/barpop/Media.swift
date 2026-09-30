@@ -104,12 +104,20 @@ final class Media {
 		guard now != self.now else { return }
 		let old = self.now
 		self.now = now
-		if now?.artwork != old?.artwork { artwork = now?.artwork.flatMap(Self.thumbnail) }
+		if now?.artwork != old?.artwork { loadArtwork(now?.artwork) }
 		if now?.bundleID != old?.bundleID || now?.pid != old?.pid { source = now.flatMap(Self.source) }
 		if now?.title != old?.title || now?.artist != old?.artist || now?.isPlaying != old?.isPlaying {
 			Shell.trigger(
 				"barpop_media",
 				["TITLE": now?.title ?? "", "ARTIST": now?.artist ?? "", "PLAYING": now?.isPlaying == true ? "1" : "0"])
+		}
+	}
+
+	private func loadArtwork(_ data: Data?) {
+		Task {
+			let cg = await Task.detached { data.flatMap(Self.thumbnail) }.value
+			guard now?.artwork == data else { return }
+			artwork = cg.map { NSImage(cgImage: $0, size: NSSize(width: $0.width, height: $0.height)) }
 		}
 	}
 
@@ -125,16 +133,14 @@ final class Media {
 	}
 
 	// Browsers hand over full-size video frames; the popup needs ~600px.
-	private static func thumbnail(_ data: Data) -> NSImage? {
-		guard let src = CGImageSourceCreateWithData(data as CFData, nil),
-			let cg = CGImageSourceCreateThumbnailAtIndex(
-				src, 0,
-				[
-					kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceThumbnailMaxPixelSize: 600,
-					kCGImageSourceCreateThumbnailWithTransform: true,
-				] as CFDictionary)
-		else { return nil }
-		return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+	private nonisolated static func thumbnail(_ data: Data) -> CGImage? {
+		guard let src = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+		return CGImageSourceCreateThumbnailAtIndex(
+			src, 0,
+			[
+				kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceThumbnailMaxPixelSize: 600,
+				kCGImageSourceCreateThumbnailWithTransform: true,
+			] as CFDictionary)
 	}
 }
 

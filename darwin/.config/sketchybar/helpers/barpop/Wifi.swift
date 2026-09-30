@@ -133,7 +133,7 @@ final class Wifi {
 		scanning = true
 		Task {
 			let known = await Self.preferred(interface)
-			let cached = Self.cached()
+			let cached = await Task.detached { Self.cached() }.value
 			if !cached.isEmpty { networks = Self.merge(cached, known: known) }
 			let found = await Task.detached { Self.scanNetworks() }.value
 			lastScan = Date()
@@ -221,7 +221,7 @@ final class Wifi {
 		return networks(found)
 	}
 
-	private static func cached() -> [WifiNetwork] {
+	private nonisolated static func cached() -> [WifiNetwork] {
 		networks(CWWiFiClient.shared().interface()?.cachedScanResults() ?? [])
 	}
 
