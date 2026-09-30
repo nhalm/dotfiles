@@ -49,8 +49,9 @@ esac
 set_picture() {
 	command -v wallpaper >/dev/null 2>&1 &&
 		wallpaper set "$IMAGE" >/dev/null 2>&1 && return 0
-	osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$IMAGE\"" \
-		>/dev/null 2>&1
+	osascript -e 'on run argv' \
+		-e 'tell application "System Events" to tell every desktop to set picture to item 1 of argv' \
+		-e 'end run' "$IMAGE" >/dev/null 2>&1
 }
 set_picture || echo "wallpaper: could not set the desktop picture" >&2
 
