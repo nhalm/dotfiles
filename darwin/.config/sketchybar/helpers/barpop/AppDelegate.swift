@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	let media = Media()
 	let wifi = Wifi()
 	let wallpapers = Wallpapers()
+	let performance = Performance()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var item = ""
@@ -60,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		case "wallpaper":
 			wallpapers.open()
 			return AnyView(WallpaperPopup().environment(wallpapers))
+		case "performance": return AnyView(PerformancePopup().environment(performance))
 		default: return nil
 		}
 	}
