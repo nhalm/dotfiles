@@ -18,6 +18,11 @@ local app_icons = require("helpers.app_icons")
 
 sbar.add("event", "aerospace_workspace_change")
 
+-- aerospace pushes its events over its socket; the helper turns each into
+-- aerospace_workspace_change, so the app glyphs follow new, moved and closed
+-- windows as well as workspace switches.
+sbar.exec("pkill -f helpers/aerospace_events.sh; $CONFIG_DIR/helpers/aerospace_events.sh &")
+
 local STYLE = {
 	focused_color = colors.accent,
 	active_app_color = colors.white,
