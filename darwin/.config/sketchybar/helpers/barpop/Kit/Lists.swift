@@ -4,10 +4,16 @@ struct SectionLabel: View {
 	@Environment(\.theme) private var theme
 	let title: String
 	var trailing: String?
+	var accessory: AnyView?
 
 	init(_ title: String, trailing: String? = nil) {
 		self.title = title
 		self.trailing = trailing
+	}
+
+	init(_ title: String, @ViewBuilder accessory: () -> some View) {
+		self.title = title
+		self.accessory = AnyView(HStack(spacing: Space.s1) { accessory() })
 	}
 
 	var body: some View {
@@ -15,6 +21,7 @@ struct SectionLabel: View {
 			Text(title)
 			Spacer(minLength: Space.s2)
 			if let trailing { Text(trailing).lineLimit(1) }
+			accessory
 		}
 		.font(Theme.Font.label)
 		.foregroundStyle(theme.textSecondary)
@@ -27,6 +34,7 @@ struct Section<Content: View>: View {
 	@Environment(\.theme) private var theme
 	let label: String
 	var trailing: String?
+	var accessory: AnyView?
 	@ViewBuilder let content: Content
 
 	init(_ label: String, trailing: String? = nil, @ViewBuilder content: () -> Content) {
@@ -35,9 +43,15 @@ struct Section<Content: View>: View {
 		self.content = content()
 	}
 
+	init(_ label: String, @ViewBuilder content: () -> Content, @ViewBuilder trailing: () -> some View) {
+		self.label = label
+		self.content = content()
+		accessory = AnyView(trailing())
+	}
+
 	var body: some View {
 		VStack(alignment: .leading, spacing: Space.s2) {
-			SectionLabel(label, trailing: trailing)
+			if let accessory { SectionLabel(label) { accessory } } else { SectionLabel(label, trailing: trailing) }
 			Group(subviews: content) { rows in
 				VStack(alignment: .leading, spacing: 0) {
 					ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
@@ -101,7 +115,7 @@ struct ListItem: View {
 }
 
 // The hover pill bleeds past the content edge so text stays on it.
-private struct RowStyle: ButtonStyle {
+struct RowStyle: ButtonStyle {
 	@Environment(\.theme) private var theme
 	let hovering: Bool
 

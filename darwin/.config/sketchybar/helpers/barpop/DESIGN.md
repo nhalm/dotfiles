@@ -46,6 +46,11 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising |
 | `AppIcon(image:)` | An app's own icon at `IconTile` size; `ListItem(icon:)` shows it in place of the tile |
 | `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.neutral` / `.accent` / `.critical` |
+| `Section(_:content:trailing:)` / `SectionLabel(_:accessory:)` | Section whose label trails views (e.g. `IconButton`s) instead of text |
+| `IconButton(symbol:label:action:)` | 24pt glyph-only action, `pressed` circle on hover |
+| `MonthGrid(month:today:selected:marked:onSelect:)` | Month in locale weeks; today accent, selected accentSoft, marked midnights get an `accentAlt` dot, out-of-month `textTertiary` |
+| `StripItem(title:subtitle:tone:chip:action:)` | `ListItem` for categorised things (events): 3pt `accent`/`accentAlt` strip leads, optional `Chip` trails |
+| `ClockFace(date:timeZone:)` | 28pt analogue clock for a tile accessory; `text` dial by day, `deep` dial 18–06 |
 
 ## Sky (`Kit/Sky.swift`)
 
