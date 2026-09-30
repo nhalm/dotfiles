@@ -18,6 +18,7 @@ One opaque card, one left edge, regular weights; hierarchy from size and colour 
 | `accentAlt` | `tertiary` — second series, markers |
 | `hairline` / `separator` | `outline_variant` 70% / 60% |
 | `critical` | `error` — only when the user should act |
+| `sky.*` | literal sky hues mixed toward `primary_container`, `surface`, `tertiary`, `on_surface`, `outline_variant`, `primary` |
 
 Type (`Theme.Font`): `display` 44 light rounded mono-digits, tracking −0.9 · `displayUnit` 22 light rounded · `title` 22, −0.2 · `headline` 17 rounded · `emptyTitle` 15 · `body` 13 · `label` 12 · `caption` 11. Regular weight otherwise; no bold, no caps. Units in `textSecondary` at about half size.
 
@@ -28,13 +29,29 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | Component | Purpose |
 |---|---|
 | `PopupCard(width: .regular 320 / .wide 340)` | The card: padding, spacing, emergence, anchor light, stagger |
-| `HeroHeader(eyebrow:value:unit:subtitle:style:dimmed:) { accessory }` | Headline value; accessory is one `HeaderToggle` or nothing |
+| `HeroHeader(eyebrow:eyebrowSymbol:value:unit:subtitle:style:dimmed:backdrop:) { accessory }` | Headline value; accessory is one `HeaderToggle` or nothing; `backdrop: .sky(condition, isNight:)` |
 | `HeaderToggle(symbol:variableValue:isOn:label:action:)` | The popup's one primary switch, 40pt circle |
 | `LevelSlider(label:value:minSymbol:maxSymbol:isEnabled:dimmed:)` | Continuous level; `dimmed` = adjustable but not in effect |
 | `Section(_:trailing:) { … }` / `SectionLabel` | Labelled group, 8pt to content, 2pt between rows |
 | `ListItem(title:subtitle:symbol:isSelected:action:)` | Something to choose; hover pill bleeds 8pt, check when selected |
 | `IconTile(symbol:tone:)` | 28pt leading glyph tile, neutral or accent |
+| `ValueRow(_:symbol:note:) { value }` | A fact; consecutive rows in a `Section` get hairlines |
+| `Meter(range:in:marker:labels:)` | A low…high range within wider bounds, marker = now |
+| `StatTile(label:symbol:value:unit:detail:) { accessory }` / `StatGrid(columns:)` | Changing numbers on raised tiles, equal widths, 8pt gap |
+| `Compass(degrees:)` | Direction arrow for a tile accessory |
+| `TrendChart(values:bars:xLabels:format:)` | Swift Charts line + area, bars 0…100 along the bottom, now point with halo |
+| `ArcProgress(progress:start:end:)` | Progress through a span of time as an arc; nil = track only |
+| `EmptyState(symbol:title:message:action:)` / `Chip` | Replaces hero and sections when there is nothing to show |
 | `FooterLink(_:detail:action:)` | Last line, hairline above; closes the popup |
+
+## Sky (`Kit/Sky.swift`)
+
+`SkyScene(condition: .clear | .partlyCloudy | .cloudy | .rain | .snow | .storm, isNight:)`, drawn behind `HeroHeader` and bled 20pt to the card's top and sides, 16pt below; the card's shape clips it.
+- Gradient `sky.day*`/`sky.night*`, mixed toward `sky.cloudDark` when overcast (0.35 day / 0.15 night; storm 0.55 / 0.3).
+- Sun (day clear/partly): halo rings breathe ±6% over 5s. Moon crescent + glow and 7 twinkling stars (3s) at night unless cloudy/storm.
+- Clouds drift ±10pt over 7s each way; dark clouds for rain/storm and at night. Rain: 34 slanted strokes, 0.9s loop. Snow: 22 flakes, 4s. Storm: flash every 5s.
+- Hills: far hill `sky.farHill*`, near hill `card`, so the sky settles into the card. No liquid motion.
+- Text over the sky uses `text` 85% for secondary lines. Reduce Motion freezes the scene.
 
 ## Composition
 
@@ -42,7 +59,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 2. All text on the 20pt content edge; hover pills bleed outward, nothing indents.
 3. Card padding 20 · top-level children 20 apart · last section → footer 16.
 4. Accent fill means on / now / current; never decoration.
-5. Choosable → `ListItem`. `.regular` for lists, `.wide` for charts and grids.
+5. Choosable → `ListItem`; facts → `ValueRow`; changing numbers → `StatTile`; spans of time → `ArcProgress` / `TrendChart`. `.regular` for lists, `.wide` for charts and grids.
 
 ## Motion (`Motion`)
 
@@ -51,4 +68,4 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 - Stagger: each top-level child fades and rises 4pt, `easeOut(0.22).delay(0.1 + 0.035·i)`, i ≤ 4.
 - Collapse: content `easeIn(0.08)`, then shape → 0 `easeIn(0.16)`, then `orderOut` at 0.26s.
 - Numeric `snappy(0.22)` · hover `easeOut(0.12)` · slider engage `spring(0.25, 0.8)` · toggle `spring(0.3, 0.7)` + bounce · selection `spring(0.3, 0.75)` · palette change `easeInOut(0.45)`.
-- Reduce Motion: shape starts full, card fades `easeOut(0.15)` in and out, no stagger.
+- Reduce Motion: shape starts full, card fades `easeOut(0.15)` in and out, no stagger, no halo, sky frozen.

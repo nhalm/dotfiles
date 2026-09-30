@@ -18,6 +18,23 @@ struct Theme {
 	let hairline: Color
 	let separator: Color
 	let critical: Color
+	let sky: Sky
+
+	// The weather illustration's only literal hues, each pulled toward a role.
+	struct Sky {
+		let dayTop: Color
+		let dayBottom: Color
+		let nightTop: Color
+		let nightBottom: Color
+		let sun: Color
+		let moon: Color
+		let cloud: Color
+		let cloudDark: Color
+		let rain: Color
+		let farHillDay: Color
+		let farHillNight: Color
+	}
+
 	init(_ r: Roles = Roles()) {
 		card = r.surfaceContainer
 		raised = r.surfaceContainerHigh
@@ -34,6 +51,19 @@ struct Theme {
 		hairline = r.outlineVariant.opacity(0.7)
 		separator = r.outlineVariant.opacity(0.6)
 		critical = r.error
+		let dayBottom = Color(hex: 0x8cbcec).mix(with: r.primaryContainer, by: 0.6)
+		sky = Sky(
+			dayTop: Color(hex: 0x3a7de0).mix(with: r.primaryContainer, by: 0.52),
+			dayBottom: dayBottom,
+			nightTop: Color(hex: 0x060a1c).mix(with: r.surface, by: 0.3),
+			nightBottom: Color(hex: 0x2a3860).mix(with: r.primaryContainer, by: 0.5),
+			sun: Color(hex: 0xffcb52).mix(with: r.tertiary, by: 0.22),
+			moon: r.onSurface.mix(with: r.tertiary, by: 0.08),
+			cloud: Color.white.mix(with: r.onSurface, by: 0.4),
+			cloudDark: Color(hex: 0x4b5772).mix(with: r.outlineVariant, by: 0.4),
+			rain: Color(hex: 0x9cc6ff).mix(with: r.primary, by: 0.45),
+			farHillDay: r.surfaceContainer.mix(with: dayBottom, by: 0.35),
+			farHillNight: r.primaryContainer.mix(with: r.surface, by: 0.45))
 	}
 
 	enum Font {

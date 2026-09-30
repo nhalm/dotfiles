@@ -5,6 +5,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
 	let palette = Palette()
 	let audio = Audio()
+	let weather = Weather()
 	private var panel: PopupPanel?
 	private var anchor = NSRect.zero
 	private var mouseTimer: Timer?
@@ -32,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	private func view(for popup: String) -> AnyView? {
 		switch popup {
 		case "volume": return AnyView(VolumePopup().environment(audio))
+		case "weather":
+			weather.refreshIfStale()
+			return AnyView(WeatherPopup().environment(weather))
 		default: return nil
 		}
 	}

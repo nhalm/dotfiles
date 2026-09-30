@@ -1,9 +1,11 @@
 import SwiftUI
 
 // The popup's headline: what it is, its one value, and an optional
-// accessory on the right (a HeaderToggle).
+// accessory on the right (a HeaderToggle). A sky backdrop bleeds to the
+// card's edges behind it.
 struct HeroHeader<Accessory: View>: View {
 	enum Style { case numeric, text }
+	enum Backdrop { case none, sky(SkyCondition, isNight: Bool) }
 
 	@Environment(\.theme) private var theme
 	let eyebrow: String
@@ -13,9 +15,25 @@ struct HeroHeader<Accessory: View>: View {
 	var subtitle: String?
 	var style = Style.numeric
 	var dimmed = false
+	var backdrop = Backdrop.none
 	@ViewBuilder var accessory: Accessory
 
 	var body: some View {
+		content.background(alignment: .top) {
+			if case .sky(let condition, let isNight) = backdrop {
+				SkyScene(condition: condition, isNight: isNight)
+					.padding(.horizontal, -Space.s5)
+					.padding(.top, -Space.s5)
+					.padding(.bottom, -Space.s4)
+			}
+		}
+	}
+
+	private var secondary: Color {
+		if case .sky = backdrop { theme.text.opacity(0.85) } else { theme.textSecondary }
+	}
+
+	private var content: some View {
 		HStack(alignment: .top, spacing: Space.s4) {
 			VStack(alignment: .leading, spacing: Space.s1) {
 				HStack(spacing: Space.s1 + 2) {
@@ -23,21 +41,21 @@ struct HeroHeader<Accessory: View>: View {
 					Text(eyebrow).lineLimit(1)
 				}
 				.font(Theme.Font.label)
-				.foregroundStyle(theme.textSecondary)
+				.foregroundStyle(secondary)
 				HStack(alignment: .firstTextBaseline, spacing: 2) {
 					Text(value)
 						.font(style == .numeric ? Theme.Font.display : Theme.Font.title)
 						.tracking(style == .numeric ? Theme.Tracking.display : Theme.Tracking.title)
-						.foregroundStyle(dimmed ? theme.textSecondary : theme.text)
+						.foregroundStyle(dimmed ? secondary : theme.text)
 						.lineLimit(1)
 						.contentTransition(.numericText())
 					if let unit {
-						Text(unit).font(Theme.Font.displayUnit).foregroundStyle(theme.textSecondary)
+						Text(unit).font(Theme.Font.displayUnit).foregroundStyle(secondary)
 					}
 				}
 				.animation(Motion.numeric, value: value)
 				if let subtitle {
-					Text(subtitle).font(Theme.Font.label).foregroundStyle(theme.textSecondary).lineLimit(1)
+					Text(subtitle).font(Theme.Font.label).foregroundStyle(secondary).lineLimit(1)
 				}
 			}
 			Spacer(minLength: 0)
@@ -49,11 +67,11 @@ struct HeroHeader<Accessory: View>: View {
 extension HeroHeader where Accessory == EmptyView {
 	init(
 		eyebrow: String, eyebrowSymbol: String? = nil, value: String, unit: String? = nil, subtitle: String? = nil,
-		style: Style = .numeric, dimmed: Bool = false
+		style: Style = .numeric, dimmed: Bool = false, backdrop: Backdrop = .none
 	) {
 		self.init(
 			eyebrow: eyebrow, eyebrowSymbol: eyebrowSymbol, value: value, unit: unit, subtitle: subtitle, style: style,
-			dimmed: dimmed, accessory: { EmptyView() })
+			dimmed: dimmed, backdrop: backdrop, accessory: { EmptyView() })
 	}
 }
 
