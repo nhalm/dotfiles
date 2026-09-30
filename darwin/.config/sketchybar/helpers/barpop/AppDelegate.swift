@@ -131,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		self.panel = nil
 		Shell.trigger("barpop_popup", ["ITEM": item, "OPEN": "0"])
 		panel.ignoresMouseEvents = true
-		panel.presentation.dismiss { panel.orderOut(nil) }
+		panel.presentation.dismiss { panel.remove() }
 	}
 
 	private func startTracking() {
@@ -217,6 +217,14 @@ final class PopupPanel: NSPanel {
 	var fittingSize: NSSize { host?.sizeThatFits(in: NSSize(width: 10_000, height: 10_000)) ?? .zero }
 
 	override var canBecomeKey: Bool { true }
+
+	// Its last frames leave the panel in an autorelease pool that drains only
+	// on barpop's next event; dropping the content stops its animations now.
+	func remove() {
+		orderOut(nil)
+		contentView = nil
+		host = nil
+	}
 
 	override func cancelOperation(_ sender: Any?) { presentation.close() }
 }
