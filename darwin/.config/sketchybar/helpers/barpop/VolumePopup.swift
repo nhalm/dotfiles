@@ -28,6 +28,19 @@ struct VolumePopup: View {
 					) { audio.select(device) }
 				}
 			}
+			if !audio.inputs.isEmpty {
+				Section("Input") {
+					LevelSlider(
+						label: "Input volume", value: Binding(get: { audio.inputVolume }, set: { audio.setInputVolume($0) }),
+						minSymbol: "mic", maxSymbol: "mic.fill", isEnabled: audio.hasInputVolume)
+					ForEach(audio.inputs) { device in
+						ListItem(
+							title: device.name, subtitle: device.kind, symbol: device.symbol,
+							isSelected: device.id == audio.currentInput
+						) { audio.select(device) }
+					}
+				}
+			}
 			FooterLink("Sound Settings…") {
 				NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Sound.prefpane"))
 			}
