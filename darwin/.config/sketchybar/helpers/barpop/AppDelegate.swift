@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		Messages.observe(.sync) { [weak self] _ in
 			self?.media.announce()
 			self?.wifi.announce()
+			self?.bluetooth.announce()
 		}
 		NSWorkspace.shared.notificationCenter.addObserver(
 			forName: NSWorkspace.didWakeNotification, object: nil, queue: .main

@@ -8,8 +8,7 @@
 -- ([p] keeps the pattern from matching the shell running it).
 -- open -n: right after a kill, LaunchServices can still list the old barpop and
 -- plain open then reopens it instead of launching; the lock keeps one daemon,
--- and the loop retries until one is up. The pause lets bluetoothd drop the old
--- one's sessions; a barpop started straight after can hang in IOBluetooth setup.
+-- and the loop retries until one is up.
 local daemon = "pgrep -f 'MacOS/barpo[p] daemon '"
 local launch = "for _ in 1 2 3; do "
 	.. daemon
@@ -25,7 +24,7 @@ sbar.exec(
 		.. "then exit 0; fi; "
 		.. "pkill -f 'MacOS/barpo[p] daemon ' 2>/dev/null; while "
 		.. daemon
-		.. " >/dev/null; do sleep 0.05; done; sleep 1; "
+		.. " >/dev/null; do sleep 0.05; done; "
 		.. launch
 )
 
