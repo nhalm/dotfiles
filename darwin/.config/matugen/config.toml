@@ -27,3 +27,8 @@ output_path = '~/.local/state/matugen/zen-colors.css'
 [templates.nvim]
 input_path = '~/.config/matugen/templates/nvim-colors.lua'
 output_path = '~/.local/state/matugen/nvim-colors.lua'
+
+# Read by sketchybar's barpop popups, which reload it on change.
+[templates.barpop]
+input_path = '~/.config/matugen/templates/barpop.json'
+output_path = '~/.local/state/matugen/barpop.json'

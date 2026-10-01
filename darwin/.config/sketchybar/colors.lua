@@ -59,6 +59,8 @@ return {
 	red = p.red,
 	green = p.green,
 	blue = p.blue,
+	-- barpop's accent: an item lights up in it while its popup is open.
+	accent = p.blue,
 	yellow = p.yellow,
 	orange = p.orange,
 	magenta = p.magenta,
@@ -72,7 +74,7 @@ return {
 		border = p.bar_border,
 	},
 	popup = {
-		bg = with_alpha(p.popup_bg, 0.75),
+		bg = p.popup_bg,
 		border = p.popup_border,
 	},
 

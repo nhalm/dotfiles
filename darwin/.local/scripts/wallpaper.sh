@@ -4,7 +4,8 @@
 #   wallpaper.sh <image>    set a specific image
 #   wallpaper.sh --restore  re-apply the remembered one
 #
-# Choosing one interactively is wallpaper-picker.sh's job (caps+w).
+# Choosing one interactively is barpop's wallpaper popup (caps+w, or the
+# bar's wallpaper item).
 
 set -uo pipefail
 
@@ -48,8 +49,9 @@ esac
 set_picture() {
 	command -v wallpaper >/dev/null 2>&1 &&
 		wallpaper set "$IMAGE" >/dev/null 2>&1 && return 0
-	osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$IMAGE\"" \
-		>/dev/null 2>&1
+	osascript -e 'on run argv' \
+		-e 'tell application "System Events" to tell every desktop to set picture to item 1 of argv' \
+		-e 'end run' "$IMAGE" >/dev/null 2>&1
 }
 set_picture || echo "wallpaper: could not set the desktop picture" >&2
 
