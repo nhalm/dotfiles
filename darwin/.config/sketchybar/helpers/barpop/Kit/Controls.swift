@@ -11,8 +11,6 @@ struct LevelSlider: View {
 	var isEnabled = true
 	// Shown, still adjustable, but not in effect (muted).
 	var dimmed = false
-	// A live level 0…1 in the track, e.g. a mic's input; the caller smooths it.
-	var live: Double?
 	@State private var hovering = false
 	@State private var drag: Double?
 	@State private var written = Date.distantPast
@@ -50,15 +48,8 @@ struct LevelSlider: View {
 				Capsule()
 					.fill(dimmed ? theme.textTertiary : theme.accent)
 					.frame(width: x + knob / 2)
-				// Over the gain fill: a full-gain input would hide it underneath.
-				if let live {
-					Rectangle()
-						.fill(theme.accentAlt.opacity(0.7))
-						.frame(width: CGFloat(min(max(live, 0), 1)) * geo.size.width)
-				}
 			}
 			.frame(height: engaged ? 8 : 6)
-			.clipShape(Capsule())
 			.overlay(alignment: .leading) {
 				Circle()
 					.fill(dimmed ? theme.textSecondary : theme.text)

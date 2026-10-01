@@ -134,7 +134,7 @@ final class Audio {
 				metered = currentInput
 				await Task.detached { meter.restart() }.value
 			}
-			let now = meter.level
+			let now = meter.take()
 			// Rises at once, falls back over a few frames.
 			inputLevel = now > inputLevel ? now : inputLevel * 0.75 + now * 0.25
 			try? await Task.sleep(for: .milliseconds(40))
@@ -277,14 +277,20 @@ final class Audio {
 	}
 }
 
-// Taps the default input on the audio thread and keeps its latest RMS as
-// 0…1 over -60…0 dB.
+// Taps the default input on the audio thread and keeps its loudest recent
+// RMS as 0…1 over -60…0 dB.
 private final class InputMeter: @unchecked Sendable {
 	private let lock = NSLock()
 	private var engine: AVAudioEngine?
 	private var latest = 0.0
 
-	var level: Double { lock.withLock { latest } }
+	// The loudest buffer since the last call, so peaks between reads count.
+	func take() -> Double {
+		lock.withLock {
+			defer { latest = 0 }
+			return latest
+		}
+	}
 
 	func restart() {
 		stop()
@@ -298,7 +304,7 @@ private final class InputMeter: @unchecked Sendable {
 			for i in 0..<Int(buffer.frameLength) { sum += samples[i] * samples[i] }
 			let db = 20 * log10(max(sqrt(sum / Float(buffer.frameLength)), 1e-6))
 			let level = Double(min(max((db + 60) / 60, 0), 1))
-			self?.lock.withLock { self?.latest = level }
+			self?.lock.withLock { self?.latest = max(self?.latest ?? 0, level) }
 		}
 		do { try engine.start() } catch {
 			input.removeTap(onBus: 0)

@@ -30,8 +30,12 @@ struct VolumePopup: View {
 			}
 			if !audio.inputs.isEmpty {
 				Section("Input") {
-					InputSlider()
-					if !audio.micAccess {
+					LevelSlider(
+						label: "Input volume", value: Binding(get: { audio.inputVolume }, set: { audio.setInputVolume($0) }),
+						minSymbol: "mic", maxSymbol: "mic.fill", isEnabled: audio.hasInputVolume)
+					if audio.micAccess {
+						InputLevel()
+					} else {
 						ListItem(
 							title: "Allow microphone access", subtitle: "To show the input level", symbol: "mic.slash"
 						) {
@@ -55,14 +59,11 @@ struct VolumePopup: View {
 	}
 }
 
-// Its own view, so the level's 25Hz updates redraw only the slider.
-private struct InputSlider: View {
+// Its own view, so the level's 25Hz updates redraw only the meter.
+private struct InputLevel: View {
 	@Environment(Audio.self) private var audio
 
 	var body: some View {
-		LevelSlider(
-			label: "Input volume", value: Binding(get: { audio.inputVolume }, set: { audio.setInputVolume($0) }),
-			minSymbol: "mic", maxSymbol: "mic.fill", isEnabled: audio.hasInputVolume,
-			live: audio.micAccess ? audio.inputLevel : nil)
+		SegmentMeter(value: audio.inputLevel, symbol: "mic.fill", under: ("mic", "mic.fill"))
 	}
 }

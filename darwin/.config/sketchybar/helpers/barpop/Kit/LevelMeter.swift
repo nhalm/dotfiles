@@ -46,3 +46,49 @@ private struct Sheen: View {
 		.allowsHitTesting(false)
 	}
 }
+
+// A live level, 0…1, e.g. a mic's input, as segments lit left to right; the
+// highest recent segment stays lit briefly. The caller smooths the value.
+// `under`: the min/max glyphs of a LevelSlider above it, whose widths it
+// reserves so the two tracks line up; `symbol` sits in the leading slot.
+struct SegmentMeter: View {
+	@Environment(\.theme) private var theme
+	let value: Double
+	var segments = 16
+	var symbol: String?
+	var under: (min: String, max: String)?
+	@State private var peak = 0
+	@State private var peakAt = Date.distantPast
+
+	var body: some View {
+		let lit = Int((min(max(value, 0), 1) * Double(segments)).rounded())
+		HStack(spacing: Space.s3) {
+			if symbol != nil || under != nil {
+				ZStack {
+					if let under { Image(systemName: under.min).hidden() }
+					if let symbol { Image(systemName: symbol) }
+				}
+			}
+			HStack(spacing: 3) {
+				ForEach(0..<segments, id: \.self) { i in
+					Capsule()
+						.fill(i < lit || (i == peak - 1 && peak > lit) ? theme.accent : theme.raised)
+						.frame(maxWidth: .infinity)
+						.frame(height: 4)
+				}
+			}
+			if let under { Image(systemName: under.max).hidden() }
+		}
+		.font(.system(size: 13))
+		.foregroundStyle(theme.textSecondary)
+		.onChange(of: value) {
+			if lit >= peak || Date().timeIntervalSince(peakAt) > 0.8 {
+				peak = lit
+				peakAt = Date()
+			}
+		}
+		.accessibilityElement()
+		.accessibilityLabel("Level")
+		.accessibilityValue("\(Int((value * 100).rounded()))%")
+	}
+}
