@@ -18,6 +18,8 @@
 	<string>barpop shows your upcoming events in the calendar popup.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>barpop lists and connects your Bluetooth devices.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>barpop shows your microphone's input level in the volume popup.</string>
 	<key>NSLocationUsageDescription</key>
 	<string>macOS only reveals Wi-Fi network names to apps with Location access.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

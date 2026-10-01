@@ -241,7 +241,7 @@ struct EmptyState: View {
 }
 
 struct Chip: View {
-	enum Tone { case accent, critical }
+	enum Tone { case accent, neutral, critical }
 
 	@Environment(\.theme) private var theme
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -260,6 +260,7 @@ struct Chip: View {
 		let (fg, bg): (Color, Color) =
 			switch tone {
 			case .accent: (theme.onAccentSoft, theme.accentSoft)
+			case .neutral: (theme.textSecondary, theme.raised)
 			case .critical: (theme.critical, theme.critical.opacity(0.18))
 			}
 		let chip = Text(text)

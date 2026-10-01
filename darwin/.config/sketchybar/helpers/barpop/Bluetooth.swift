@@ -25,19 +25,50 @@ final class Bluetooth {
 	@ObservationIgnored private var profile: [String: Profile] = [:]
 	@ObservationIgnored private var loading: Task<Void, Never>?
 	@ObservationIgnored private lazy var observer = Observer { [weak self] in self?.handle($0) }
+	@ObservationIgnored private var ready = false
 
+	// IOBluetooth's first use waits on bluetoothd, at times for 20s or more;
+	// that wait happens on a background thread so barpop answers meanwhile.
 	init() {
+		Task {
+			await Task.detached { Self.warmUp() }.value
+			start()
+		}
+	}
+
+	private func start() {
 		for name in [NSNotification.Name.IOBluetoothHostControllerPoweredOn, .IOBluetoothHostControllerPoweredOff] {
 			NotificationCenter.default.addObserver(observer, selector: #selector(Observer.power), name: name, object: nil)
 		}
 		IOBluetoothDevice.register(forConnectNotifications: observer, selector: #selector(Observer.connected(_:device:)))
+		ready = true
 		refresh()
+		announce()
+	}
+
+	// The shared coordinator every IOBluetooth call goes through; building it
+	// is the wait.
+	private nonisolated static func warmUp() {
+		guard let coordinator = NSClassFromString("IOBluetoothCoreBluetoothCoordinator") as AnyObject?,
+			coordinator.responds(to: NSSelectorFromString("sharedInstance"))
+		else {
+			_ = IOBluetoothDevice.pairedDevices()
+			return
+		}
+		_ = coordinator.perform(NSSelectorFromString("sharedInstance"))
+	}
+
+	// Tells the bar's item whether the controller is on.
+	func announce() {
+		guard ready else { return }
+		Shell.trigger("bluetooth_change", ["POWER": Power.get() ? "on" : "off"])
 	}
 
 	var connected: [BluetoothDevice] { devices.filter(\.isConnected) }
 	var paired: [BluetoothDevice] { devices.filter { !$0.isConnected } }
 
 	func refresh() {
+		guard ready else { return }
 		rebuild()
 		loadProfile()
 	}
@@ -48,7 +79,7 @@ final class Bluetooth {
 	}
 
 	func toggle(_ device: BluetoothDevice) {
-		guard let d = IOBluetoothDevice(addressString: device.id), !connecting.contains(device.id) else { return }
+		guard ready, let d = IOBluetoothDevice(addressString: device.id), !connecting.contains(device.id) else { return }
 		if device.isConnected {
 			d.closeConnection()
 			return
@@ -64,9 +95,8 @@ final class Bluetooth {
 	private func handle(_ event: Observer.Event) {
 		switch event {
 		case .power:
-			let on = Power.get()
-			Shell.trigger("bluetooth_change", ["POWER": on ? "on" : "off"])
-			if !on { connecting = [] }
+			announce()
+			if !Power.get() { connecting = [] }
 			rebuild()
 		case .connected:
 			refresh()

@@ -3,15 +3,28 @@
 -- exits with sketchybar. It runs as an app so macOS asks for permissions in
 -- its own name. A reload (wallpaper.sh runs one) keeps a barpop that serves
 -- this sketchybar and is newer than its binary, so an open popup survives it.
--- pgrep skips its own ancestors, sketchybar among them, without -a.
-local launch = "open -g $CONFIG_DIR/helpers/barpop/bin/barpop.app --args daemon $(pgrep -axn sketchybar)"
+-- pgrep skips its own ancestors, sketchybar among them, without -a. Only the
+-- daemon counts: `barpop sync`/`show` are short-lived processes of the same name
+-- ([p] keeps the pattern from matching the shell running it).
+-- open -n: right after a kill, LaunchServices can still list the old barpop and
+-- plain open then reopens it instead of launching; the lock keeps one daemon,
+-- and the loop retries until one is up.
+local daemon = "pgrep -f 'MacOS/barpo[p] daemon '"
+local launch = "for _ in 1 2 3; do "
+	.. daemon
+	.. " >/dev/null && break; open -n -g $CONFIG_DIR/helpers/barpop/bin/barpop.app --args daemon $(pgrep -axn sketchybar); "
+	.. "sleep 1; done"
 sbar.exec(
 	"bin=$CONFIG_DIR/helpers/barpop/bin/barpop.app/Contents/MacOS/barpop; bar=$(pgrep -axn sketchybar); "
-		.. "pid=$(pgrep -x barpop | head -1); "
+		.. "pid=$("
+		.. daemon
+		.. " | head -1); "
 		.. "if [ -n \"$pid\" ] && ps -o args= -p $pid | grep -q \" daemon $bar$\" && "
 		.. "[ $(LC_ALL=C date -j -f '%a %b %e %T %Y' \"$(LC_ALL=C ps -o lstart= -p $pid | xargs)\" +%s) -ge $(stat -f %m $bin) ]; "
 		.. "then exit 0; fi; "
-		.. "pkill -x barpop 2>/dev/null; while pgrep -qx barpop; do sleep 0.05; done; "
+		.. "pkill -f 'MacOS/barpo[p] daemon ' 2>/dev/null; while "
+		.. daemon
+		.. " >/dev/null; do sleep 0.05; done; "
 		.. launch
 )
 
@@ -33,7 +46,7 @@ function M.open(item, popup, keyboard)
 	if #rects > 0 then
 		-- If barpop has died, start it again before asking it for the popup.
 		sbar.exec(string.format(
-			"pgrep -qx barpop || { %s; sleep 1; }; $CONFIG_DIR/helpers/barpop/bin/barpop show %s '%s' %s%s",
+			"%s; $CONFIG_DIR/helpers/barpop/bin/barpop show %s '%s' %s%s",
 			launch,
 			popup,
 			table.concat(rects, ";"),

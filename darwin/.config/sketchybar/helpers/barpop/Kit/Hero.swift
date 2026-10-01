@@ -107,31 +107,42 @@ struct HeaderToggle: View {
 	// Looking for something to connect to.
 	var searching = false
 	let label: String
-	let action: () -> Void
+	// nil shows the state without a switch, e.g. a link only unplugging ends.
+	let action: (() -> Void)?
 
 	var body: some View {
-		let alert = attention && !isOn
-		Button {
-			withAnimation(Motion.toggle) { action() }
-		} label: {
-			Image(symbol: symbol, variableValue: variableValue)
-				.font(.system(size: 17))
-				.foregroundStyle(isOn ? theme.onAccent : (alert ? theme.critical : theme.textSecondary))
-				.symbolEffect(.bounce, value: isOn)
-				.symbolEffect(.pulse, isActive: alert)
-				.symbolEffect(
-					.variableColor.iterative.dimInactiveLayers.reversing, options: .repeating,
-					isActive: searching && !reduceMotion)
-				.contentTransition(.symbolEffect(.replace))
-				.frame(width: 40, height: 40)
-				.background(Circle().fill(isOn ? theme.accent : theme.raised))
-				.overlay { if alert { AttentionRing(color: theme.critical) } }
-				.contentShape(Circle())
+		Group {
+			if let action {
+				Button {
+					withAnimation(Motion.toggle) { action() }
+				} label: {
+					glyph
+				}
+				.buttonStyle(.plain)
+			} else {
+				glyph
+			}
 		}
-		.buttonStyle(.plain)
 		.opacity(isEnabled ? 1 : 0.4)
 		.help(label)
 		.accessibilityLabel(label)
+	}
+
+	private var glyph: some View {
+		let alert = attention && !isOn
+		return Image(symbol: symbol, variableValue: variableValue)
+			.font(.system(size: 17))
+			.foregroundStyle(isOn ? theme.onAccent : (alert ? theme.critical : theme.textSecondary))
+			.symbolEffect(.bounce, value: isOn)
+			.symbolEffect(.pulse, isActive: alert)
+			.symbolEffect(
+				.variableColor.iterative.dimInactiveLayers.reversing, options: .repeating,
+				isActive: searching && !reduceMotion)
+			.contentTransition(.symbolEffect(.replace))
+			.frame(width: 40, height: 40)
+			.background(Circle().fill(isOn ? theme.accent : theme.raised))
+			.overlay { if alert { AttentionRing(color: theme.critical) } }
+			.contentShape(Circle())
 	}
 }
 

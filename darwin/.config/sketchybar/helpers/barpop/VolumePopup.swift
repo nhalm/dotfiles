@@ -28,9 +28,42 @@ struct VolumePopup: View {
 					) { audio.select(device) }
 				}
 			}
+			if !audio.inputs.isEmpty {
+				Section("Input") {
+					LevelSlider(
+						label: "Input volume", value: Binding(get: { audio.inputVolume }, set: { audio.setInputVolume($0) }),
+						minSymbol: "mic", maxSymbol: "mic.fill", isEnabled: audio.hasInputVolume)
+					if audio.micAccess {
+						InputLevel()
+					} else {
+						ListItem(
+							title: "Allow microphone access", subtitle: "To show the input level", symbol: "mic.slash"
+						) {
+							NSWorkspace.shared.open(
+								URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
+						}
+					}
+					ForEach(audio.inputs) { device in
+						ListItem(
+							title: device.name, subtitle: device.kind, symbol: device.symbol,
+							isSelected: device.id == audio.currentInput
+						) { audio.select(device) }
+					}
+				}
+			}
 			FooterLink("Sound Settings…") {
 				NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Sound.prefpane"))
 			}
 		}
+		.whileOpen { await audio.meterInput() }
+	}
+}
+
+// Its own view, so the level's 25Hz updates redraw only the meter.
+private struct InputLevel: View {
+	@Environment(Audio.self) private var audio
+
+	var body: some View {
+		SegmentMeter(value: audio.inputLevel, symbol: "mic.fill", under: ("mic", "mic.fill"))
 	}
 }

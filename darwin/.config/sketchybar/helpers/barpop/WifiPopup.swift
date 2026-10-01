@@ -5,16 +5,18 @@ struct WifiPopup: View {
 
 	var body: some View {
 		PopupCard(width: .regular) {
-			HeroHeader(
-				eyebrow: "Wi-Fi", value: headline, subtitle: subtitle, style: .text, dimmed: !wifi.connected
-			) {
-				HeaderToggle(
-					symbol: wifi.power ? "wifi" : "wifi.slash", variableValue: wifi.connected ? wifi.signal : nil,
-					isOn: wifi.power, searching: wifi.power && !wifi.connected,
-					label: wifi.power ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
-				) { wifi.setPower(!wifi.power) }
+			if let via = wifi.tether {
+				hotspot(via)
+			} else {
+				HeroHeader(eyebrow: "Wi-Fi", value: headline, subtitle: subtitle, style: .text, dimmed: !wifi.connected) {
+					HeaderToggle(
+						symbol: wifi.power ? "wifi" : "wifi.slash", variableValue: wifi.connected ? wifi.signal : nil,
+						isOn: wifi.power, searching: wifi.power && !wifi.connected,
+						label: wifi.power ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
+					) { wifi.setPower(!wifi.power) }
+				}
 			}
-			if wifi.connected {
+			if wifi.connected || wifi.tether != nil {
 				StatGrid(columns: 2) {
 					let down = rate(wifi.download.last ?? 0)
 					let up = rate(wifi.upload.last ?? 0)
@@ -25,15 +27,20 @@ struct WifiPopup: View {
 						Sparkline(values: wifi.upload, tone: .alt)
 					}
 				}
-				Section("Details", trailing: "Click to copy") {
-					CopyRow(
-						"Signal", value: "\(wifi.rssi) dBm",
-						symbol: "cellularbars", variableValue: wifi.signal)
+				Section("Details") {
+					if wifi.connected && wifi.tether == nil { signal }
 					if let ip = wifi.ip { CopyRow("IP address", value: ip) }
-					if let router = wifi.router { CopyRow("Router", value: router) }
 					if let host = wifi.hostname { CopyRow("Hostname", value: host) }
 				}
-			} else if wifi.power {
+			}
+			// The link to the iPhone, after what matters while tethered.
+			if wifi.tether == .wifi {
+				Section("Wi-Fi") {
+					signal
+					if let link = wifiLink { ValueRow("Channel") { Text(link) } }
+				}
+			}
+			if wifi.power && !wifi.connected {
 				let known = wifi.networks.filter(\.known)
 				let other = wifi.networks.filter { !$0.known }
 				if !known.isEmpty {
@@ -50,6 +57,30 @@ struct WifiPopup: View {
 			FooterLink("Wi-Fi Settings…") { Wifi.openSettings() }
 		}
 		.whileOpen { await wifi.monitor() }
+	}
+
+	// Over Wi-Fi the switch leaves the hotspot with Wi-Fi on; USB and
+	// Bluetooth links end by unplugging or on the iPhone.
+	private func hotspot(_ via: Tether) -> some View {
+		let name = wifi.tetherName ?? "iPhone"
+		return HeroHeader(
+			eyebrow: "Internet", eyebrowSymbol: "personalhotspot", eyebrowChip: Chip("Cellular data", tone: .neutral),
+			value: name, subtitle: "Personal Hotspot · over \(via.rawValue)", style: .text
+		) {
+			HeaderToggle(
+				symbol: "personalhotspot", isOn: true,
+				label: via == .wifi ? "Disconnect from \(name)" : "Connected over \(via.rawValue)",
+				action: via == .wifi ? { wifi.disconnect() } : nil)
+		}
+	}
+
+	private var signal: some View {
+		CopyRow("Signal", value: "\(wifi.rssi) dBm", symbol: "cellularbars", variableValue: wifi.signal)
+	}
+
+	private var wifiLink: String? {
+		let s = [wifi.channel.map(String.init), wifi.band].compactMap { $0 }.joined(separator: " · ")
+		return s.isEmpty ? nil : s
 	}
 
 	private var headline: String {
