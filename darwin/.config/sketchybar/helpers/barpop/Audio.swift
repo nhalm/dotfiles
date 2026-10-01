@@ -278,8 +278,12 @@ final class Audio {
 }
 
 // Taps the default input on the audio thread and keeps its loudest recent
-// RMS as 0…1 over -60…0 dB.
+// RMS in dBFS as 0…1. The range suits speech: a quiet room sits near -58 at
+// the built-in mic and talking at the desk around -35…-20.
 private final class InputMeter: @unchecked Sendable {
+	static let floor: Float = -55
+	static let ceiling: Float = -10
+
 	private let lock = NSLock()
 	private var engine: AVAudioEngine?
 	private var latest = 0.0
@@ -302,8 +306,8 @@ private final class InputMeter: @unchecked Sendable {
 			guard let samples = buffer.floatChannelData?[0], buffer.frameLength > 0 else { return }
 			var sum: Float = 0
 			for i in 0..<Int(buffer.frameLength) { sum += samples[i] * samples[i] }
-			let db = 20 * log10(max(sqrt(sum / Float(buffer.frameLength)), 1e-6))
-			let level = Double(min(max((db + 60) / 60, 0), 1))
+			let db = max(20 * log10(max(sqrt(sum / Float(buffer.frameLength)), 1e-6)), -60)
+			let level = Double(min(max((db - InputMeter.floor) / (InputMeter.ceiling - InputMeter.floor), 0), 1))
 			self?.lock.withLock { self?.latest = max(self?.latest ?? 0, level) }
 		}
 		do { try engine.start() } catch {
