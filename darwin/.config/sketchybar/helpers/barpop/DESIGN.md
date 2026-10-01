@@ -13,7 +13,7 @@ One opaque card, one left edge, regular weights; hierarchy from size and colour 
 | `HeroGlyph` (40pt palette-rendered symbol) | Not built yet |
 | `SectionLabel`, `Section`, `ListItem`, `IconTile`, `ValueRow`, `Chip`, `EmptyState`, `FooterLink` | Built (`Kit/Lists.swift`); `IconTile(letter:)` not built yet |
 | `ValueRow(copyable:)` | Built as `CopyRow` (`Kit/CopyRow.swift`) |
-| `LevelSlider` | Built (`Kit/Controls.swift`) |
+| `LevelSlider` | Built (`Kit/Controls.swift`), plus `live:` |
 | `Meter(value:)` | Built as `LevelMeter` (`Kit/LevelMeter.swift`); `.size(.thin)` not built yet |
 | `Meter(range:in:marker:)`, `StatTile`, `StatGrid`, `TrendChart`, `ArcProgress` | Built (`Kit/Data.swift`) |
 | `Sparkline` | Built (`Kit/Sparkline.swift`) |
@@ -51,7 +51,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `PopupCard(width: .regular 320 / .wide 340)` | The card: padding, spacing, emergence, anchor light, stagger |
 | `HeroHeader(eyebrow:eyebrowSymbol:value:unit:subtitle:style:dimmed:backdrop:) { accessory }` | Headline value; accessory is one `HeaderToggle` or nothing; `backdrop: .sky(condition, isNight:)` |
 | `HeaderToggle(symbol:variableValue:isOn:label:action:)` | The popup's one primary switch, 40pt circle; `action: nil` shows the state without a switch |
-| `LevelSlider(label:value:minSymbol:maxSymbol:isEnabled:dimmed:)` | Continuous level; `dimmed` = adjustable but not in effect |
+| `LevelSlider(label:value:minSymbol:maxSymbol:isEnabled:dimmed:live:)` | Continuous level; `dimmed` = adjustable but not in effect; `live` = a changing level 0…1 (mic input) as an `accentAlt` 70% fill over the track under the knob, shown even when disabled |
 | `Section(_:trailing:) { … }` / `SectionLabel` | Labelled group, 8pt to content, 2pt between rows |
 | `ListItem(title:subtitle:symbol:isSelected:action:)` | Something to choose; hover pill bleeds 8pt, check when selected |
 | `IconTile(symbol:tone:)` | 28pt leading glyph tile, neutral or accent |
@@ -63,7 +63,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `ArcProgress(progress:start:end:)` | Progress through a span of time as an arc; nil = track only |
 | `EmptyState(symbol:title:message:action:)` / `Chip` | Replaces hero and sections when there is nothing to show |
 | `FooterLink(_:detail:action:)` | Last line, hairline above; closes the popup |
-| `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising; dims when disabled (e.g. input level without Microphone access) |
+| `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising |
 | `AppIcon(image:)` | An app's own icon at `IconTile` size; `ListItem(icon:)` shows it in place of the tile |
 | `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.accent` / `.neutral` (a fact worth flagging, e.g. "Cellular data") / `.critical` |
 | `Section(_:content:trailing:)` / `SectionLabel(_:accessory:)` | Section whose label trails views (e.g. `IconButton`s) instead of text |

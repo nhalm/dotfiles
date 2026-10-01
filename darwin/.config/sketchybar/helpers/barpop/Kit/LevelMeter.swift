@@ -7,7 +7,6 @@ struct LevelMeter: View {
 
 	@Environment(\.theme) private var theme
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
-	@Environment(\.isEnabled) private var isEnabled
 	let value: Double
 	var tone = Tone.accent
 	var isLive = false
@@ -26,7 +25,6 @@ struct LevelMeter: View {
 			}
 		}
 		.frame(height: 8)
-		.opacity(isEnabled ? 1 : 0.4)
 		.animation(Motion.numeric, value: value)
 		.accessibilityElement()
 		.accessibilityValue("\(Int((value * 100).rounded()))%")
