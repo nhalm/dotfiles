@@ -2,6 +2,26 @@
 
 One opaque card, one left edge, regular weights; hierarchy from size and colour only. A popup is a composition of `Kit/` components and sets no colour, font, padding or radius itself. If it needs something the kit lacks, add a general component to `Kit/`.
 
+`design/` is the source of truth: `quiet-native.md` (full spec), `quiet-native.html` (mockups, open in a browser), `sky.md` (weather backdrop). This file records what is built and how it diverged.
+
+## Status
+
+| Spec component | Status |
+|---|---|
+| `PopupCard` | Built (`Kit/Card.swift`) |
+| `HeroHeader`, `HeaderToggle` | Built (`Kit/Hero.swift`) |
+| `HeroGlyph` (40pt palette-rendered symbol) | Not built yet |
+| `SectionLabel`, `Section`, `ListItem`, `IconTile`, `ValueRow`, `Chip`, `EmptyState`, `FooterLink` | Built (`Kit/Lists.swift`); `IconTile(letter:)` not built yet |
+| `ValueRow(copyable:)` | Built as `CopyRow` (`Kit/CopyRow.swift`) |
+| `LevelSlider` | Built (`Kit/Controls.swift`) |
+| `Meter(value:)` | Built as `LevelMeter` (`Kit/LevelMeter.swift`); `.size(.thin)` not built yet |
+| `Meter(range:in:marker:)`, `StatTile`, `StatGrid`, `TrendChart`, `ArcProgress` | Built (`Kit/Data.swift`) |
+| `Sparkline` | Built (`Kit/Sparkline.swift`) |
+| `MonthGrid` · `ClockFace` · `IconButton` · `SearchField` | Built (`Kit/MonthGrid.swift` · `ClockFace.swift` · `IconButton.swift` · `SearchField.swift`) |
+| `ThumbGrid`, `Thumbnail` · `SwatchStrip` | Built (`Kit/ThumbGrid.swift` · `SwatchStrip.swift`) |
+
+Kit beyond the spec: `Compass` (`Data.swift`), `AppIcon`, `Artwork`, `BarStrip`, `ScrubBar`, `SegmentedToggle`, `StripItem`, `SkyScene` (`Sky.swift`), `.whileOpen` (`WhileOpen.swift`), `Image(symbol:)` (`Symbol.swift`), `Theme`/`Themed` (`Theme.swift`).
+
 ## Tokens (`Kit/Theme.swift`)
 
 `Palette` loads matugen roles (`templates/barpop.json`, dark scheme) into `Roles`; `Theme(roles)` derives the tokens, injected by `Themed` as `\.theme`.
