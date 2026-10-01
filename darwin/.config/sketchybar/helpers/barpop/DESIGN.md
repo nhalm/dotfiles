@@ -30,7 +30,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 |---|---|
 | `PopupCard(width: .regular 320 / .wide 340)` | The card: padding, spacing, emergence, anchor light, stagger |
 | `HeroHeader(eyebrow:eyebrowSymbol:value:unit:subtitle:style:dimmed:backdrop:) { accessory }` | Headline value; accessory is one `HeaderToggle` or nothing; `backdrop: .sky(condition, isNight:)` |
-| `HeaderToggle(symbol:variableValue:isOn:label:action:)` | The popup's one primary switch, 40pt circle |
+| `HeaderToggle(symbol:variableValue:isOn:label:action:)` | The popup's one primary switch, 40pt circle; `action: nil` shows the state without a switch |
 | `LevelSlider(label:value:minSymbol:maxSymbol:isEnabled:dimmed:)` | Continuous level; `dimmed` = adjustable but not in effect |
 | `Section(_:trailing:) { … }` / `SectionLabel` | Labelled group, 8pt to content, 2pt between rows |
 | `ListItem(title:subtitle:symbol:isSelected:action:)` | Something to choose; hover pill bleeds 8pt, check when selected |
@@ -45,7 +45,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `FooterLink(_:detail:action:)` | Last line, hairline above; closes the popup |
 | `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising |
 | `AppIcon(image:)` | An app's own icon at `IconTile` size; `ListItem(icon:)` shows it in place of the tile |
-| `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.accent` / `.critical` |
+| `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.accent` / `.neutral` (a fact worth flagging, e.g. "Cellular data") / `.critical` |
 | `Section(_:content:trailing:)` / `SectionLabel(_:accessory:)` | Section whose label trails views (e.g. `IconButton`s) instead of text |
 | `IconButton(symbol:label:action:)` | 24pt glyph-only action, `pressed` circle on hover |
 | `MonthGrid(month:today:selected:marked:onSelect:)` | Month in locale weeks; today accent, selected accentSoft, marked midnights get an `accentAlt` dot, out-of-month `textTertiary` |

@@ -2,6 +2,7 @@ import AppKit
 import CoreLocation
 import CoreWLAN
 import Foundation
+import Network
 import Observation
 import SystemConfiguration
 
@@ -15,9 +16,17 @@ struct WifiNetwork: Identifiable, Sendable {
 	var id: String { ssid }
 }
 
+// How the Mac reaches an iPhone's Personal Hotspot.
+enum Tether: String, Sendable {
+	case wifi = "Wi-Fi"
+	case usb = "USB"
+	case bluetooth = "Bluetooth"
+}
+
 // The Wi-Fi interface, sampled each second while the popup is open. macOS
 // hides network names from apps without Location access, so the connected
-// name falls back to ipconfig until that is granted.
+// name falls back to ipconfig until that is granted. The network path is
+// watched all the time, so the bar knows when it is on a Personal Hotspot.
 @MainActor
 @Observable
 final class Wifi {
@@ -31,21 +40,31 @@ final class Wifi {
 	private(set) var band: String?
 	private(set) var secure = false
 	private(set) var ip: String?
-	private(set) var router: String?
 	private(set) var hostname: String?
 	private(set) var download = [Double](repeating: 0, count: samples)
 	private(set) var upload = [Double](repeating: 0, count: samples)
 	private(set) var networks: [WifiNetwork] = []
 	private(set) var scanning = false
+	private(set) var tether: Tether?
+	// The hotspot's device: its network name over Wi-Fi.
+	private(set) var tetherName: String?
 
 	@ObservationIgnored private var counters: (rx: UInt32, tx: UInt32, at: Date)?
 	@ObservationIgnored private var namedSSID: String?
 	@ObservationIgnored private var lastScan = Date.distantPast
 	@ObservationIgnored private var sampledAt = Date.distantPast
 	@ObservationIgnored private let location = LocationGate()
+	@ObservationIgnored private let paths = NWPathMonitor()
+	@ObservationIgnored private var pathChanges = 0
+	// Where traffic goes when it isn't the Wi-Fi interface (USB, Bluetooth).
+	@ObservationIgnored private var link: String?
 
 	init() {
 		location.changed = { [weak self] in self?.nameChanged() }
+		paths.pathUpdateHandler = { [weak self] path in
+			MainActor.assumeIsolated { self?.pathChanged(path) }
+		}
+		paths.start(queue: .main)
 		Task { await sample() }
 	}
 
@@ -73,6 +92,15 @@ final class Wifi {
 		}
 	}
 
+	// Leaves the network with Wi-Fi still on, e.g. a Personal Hotspot; macOS
+	// may rejoin a known one.
+	func disconnect() {
+		Task {
+			await Task.detached { CWWiFiClient.shared().interface()?.disassociate() }.value
+			await sample()
+		}
+	}
+
 	// Joins with the keychain's password where macOS lets us read it;
 	// otherwise, or if joining fails, hands over to Wi-Fi Settings.
 	func join(_ network: WifiNetwork) {
@@ -87,13 +115,39 @@ final class Wifi {
 		NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.wifi-settings-extension")!)
 	}
 
+	// Tells the bar's Wi-Fi item whether it is on a Personal Hotspot.
+	func announce() {
+		Shell.trigger(
+			"barpop_network",
+			["HOTSPOT": tether == nil ? "0" : "1", "DEVICE": tetherName ?? "", "VIA": tether?.rawValue ?? ""])
+	}
+
+	private func pathChanged(_ path: NWPath) {
+		pathChanges += 1
+		let change = pathChanges
+		Task {
+			let found = await Self.tether(path)
+			guard change == pathChanges else { return }
+			let interface = found.flatMap { $0.via == .wifi ? nil : $0.interface }
+			if interface != link {
+				link = interface
+				counters = nil
+			}
+			guard found?.via != tether || found?.name != tetherName else { return }
+			tether = found?.via
+			tetherName = found?.name
+			announce()
+		}
+	}
+
 	private func nameChanged() {
 		namedSSID = nil
 		lastScan = .distantPast
 	}
 
 	private func sample() async {
-		let s = await Task.detached { Self.read() }.value
+		let link = link
+		let s = await Task.detached { Self.read(link: link) }.value
 		// Reads can finish out of order (a toggle overlapping the tick).
 		guard s.at > sampledAt else { return }
 		sampledAt = s.at
@@ -105,7 +159,6 @@ final class Wifi {
 		band = s.band
 		secure = s.secure
 		ip = s.ip
-		router = s.router
 		hostname = s.hostname
 		if connected != wasConnected { namedSSID = nil }
 		if let name = s.ssid {
@@ -153,12 +206,11 @@ final class Wifi {
 		var band: String?
 		var secure = false
 		var ip: String?
-		var router: String?
 		var hostname: String?
 		var counters: (rx: UInt32, tx: UInt32)?
 	}
 
-	private nonisolated static func read() -> Sample {
+	private nonisolated static func read(link: String?) -> Sample {
 		var s = Sample()
 		guard let wifi = CWWiFiClient.shared().interface() else { return s }
 		s.interface = wifi.interfaceName ?? s.interface
@@ -177,15 +229,15 @@ final class Wifi {
 		s.ssid = wifi.ssid()
 		s.rssi = wifi.rssiValue()
 		s.secure = wifi.security() != .none
+		let interface = link ?? s.interface
 		let store = SCDynamicStoreCreate(nil, "barpop" as CFString, nil, nil)
 		if let store {
 			s.hostname = (SCDynamicStoreCopyLocalHostName(store) as String?).map { "\($0).local" }
 			let services = SCDynamicStoreCopyMultiple(store, nil, ["State:/Network/Service/.*/IPv4"] as CFArray)
-			let ipv4 = (services as? [String: [String: Any]])?.values.first { $0["InterfaceName"] as? String == s.interface }
+			let ipv4 = (services as? [String: [String: Any]])?.values.first { $0["InterfaceName"] as? String == interface }
 			s.ip = (ipv4?["Addresses"] as? [String])?.first
-			s.router = ipv4?["Router"] as? String
 		}
-		s.counters = linkCounters(s.interface)
+		s.counters = linkCounters(interface)
 		return s
 	}
 
@@ -204,11 +256,44 @@ final class Wifi {
 	}
 
 	private nonisolated static func summarySSID(_ interface: String) async -> String? {
+		await summary(interface)["SSID"]
+	}
+
+	// ipconfig's top-level "KEY : value" lines; nested ones are indented further.
+	private nonisolated static func summary(_ interface: String) async -> [String: String] {
 		let out = await Shell.output("ipconfig", "getsummary", interface)
-		return out.split(separator: "\n").lazy
-			.map { $0.trimmingCharacters(in: .whitespaces) }
-			.first { $0.hasPrefix("SSID : ") }
-			.map { String($0.dropFirst(7)) }
+		var fields: [String: String] = [:]
+		for line in out.split(separator: "\n") where line.hasPrefix("  ") && !line.hasPrefix("   ") {
+			let parts = line.split(separator: " : ", maxSplits: 1)
+			if parts.count == 2 { fields[parts[0].trimmingCharacters(in: .whitespaces)] = String(parts[1]) }
+		}
+		return fields
+	}
+
+	// macOS marks the path expensive on a Personal Hotspot, however it is
+	// reached. The interface carrying it says how; an iPhone's hotspot
+	// BSSID is locally administered, which rules out a metered access point.
+	private nonisolated static func tether(_ path: NWPath) async -> (via: Tether, name: String, interface: String)? {
+		guard path.status == .satisfied, path.isExpensive else { return nil }
+		let ports = (SCNetworkInterfaceCopyAll() as? [SCNetworkInterface] ?? []).reduce(into: [String: SCNetworkInterface]()) {
+			if let name = SCNetworkInterfaceGetBSDName($1) as String? { $0[name] = $1 }
+		}
+		// A VPN's utun is first when it is up; the hardware under it is what counts.
+		guard let interface = path.availableInterfaces.lazy.map(\.name).first(where: { ports[$0] != nil }),
+			let port = ports[interface]
+		else { return nil }
+		let type = SCNetworkInterfaceGetInterfaceType(port)
+		if type == kSCNetworkInterfaceTypeIEEE80211 {
+			let fields = await summary(interface)
+			if let bssid = fields["BSSID"], let octet = bssid.split(separator: ":").first.flatMap({ UInt8($0, radix: 16) }),
+				octet & 0x02 == 0
+			{ return nil }
+			let ssid = CWWiFiClient.shared().interface(withName: interface)?.ssid() ?? fields["SSID"]
+			return (.wifi, ssid ?? "iPhone", interface)
+		}
+		if type == kSCNetworkInterfaceTypeBluetooth { return (.bluetooth, "iPhone", interface) }
+		let name = (SCNetworkInterfaceGetLocalizedDisplayName(port) as String?)?.replacingOccurrences(of: " USB", with: "")
+		return (.usb, name ?? "iPhone", interface)
 	}
 
 	private nonisolated static func preferred(_ interface: String) async -> [String] {

@@ -28,7 +28,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		MenuBar.setAlpha(0)
 		Messages.observe(.show) { [weak self] info in self?.show(info) }
 		Messages.observe(.hide) { [weak self] _ in self?.hide() }
-		Messages.observe(.sync) { [weak self] _ in self?.media.announce() }
+		Messages.observe(.sync) { [weak self] _ in
+			self?.media.announce()
+			self?.wifi.announce()
+		}
 		NSWorkspace.shared.notificationCenter.addObserver(
 			forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
 		) { [weak self] _ in MainActor.assumeIsolated { self?.reset() } }

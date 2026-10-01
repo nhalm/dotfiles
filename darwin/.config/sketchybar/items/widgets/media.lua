@@ -60,5 +60,6 @@ barpop.watch(media, function(is_open)
 	paint()
 end)
 
--- A reload recreates the chip hidden; ask barpop for what is already playing.
+-- A reload recreates the chip hidden; ask barpop for what is already playing
+-- (and the Wi-Fi item's hotspot state). Loaded last, after every barpop event.
 sbar.exec("$CONFIG_DIR/helpers/barpop/bin/barpop sync 2>/dev/null")
