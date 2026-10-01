@@ -43,7 +43,7 @@ Space: `s1 4 · s2 8 · s3 12 · s4 16 · s5 20`. Radius (continuous): `card 22 
 | `ArcProgress(progress:start:end:)` | Progress through a span of time as an arc; nil = track only |
 | `EmptyState(symbol:title:message:action:)` / `Chip` | Replaces hero and sections when there is nothing to show |
 | `FooterLink(_:detail:action:)` | Last line, hairline above; closes the popup |
-| `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising |
+| `LevelMeter(value:tone:isLive:)` | How full something is, 0…1, 8pt; `.critical` when the user should act; live sheen while rising; dims when disabled (e.g. input level without Microphone access) |
 | `AppIcon(image:)` | An app's own icon at `IconTile` size; `ListItem(icon:)` shows it in place of the tile |
 | `HeroHeader(eyebrowChip:subtitleSymbol:)` · `HeaderToggle(attention:)` · `Chip(_:tone:)` | Chip beside the eyebrow; accent glyph before the subtitle; pulsing critical ring on a switch that is off but should be on; chip `.accent` / `.neutral` (a fact worth flagging, e.g. "Cellular data") / `.critical` |
 | `Section(_:content:trailing:)` / `SectionLabel(_:accessory:)` | Section whose label trails views (e.g. `IconButton`s) instead of text |

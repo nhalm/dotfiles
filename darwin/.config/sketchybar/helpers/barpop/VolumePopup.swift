@@ -33,6 +33,15 @@ struct VolumePopup: View {
 					LevelSlider(
 						label: "Input volume", value: Binding(get: { audio.inputVolume }, set: { audio.setInputVolume($0) }),
 						minSymbol: "mic", maxSymbol: "mic.fill", isEnabled: audio.hasInputVolume)
+					InputLevel()
+					if !audio.micAccess {
+						ListItem(
+							title: "Allow microphone access", subtitle: "To show the input level", symbol: "mic.slash"
+						) {
+							NSWorkspace.shared.open(
+								URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
+						}
+					}
 					ForEach(audio.inputs) { device in
 						ListItem(
 							title: device.name, subtitle: device.kind, symbol: device.symbol,
@@ -45,5 +54,15 @@ struct VolumePopup: View {
 				NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Sound.prefpane"))
 			}
 		}
+		.whileOpen { await audio.meterInput() }
+	}
+}
+
+// Its own view, so the meter's 25Hz updates redraw only itself.
+private struct InputLevel: View {
+	@Environment(Audio.self) private var audio
+
+	var body: some View {
+		LevelMeter(value: audio.inputLevel).disabled(!audio.micAccess)
 	}
 }

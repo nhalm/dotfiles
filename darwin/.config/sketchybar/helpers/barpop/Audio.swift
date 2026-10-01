@@ -1,3 +1,4 @@
+import AVFoundation
 import AudioToolbox
 import CoreAudio
 import Foundation
@@ -64,6 +65,9 @@ final class Audio {
 	var hasInputVolume = false
 	var inputs: [AudioDevice] = []
 	var currentInput: AudioObjectID = 0
+	// The default input's level, 0…1, while the popup is open.
+	var inputLevel: Double = 0
+	var micAccess = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
 
 	@ObservationIgnored private let system = AudioObjectID(kAudioObjectSystemObject)
 	@ObservationIgnored private var outputWatch = Watch()
@@ -113,6 +117,30 @@ final class Audio {
 		var id = device.id
 		var addr = address(device.isInput ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice)
 		AudioObjectSetPropertyData(system, &addr, 0, nil, UInt32(MemoryLayout<AudioObjectID>.size), &id)
+	}
+
+	// Meters the default input from open until close, on a fresh engine for
+	// each device: one built for the previous device stops when it changes.
+	func meterInput() async {
+		if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
+			_ = await AVCaptureDevice.requestAccess(for: .audio)
+		}
+		micAccess = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+		guard micAccess else { return }
+		let meter = InputMeter()
+		var metered: AudioObjectID?
+		while !Task.isCancelled {
+			if metered != currentInput {
+				metered = currentInput
+				await Task.detached { meter.restart() }.value
+			}
+			let now = meter.level
+			// Rises at once, falls back over a few frames.
+			inputLevel = now > inputLevel ? now : inputLevel * 0.75 + now * 0.25
+			try? await Task.sleep(for: .milliseconds(40))
+		}
+		await Task.detached { meter.stop() }.value
+		inputLevel = 0
 	}
 
 	var currentName: String { devices.first { $0.id == current }?.name ?? "Output" }
@@ -246,5 +274,45 @@ final class Audio {
 	) {
 		var addr = address(selector, scope)
 		AudioObjectAddPropertyListenerBlock(id, &addr, .main) { _, _ in MainActor.assumeIsolated { handler() } }
+	}
+}
+
+// Taps the default input on the audio thread and keeps its latest RMS as
+// 0…1 over -60…0 dB.
+private final class InputMeter: @unchecked Sendable {
+	private let lock = NSLock()
+	private var engine: AVAudioEngine?
+	private var latest = 0.0
+
+	var level: Double { lock.withLock { latest } }
+
+	func restart() {
+		stop()
+		let engine = AVAudioEngine()
+		let input = engine.inputNode
+		let format = input.outputFormat(forBus: 0)
+		guard format.channelCount > 0, format.sampleRate > 0 else { return }
+		input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+			guard let samples = buffer.floatChannelData?[0], buffer.frameLength > 0 else { return }
+			var sum: Float = 0
+			for i in 0..<Int(buffer.frameLength) { sum += samples[i] * samples[i] }
+			let db = 20 * log10(max(sqrt(sum / Float(buffer.frameLength)), 1e-6))
+			let level = Double(min(max((db + 60) / 60, 0), 1))
+			self?.lock.withLock { self?.latest = level }
+		}
+		do { try engine.start() } catch {
+			input.removeTap(onBus: 0)
+			return
+		}
+		lock.withLock { self.engine = engine }
+	}
+
+	func stop() {
+		let engine = lock.withLock {
+			defer { self.engine = nil; latest = 0 }
+			return self.engine
+		}
+		engine?.inputNode.removeTap(onBus: 0)
+		engine?.stop()
 	}
 }
