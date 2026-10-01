@@ -6,7 +6,7 @@ struct PerformancePopup: View {
 
 	var body: some View {
 		PopupCard(width: .wide) {
-			HeroHeader(eyebrow: "CPU", eyebrowSymbol: "cpu", value: "\(Int(perf.load.total.rounded()))", unit: "%", subtitle: subtitle)
+			HeroHeader(eyebrow: "CPU", eyebrowSymbol: "cpu", value: "\(Int(perf.load.total.rounded()))", unit: "%", subtitle: subtitle, live: true)
 			Section("Last 2 minutes", trailing: perf.history.max().map { "Peak \(Int($0.rounded()))%" }) {
 				Sparkline(values: perf.history, scale: 100, height: 44)
 			}
@@ -15,11 +15,11 @@ struct PerformancePopup: View {
 				StatGrid(columns: 3) {
 					if let memory = perf.memory {
 						let used = bytes(memory.used)
-						StatTile(label: "Memory", value: used.value, unit: used.unit, detail: "of \(bytes(memory.total).joined)")
+						StatTile(label: "Memory", value: used.value, unit: used.unit, detail: "of \(bytes(memory.total).joined)", live: true)
 						let compressed = bytes(memory.compressed)
-						StatTile(label: "Compressed", value: compressed.value, unit: compressed.unit)
+						StatTile(label: "Compressed", value: compressed.value, unit: compressed.unit, live: true)
 						let swap = bytes(memory.swap)
-						StatTile(label: "Swap", value: swap.value, unit: swap.unit)
+						StatTile(label: "Swap", value: swap.value, unit: swap.unit, live: true)
 					}
 					StatTile(label: "Thermal", value: thermal)
 					if let disk = perf.disk {

@@ -3,6 +3,7 @@ import Foundation
 enum Messages: String {
 	case show = "barpop.show"
 	case hide = "barpop.hide"
+	case sync = "barpop.sync"
 
 	static func post(_ message: Messages, _ info: [String: String]) {
 		DistributedNotificationCenter.default().postNotificationName(

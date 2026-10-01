@@ -10,6 +10,7 @@ struct StatTile<Accessory: View, Footer: View>: View {
 	let value: String
 	var unit: String?
 	var detail: String?
+	var live = false
 	@ViewBuilder var accessory: Accessory
 	@ViewBuilder var footer: Footer
 
@@ -24,10 +25,10 @@ struct StatTile<Accessory: View, Footer: View>: View {
 			.font(Theme.Font.caption)
 			.foregroundStyle(theme.textSecondary)
 			HStack(alignment: .firstTextBaseline, spacing: 2) {
-				Text(value).font(Theme.Font.headline).contentTransition(.numericText())
+				Text(value).font(Theme.Font.headline).contentTransition(live ? .identity : .numericText())
 				if let unit { Text(unit).font(Theme.Font.caption).foregroundStyle(theme.textSecondary) }
 			}
-			.animation(Motion.numeric, value: value)
+			.animation(live ? nil : Motion.numeric, value: value)
 			.padding(.top, 2)
 			if let detail {
 				Text(detail).font(Theme.Font.caption).foregroundStyle(theme.textSecondary).lineLimit(1)
@@ -43,17 +44,19 @@ struct StatTile<Accessory: View, Footer: View>: View {
 extension StatTile where Footer == EmptyView {
 	init(
 		label: String, symbol: String? = nil, value: String, unit: String? = nil, detail: String? = nil,
-		@ViewBuilder accessory: () -> Accessory
+		live: Bool = false, @ViewBuilder accessory: () -> Accessory
 	) {
 		self.init(
-			label: label, symbol: symbol, value: value, unit: unit, detail: detail, accessory: accessory,
+			label: label, symbol: symbol, value: value, unit: unit, detail: detail, live: live, accessory: accessory,
 			footer: { EmptyView() })
 	}
 }
 
 extension StatTile where Accessory == EmptyView, Footer == EmptyView {
-	init(label: String, symbol: String? = nil, value: String, unit: String? = nil, detail: String? = nil) {
-		self.init(label: label, symbol: symbol, value: value, unit: unit, detail: detail, accessory: { EmptyView() })
+	init(
+		label: String, symbol: String? = nil, value: String, unit: String? = nil, detail: String? = nil, live: Bool = false
+	) {
+		self.init(label: label, symbol: symbol, value: value, unit: unit, detail: detail, live: live, accessory: { EmptyView() })
 	}
 }
 

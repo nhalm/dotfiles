@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		MenuBar.setAlpha(0)
 		Messages.observe(.show) { [weak self] info in self?.show(info) }
 		Messages.observe(.hide) { [weak self] _ in self?.hide() }
+		Messages.observe(.sync) { [weak self] _ in self?.media.announce() }
 		NSWorkspace.shared.notificationCenter.addObserver(
 			forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
 		) { [weak self] _ in MainActor.assumeIsolated { self?.reset() } }
@@ -216,7 +217,9 @@ final class PopupPanel: NSPanel {
 	// Sized by the caller, so the top edge stays put when the content grows.
 	var fittingSize: NSSize { host?.sizeThatFits(in: NSSize(width: 10_000, height: 10_000)) ?? .zero }
 
-	override var canBecomeKey: Bool { true }
+	// Only the wallpaper search takes keys; a key panel elsewhere would leave
+	// the app you were typing in without focus when it closes.
+	override var canBecomeKey: Bool { name == "wallpaper" }
 
 	// Its last frames leave the panel in an autorelease pool that drains only
 	// on barpop's next event; dropping the content stops its animations now.

@@ -18,10 +18,10 @@ struct WifiPopup: View {
 				StatGrid(columns: 2) {
 					let down = rate(wifi.download.last ?? 0)
 					let up = rate(wifi.upload.last ?? 0)
-					StatTile(label: "Download", symbol: "arrow.down", value: down.value, unit: down.unit) {} footer: {
+					StatTile(label: "Download", symbol: "arrow.down", value: down.value, unit: down.unit, live: true) {} footer: {
 						Sparkline(values: wifi.download)
 					}
-					StatTile(label: "Upload", symbol: "arrow.up", value: up.value, unit: up.unit) {} footer: {
+					StatTile(label: "Upload", symbol: "arrow.up", value: up.value, unit: up.unit, live: true) {} footer: {
 						Sparkline(values: wifi.upload, tone: .alt)
 					}
 				}

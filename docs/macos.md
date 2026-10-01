@@ -98,26 +98,31 @@ right.
 
 | Item | Detail |
 |---|---|
-| `aerospace_workspaces` | numbers with one fixed-width slot per app icon, `│` between workspaces; the focused window's icon is lit. Refreshed on `aerospace_workspace_change`, `front_app_switched`, `display_change` and `system_woke`. Click focuses, right-click moves the window |
-| `calendar` | `%a. %d %b.` + `%H:%M`, 30s; click opens Calendar |
-| `weather` | wttr.in, location from `CoreLocationCLI` cached 30 min, exponential backoff to 6h on failure; right-click opens Weather |
-| `battery` | icon only, red at 20% or below; popup shows charge and time remaining |
-| `volume` | icon only; click opens the barpop volume card (level, mute, output devices); scroll adjusts, right-click opens Sound preferences |
-| `wifi` | icon only; popup shows SSID, hostname, IP, subnet, router and throughput from the compiled `network_load` provider, each address row copying itself on click |
-| `wallpaper` | icon only; click or `caps+w` opens the barpop wallpaper popup (see Theming); right-click opens the folder |
+| `aerospace_workspaces` | numbers with one fixed-width slot per app icon; the focused window's icon is lit. Follows AeroSpace's event socket (`helpers/aerospace_events.sh`). Click focuses, right-click moves the window |
+| `calendar` | `%a. %d %b.` + `%H:%M`; click opens the calendar popup (month, agenda, world clocks) |
+| `weather` | icon + temperature from wttr.in, backing off to 6h on failure; click opens the weather popup (Open-Meteo, illustrated sky), right-click opens Weather |
+| `battery` | icon only, red at 20% or below; popup shows charge, time remaining, health and energy use |
+| `volume` | icon only; popup has level, mute and output devices; scroll adjusts, right-click opens Sound settings |
+| `performance` | icon only; popup shows CPU (history, per core), memory, top processes, thermal, disk and uptime; right-click opens Activity Monitor |
+| `wifi` | icon only; popup shows the network, throughput and address rows that copy on click |
+| `bluetooth` | icon only; popup lists paired devices |
+| `media` | title and artist while something plays (via `media-control`); click opens the now playing popup, right-click toggles play |
+| `wallpaper` | icon only; click or `caps+w` opens the wallpaper popup (see Theming); right-click opens the folder |
 
-Popups close once the mouse leaves the icon and the popup; one opened by a
-shortcut stays until the pointer has been over it. The SSID needs
-`ipconfig setverbose 1`, which post-link sets.
+Weather's chip and popup both get location through `helpers/location.sh`,
+which keeps the last good CoreLocation fix. The SSID needs `ipconfig setverbose 1`, which post-link sets.
 
-`helpers/barpop` is a small SwiftUI app for popups sketchybar cannot draw.
-The helpers makefile builds it with `swiftc` and the volume item starts it;
-`barpop show <popup> <rects> <item> [keyboard]` opens one under an item, and
-`sketchybar --trigger barpop_open POPUP=<popup>` does it for an item that
-calls `barpop.shortcut`. It reads its colours
-from matugen's `barpop.json`, and while running it keeps the native menu bar
-invisible when the pointer reaches the top edge (SkyLight's
-`SLSSetMenuBarInsetAndAlpha`, as yabai's `menubar_opacity`).
+`helpers/barpop` is a SwiftUI app for the popups, built from the components in
+`helpers/barpop/Kit` (see its `DESIGN.md`). The helpers makefile builds it
+with `swiftc` and `helpers/barpop.lua` starts it; it exits with sketchybar.
+`barpop show <popup> <rects> <item> [keyboard]` opens a popup under an item,
+`sketchybar --trigger barpop_open POPUP=<popup>` does it from a shortcut, and
+`barpop sync` repaints bar items from its state after a reload. Popups close
+once the pointer leaves the icon and the popup. It reads its colours from
+matugen's `barpop.json`, and while running keeps the native menu bar
+invisible at the top edge (SkyLight's `SLSSetMenuBarInsetAndAlpha`, as yabai's
+`menubar_opacity`) with "Show menu bar background" on, which removes the
+reveal glow.
 
 `colors.lua` falls back to a static TokyoNight Storm table when the
 matugen-generated `matugen-colors.lua` beside it does not exist.

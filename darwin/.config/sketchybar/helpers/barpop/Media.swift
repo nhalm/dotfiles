@@ -106,11 +106,14 @@ final class Media {
 		self.now = now
 		if now?.artwork != old?.artwork { loadArtwork(now?.artwork) }
 		if now?.bundleID != old?.bundleID || now?.pid != old?.pid { source = now.flatMap(Self.source) }
-		if now?.title != old?.title || now?.artist != old?.artist || now?.isPlaying != old?.isPlaying {
-			Shell.trigger(
-				"barpop_media",
-				["TITLE": now?.title ?? "", "ARTIST": now?.artist ?? "", "PLAYING": now?.isPlaying == true ? "1" : "0"])
-		}
+		if now?.title != old?.title || now?.artist != old?.artist || now?.isPlaying != old?.isPlaying { announce() }
+	}
+
+	// Tells the bar's chip what is playing.
+	func announce() {
+		Shell.trigger(
+			"barpop_media",
+			["TITLE": now?.title ?? "", "ARTIST": now?.artist ?? "", "PLAYING": now?.isPlaying == true ? "1" : "0"])
 	}
 
 	private func loadArtwork(_ data: Data?) {

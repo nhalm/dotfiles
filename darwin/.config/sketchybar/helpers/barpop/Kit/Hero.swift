@@ -20,6 +20,9 @@ struct HeroHeader<Accessory: View>: View {
 	var subtitleSymbol: String?
 	var style = Style.numeric
 	var dimmed = false
+	// Values that change every second or two skip the rolling digits, which
+	// keep the card redrawing at the display rate.
+	var live = false
 	var backdrop = Backdrop.none
 	@ViewBuilder var accessory: Accessory
 
@@ -55,12 +58,12 @@ struct HeroHeader<Accessory: View>: View {
 						.tracking(style == .numeric ? Theme.Tracking.display : Theme.Tracking.title)
 						.foregroundStyle(dimmed ? secondary : theme.text)
 						.lineLimit(1)
-						.contentTransition(.numericText())
+						.contentTransition(live ? .identity : .numericText())
 					if let unit {
 						Text(unit).font(Theme.Font.displayUnit).foregroundStyle(secondary)
 					}
 				}
-				.animation(Motion.numeric, value: value)
+				.animation(live ? nil : Motion.numeric, value: value)
 				if let subtitle {
 					HStack(spacing: Space.s1 + 2) {
 						if let subtitleSymbol {
@@ -82,11 +85,11 @@ extension HeroHeader where Accessory == EmptyView {
 	init(
 		eyebrow: String, eyebrowSymbol: String? = nil, eyebrowChip: Chip? = nil, value: String, unit: String? = nil,
 		subtitle: String? = nil, subtitleSymbol: String? = nil, style: Style = .numeric, dimmed: Bool = false,
-		backdrop: Backdrop = .none
+		live: Bool = false, backdrop: Backdrop = .none
 	) {
 		self.init(
 			eyebrow: eyebrow, eyebrowSymbol: eyebrowSymbol, eyebrowChip: eyebrowChip, value: value, unit: unit,
-			subtitle: subtitle, subtitleSymbol: subtitleSymbol, style: style, dimmed: dimmed, backdrop: backdrop,
+			subtitle: subtitle, subtitleSymbol: subtitleSymbol, style: style, dimmed: dimmed, live: live, backdrop: backdrop,
 			accessory: { EmptyView() })
 	}
 }

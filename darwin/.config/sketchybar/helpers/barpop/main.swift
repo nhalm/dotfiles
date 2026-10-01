@@ -31,7 +31,10 @@ case "show" where args.count >= 5:
 		.show, ["popup": args[2], "rects": args[3], "item": args[4], "keyboard": args.count > 5 && args[5] == "keyboard" ? "1" : "0"])
 case "hide":
 	Messages.post(.hide, [:])
+// A reload recreates the bar items; this repaints them from barpop's state.
+case "sync":
+	Messages.post(.sync, [:])
 default:
-	FileHandle.standardError.write(Data("usage: barpop daemon <pid> | show <name> <rects> <item> [keyboard] | hide\n".utf8))
+	FileHandle.standardError.write(Data("usage: barpop daemon <pid> | show <name> <rects> <item> [keyboard] | hide | sync\n".utf8))
 	exit(1)
 }

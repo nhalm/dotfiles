@@ -59,3 +59,6 @@ barpop.watch(media, function(is_open)
 	open = is_open
 	paint()
 end)
+
+-- A reload recreates the chip hidden; ask barpop for what is already playing.
+sbar.exec("$CONFIG_DIR/helpers/barpop/bin/barpop sync 2>/dev/null")
