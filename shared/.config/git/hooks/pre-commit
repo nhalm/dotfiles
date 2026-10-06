@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_hook="$(git rev-parse --git-path hooks/pre-commit)"
+# --git-path follows core.hooksPath (i.e. back to this file), so resolve the
+# repo's own hooks dir explicitly.
+repo_hook="$(git rev-parse --path-format=absolute --git-common-dir)/hooks/pre-commit"
 if [ -x "$repo_hook" ] && ! [ "$repo_hook" -ef "${BASH_SOURCE[0]}" ]; then
 	"$repo_hook" "$@" || exit $?
 fi
