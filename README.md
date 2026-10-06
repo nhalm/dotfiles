@@ -224,7 +224,8 @@ machine-wide. `pre-commit` chains back to a repo-local hook if one exists.
 | `system/linux/etc/` | Root-owned drop-ins: sshd, sysctl, faillock, docker daemon |
 | `platform/linux/arch/post-link.sh` | ufw default-deny, ssh rate-limited, `system/` tree, `paccache.timer` |
 | `lib/system.sh` | Installs root-owned `0644`, validates with `sshd -t` before reload |
-| `shared/.config/git/hooks/pre-commit` | gitleaks on staged content, global via `core.hooksPath` |
+| `shared/.config/git/hooks/pre-commit` | runs the repo's own `.git/hooks/pre-commit`, then gitleaks on staged content; global via `core.hooksPath` |
+| `shared/.config/git/hooks/pre-push` | runs the repo's own `.git/hooks/pre-push` (`core.hooksPath` otherwise hides it) |
 | `shared/.gitignore_global` | Credential paths |
 | `shared/.ssh/config` | No agent forwarding, hashed known_hosts, keys from 1Password |
 | `shared/.claude/settings.json` | Deny rules for credential paths and unrecoverable commands |

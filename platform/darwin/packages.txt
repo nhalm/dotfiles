@@ -4,6 +4,7 @@
 bash
 git
 git-lfs
+gitleaks
 openssh
 openssl
 gnupg
