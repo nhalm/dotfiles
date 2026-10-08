@@ -178,6 +178,7 @@ orphaned silently on the next major bump.
 | Compiled tool the package manager carries | `packages.txt` | ripgrep, fzf, jq, neovim, starship, chafa |
 | Tool it does *not* carry, but a registry does | `conf.d/<os>.toml` | `cargo:matugen`, `npm:ccusage` |
 | GUI application | `casks.txt` | ghostty, raycast, 1password |
+| Claude Code skill | [nhalm/skills](https://github.com/nhalm/skills), declared in `shared/.claude/settings.json` | golang-pro, pgxkit |
 
 Prefer the package manager where it has the tool.
 
