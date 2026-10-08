@@ -28,6 +28,23 @@ if have docker-compose; then
 	echo "docker compose plugin configured"
 fi
 
+# --- colima -------------------------------------------------------------
+# ~/.ssh/config is linked from the repo, so colima's Include, with its absolute
+# home path, would land in the working tree. Off in the template that new
+# profiles copy, and in every existing profile; a running VM picks it up at its
+# next start.
+if have colima && have yq; then
+	colima_tmpl="$(colima template --print)"
+	[ -f "$colima_tmpl" ] || colima template --editor true >/dev/null 2>&1
+	for f in "$colima_tmpl" "$(dirname "$(dirname "$colima_tmpl")")"/*/colima.yaml; do
+		[ -f "$f" ] || continue
+		[ "$(yq '.sshConfig' "$f")" = "false" ] && continue
+		yq -i '.sshConfig = false' "$f"
+		echo "colima ssh config disabled in ${f#"$HOME/"}"
+	done
+	unset colima_tmpl f
+fi
+
 # --- config checks ------------------------------------------------------
 # Validate what stow just linked, so a syntax error surfaces here rather than
 # the next time the app starts.

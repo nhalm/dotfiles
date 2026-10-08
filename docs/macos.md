@@ -217,7 +217,7 @@ Installed outside those lists:
 | Where | What |
 |---|---|
 | `setup.sh` | Homebrew, taps (felixkratz, nikitabobko, hashicorp — trusted *and* tapped), the docker CLI formula, corelocationcli |
-| `post-link.sh` | wallpapers, the docker compose plugin symlink, the Zen theme link, config checks for the stowed sketchybar Lua and aerospace |
+| `post-link.sh` | wallpapers, the docker compose plugin symlink, colima `sshConfig: false` in the template and every profile, the Zen theme link, config checks for the stowed sketchybar Lua and aerospace |
 | `gui.sh` | casks, sketchybar, borders, SbarLua from source |
 
 ## Terminal
