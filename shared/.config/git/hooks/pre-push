@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Git feeds refs on stdin once; buffer it so both hooks below can read it.
+refs="$(cat)"
+
 # core.hooksPath replaces .git/hooks, so run the repo's own pre-push (e.g. a
-# force-push guardrail) if it has one. Git feeds refs on stdin; pass it through.
+# force-push guardrail) if it has one.
 repo_hook="$(git rev-parse --path-format=absolute --git-common-dir)/hooks/pre-push"
 if [ -x "$repo_hook" ] && ! [ "$repo_hook" -ef "${BASH_SOURCE[0]}" ]; then
-	exec "$repo_hook" "$@"
+	printf '%s' "${refs:+$refs$'\n'}" | "$repo_hook" "$@" || exit $?
+fi
+
+# This file takes the place of the hook `git lfs install` writes here.
+if command -v git-lfs >/dev/null 2>&1; then
+	printf '%s' "${refs:+$refs$'\n'}" | git lfs pre-push "$@"
 fi
