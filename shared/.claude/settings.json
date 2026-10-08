@@ -83,7 +83,16 @@
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "nhalm@nhalm": true
+  },
+  "extraKnownMarketplaces": {
+    "nhalm": {
+      "source": {
+        "source": "github",
+        "repo": "nhalm/skills"
+      }
+    }
   },
   "effortLevel": "high",
   "autoUpdatesChannel": "latest",
