@@ -491,7 +491,7 @@ provide, and omits anything another entry pulls in as a dependency.
 | Git | github-cli |
 | Terminal | ghostty |
 | Containers | docker, docker-compose, docker-buildx |
-| Audio | pipewire-jack, playerctl |
+| Audio | playerctl |
 | Network | network-manager-applet, blueman |
 | Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, ly, qt6ct, qt5/qt6 wayland, papirus-icon-theme |
 | Printing | cups, cups-pk-helper, system-config-printer |
