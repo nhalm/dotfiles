@@ -24,7 +24,17 @@ _install_yay() {
 	rm -rf "$tmp"
 }
 
+# CachyOS's default vlc-plugins-all can pull in jack2, which conflicts with
+# pipewire-jack. pacman --noconfirm answers no to removing it, failing the whole
+# install, so drop it here; pipewire-jack satisfies its dependents.
+_replace_jack2() {
+	pacman -Qq jack2 >/dev/null 2>&1 || return 0
+	echo "removing jack2 in favour of pipewire-jack..."
+	sudo pacman -Rdd --noconfirm jack2
+}
+
 pkg_refresh
+_replace_jack2
 pkg_install_file "$HERE/packages.txt"
 
 _install_yay
