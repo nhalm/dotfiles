@@ -152,6 +152,7 @@ lives in `~/.config/mise/conf.d/`; `config.toml` holds only `[settings]`.
 |---|---|---|
 | `conf.d/shared.toml` | `shared` | Node 24, Go 1, Rust 1, zoxide, lazygit, herdr, `npm:ccstatusline` |
 | `conf.d/darwin.toml` | `darwin` | Lua 5.5, Ruby 3, Bun, `cargo:matugen`, `npm:carbonyl`, `npm:@mermaid-js/mermaid-cli`, `npm:ccusage` |
+| `conf.d/linux.toml` | `linux` | Ruby 3, Bun, `npm:carbonyl`, `npm:@mermaid-js/mermaid-cli`, `npm:ccusage` |
 
 Tools name a major version, so `mise upgrade` never crosses a major. Two
 exceptions: `lua` stays on 5.5 for SbarLua, and `carbonyl` names an exact build
@@ -250,9 +251,11 @@ sudo ufw allow from 192.168.0.0/16 to any port 22 proto tcp
 
 ## Rebuilding
 
-1. Install Arch with [nhalm/arch-install](https://github.com/nhalm/arch-install),
-   which lays down what this repo assumes: LUKS, btrfs + snapper, pipewire,
-   NetworkManager, bluetooth, printing.
+1. Install [CachyOS](https://cachyos.org): Limine, "Erase disk" with
+   encryption (btrfs is the default), No Desktop, default package selection
+   minus "CachyOS shell configuration". This lays down what this repo assumes:
+   LUKS, btrfs + snapper with Limine snapshot boot, pipewire, NetworkManager,
+   bluetooth, ufw, the kernels and hardware drivers.
 2. Run the one-liner above.
 3. Sign in to 1Password, enable its SSH agent, re-run `./setup.sh` for the ssh
    hardening.

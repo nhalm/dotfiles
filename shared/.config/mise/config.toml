@@ -1,5 +1,5 @@
 # Settings only. Every tool lives in conf.d/ -- shared.toml for both machines,
-# darwin.toml for macOS -- so the full set is readable in one directory.
+# darwin.toml or linux.toml per OS -- so the full set is readable in one directory.
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
 auto_install = true
