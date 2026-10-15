@@ -1,0 +1,13 @@
+# Linux-only runtimes, merged on top of the shared ~/.config/mise/config.toml.
+# The macOS set minus lua (SbarLua only) and matugen (pacman here).
+[tools]
+ruby = "3"
+bun = "1"
+
+# Through the npm backend, not `npm install -g`: the latter drops binaries into
+# the active node's prefix, so a node major bump orphans them.
+# carbonyl publishes nothing but prereleases, which mise filters out of a range,
+# so it is the one tool that has to name an exact build.
+"npm:carbonyl" = "0.0.3-next.ab80a27"
+"npm:@mermaid-js/mermaid-cli" = "11"
+"npm:ccusage" = "20"

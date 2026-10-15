@@ -1,50 +1,31 @@
 # Arch official repos. Installed with `pacman -S --needed`.
 #
-# Scope: what this machine needs *beyond* a base archinstall. Anything the
-# installer lays down, and anything another entry here already pulls in as a
-# dependency, is left out -- the closure of this list still reproduces the
-# machine.
+# Scope: what this machine needs *beyond* a CachyOS install. Anything the
+# installer lays down -- including chwd's hardware drivers -- and anything
+# another entry here already pulls in as a dependency, is left out.
 #
-# Step 1 of the rebuild (see README) must select the same archinstall options:
-# btrfs + snapper, pipewire audio, NetworkManager, bluetooth, printing.
-
-# --------------------------------------------------------------- kernel -----
-linux-lts
-linux-headers
-
-# ----------------------------------------------------------- filesystem -----
-snapper
-zram-generator
+# Step 1 of the rebuild (see README) must use the same installer choices:
+# Limine, btrfs, encryption, No Desktop, default package selection.
 
 # ------------------------------------------------------------- hardware -----
-intel-ucode
-intel-media-driver
-intel-lpmd
-vulkan-intel
 libva-utils
 thermald
 fwupd
-sof-firmware
 v4l2loopback-dkms
 
 # ------------------------------------------------------------- security -----
-ufw
 gitleaks
 arch-audit
 
 # ----------------------------------------------------------------- core -----
-base-devel
-git
 git-lfs
-openssh
 stow
-wget
-unzip
-man-db
 clang
 7zip
 jq
 yq
+# ruby's psych extension, for mise building ruby
+libyaml
 
 # ---------------------------------------------------------------- shell -----
 zsh
@@ -59,7 +40,6 @@ wl-clipboard
 xclip
 
 # ------------------------------------------------------ search and files ----
-ripgrep
 fd
 fzf
 bat
@@ -68,8 +48,6 @@ tree
 
 # --------------------------------------------------------------- system -----
 htop
-btop
-pacman-contrib
 
 # ------------------------------------------------------------------ git -----
 github-cli
@@ -83,19 +61,12 @@ docker-buildx
 ghostty
 
 # ---------------------------------------------------------------- audio -----
-gst-plugin-pipewire
-pipewire-alsa
 pipewire-jack
-pipewire-pulse
-wireplumber
-alsa-utils
-pavucontrol
 playerctl
 
 # -------------------------------------------------------------- network -----
 network-manager-applet
 blueman
-bluez-utils
 
 # ---------------------------------------------- desktop: Hyprland session ---
 hyprland
@@ -115,8 +86,6 @@ qt6-virtualkeyboard
 papirus-icon-theme
 swaync
 quickshell
-upower
-power-profiles-daemon
 nwg-displays
 awww
 satty
@@ -135,7 +104,7 @@ cups-pk-helper
 system-config-printer
 
 # --------------------------------------------------------- desktop apps -----
-firefox
+chromium
 nemo
 imv
 mpv
@@ -146,6 +115,3 @@ imagemagick
 # ---------------------------------------------------------------- fonts -----
 ttf-monaspace-variable
 ttf-jetbrains-mono-nerd
-noto-fonts
-noto-fonts-emoji
-ttf-dejavu

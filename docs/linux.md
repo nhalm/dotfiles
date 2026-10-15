@@ -4,10 +4,10 @@ The desktop is a Hyprland session with a quickshell bar, swaync notifications,
 and a colour scheme derived from the wallpaper by matugen. Everything here lives
 in the `arch` stow package unless noted; `linux` holds what any distro would use.
 
-The base system comes from
-[nhalm/arch-install](https://github.com/nhalm/arch-install) — LUKS, btrfs +
-snapper, pipewire, NetworkManager, bluetooth, printing. `packages.txt` lists
-only what that does not already provide.
+The base system is a [CachyOS](https://cachyos.org) install — LUKS, btrfs +
+snapper with `limine-snapper-sync`, the `linux-cachyos` kernels, pipewire,
+NetworkManager, bluetooth, ufw, and `chwd`'s hardware drivers. `packages.txt`
+lists only what that does not already provide.
 
 ## Session
 
@@ -476,28 +476,27 @@ output. The success character keeps a fixed green.
 
 ## Packages
 
-`platform/linux/arch/packages.txt` lists only what a base `archinstall` does not
+`platform/linux/arch/packages.txt` lists only what a CachyOS install does not
 provide, and omits anything another entry pulls in as a dependency.
 
 | Group | Contents |
 |---|---|
-| Kernel, hardware | linux-lts, linux-headers, intel-ucode, intel-media-driver, intel-lpmd, vulkan-intel, libva-utils, thermald, fwupd, sof-firmware, v4l2loopback-dkms |
-| Filesystem | snapper, zram-generator |
-| Security | ufw, gitleaks, arch-audit |
-| Core | base-devel, git, git-lfs, openssh, stow, wget, unzip, man-db, clang, 7zip, jq, yq |
+| Hardware | libva-utils, thermald, fwupd, v4l2loopback-dkms |
+| Security | gitleaks, arch-audit |
+| Core | git-lfs, stow, clang, 7zip, jq, yq, libyaml |
 | Shell | zsh, starship, mise |
 | Editor | neovim, python-pynvim, tree-sitter-cli, wl-clipboard, xclip |
-| Search | ripgrep, fd, fzf, bat, glow, tree |
-| System | htop, btop, pacman-contrib |
+| Search | fd, fzf, bat, glow, tree |
+| System | htop |
 | Git | github-cli |
 | Terminal | ghostty |
 | Containers | docker, docker-compose, docker-buildx |
-| Audio | pipewire-alsa/jack/pulse, gst-plugin-pipewire, wireplumber, alsa-utils, pavucontrol, playerctl |
-| Network | network-manager-applet, blueman, bluez-utils |
-| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, upower, power-profiles-daemon, ly, qt6ct, qt5/qt6 wayland, papirus-icon-theme |
+| Audio | pipewire-jack, playerctl |
+| Network | network-manager-applet, blueman |
+| Hyprland session | hyprland, hyprlauncher, hyprpicker, hyprpolkitagent, hyprshutdown, hyprlock, hypridle, hyprshot, hyprsunset, xdg-desktop-portal-hyprland, quickshell, swaync, awww, matugen, fuzzel, satty, wf-recorder, cliphist, wl-clip-persist, nwg-displays, brightnessctl, wlopm, ly, qt6ct, qt5/qt6 wayland, papirus-icon-theme |
 | Printing | cups, cups-pk-helper, system-config-printer |
-| Apps | firefox, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
-| Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd, noto-fonts, noto-fonts-emoji, ttf-dejavu |
+| Apps | chromium, nemo, imv, mpv, obs-studio, telegram-desktop, imagemagick |
+| Fonts | ttf-monaspace-variable, ttf-jetbrains-mono-nerd |
 
 `aur.txt` holds `1password`, `1password-cli` and `zen-browser-bin`, installed
 through yay with the PKGBUILD diff prompt kept.
