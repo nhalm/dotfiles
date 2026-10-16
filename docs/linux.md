@@ -71,13 +71,12 @@ any of this.
 | Wallpaper daemon | `awww-daemon`, started on demand by `wallpaper.sh` |
 | Idle | hypridle |
 | Lock | hyprlock |
-| Network / bluetooth UI | quickshell sidebar; `nm-connection-editor` and `blueman-manager` for detail |
+| Network / bluetooth UI | quickshell bar popups; `nm-connection-editor` and `blueman-manager` for detail |
 | Display layout | nwg-displays |
 | Screenshots, annotation, recording | hyprshot, satty, `screenrec.sh` (slurp + wf-recorder) |
 | Display manager | ly (`ly@tty2.service`) |
 
-swaync's panel (`SUPER+N`) and the quickshell sidebar (`SUPER+A`) both offer
-DND, Wi-Fi, bluetooth and media controls, and are independent of each other.
+swaync's panel (`SUPER+N`) shows only notifications.
 
 `bar.json` names only the modules in the bar's islands; `shell.qml` instantiates
 `Sidebar`, `Hotkeys`, `Overview` and `WallpaperPicker` directly, each reachable
@@ -195,9 +194,6 @@ with no description does not appear.
 
 The profile is whatever you last set it to — nothing switches it on plug or
 unplug, and power-profiles-daemon starts every boot on `balanced`.
-`modules/PowerProfile.qml` cycles it from the bar.
-
-It reads `org.freedesktop.UPower.PowerProfiles` over `busctl`.
 
 **No global `python` pin** — it would shadow the distro interpreter. Pin per
 project.
@@ -236,7 +232,7 @@ cursor when a window floats or re-tiles.
   "modules": {
     "left":   ["Launcher", "Workspaces"],
     "center": ["NowPlaying", "Volume", "Battery", "Clock"],
-    "right":  ["Updates", "PowerProfile", "Tray", "Notifications", "PowerMenu"]
+    "right":  ["Weather", "Performance", "Network", "Bluetooth", "Updates", "Tray", "Notifications", "PowerMenu"]
   }
 }
 ```
@@ -255,9 +251,12 @@ left one.
 | `Battery` | percent, warn under 20% — hidden on AC | — |
 | `Clock` | `ddd dd MMM  HH:mm` | month calendar popup |
 | `Updates` | `checkupdates` count, hidden at zero, polled every 30 min | ghostty running `sudo pacman -Syu` |
-| `PowerProfile` | current profile | cycle power-saver → balanced → performance |
+| `Weather` | condition glyph + temp | popup: now, 12h, 5-day, daylight |
+| `Performance` | chip glyph, warn at 85% CPU | L popup: CPU/memory graphs, cores, processes; R btop |
+| `Network` | Wi-Fi strength or ethernet | L popup: rates, IP, networks; R nm-connection-editor |
+| `Bluetooth` | power / connected glyph | L popup: devices; R blueman-manager |
 | `Tray` | SystemTray items | L activate, R menu |
-| `Notifications` | swaync count / DND glyph | L control center, R toggle DND |
+| `Notifications` | swaync count / DND glyph | L notifications, R toggle DND |
 | `PowerMenu` | power glyph | lock, suspend, log out, reboot, shut down |
 
 #### NowPlaying
@@ -273,7 +272,7 @@ Three overlay windows, each with an IPC handler:
 
 | Window | Opened by | Contents |
 |---|---|---|
-| Sidebar | `SUPER+A`, `qs ipc call sidebar toggle` | theme toggle, colour picker, screenshot; wallpaper and display buttons; volume and brightness sliders; Wi-Fi, bluetooth, blue-light, idle-lock and DND toggles; MPRIS cards |
+| Sidebar | `SUPER+A`, `qs ipc call sidebar toggle` | theme toggle, colour picker, screenshot; wallpaper and display buttons; volume and brightness sliders; blue-light, idle-lock and DND toggles; MPRIS cards |
 | Overview | `SUPER+Tab`, `qs ipc call overview toggle` | every window grouped by workspace; click to focus |
 | Wallpaper picker | `SUPER+W`, `qs ipc call wallpaper toggle` | searchable carousel with live palette preview |
 
@@ -326,12 +325,10 @@ the `[Install*]` section, not the one marked `Default=1` — symlinks the render
 into `chrome/zen-matugen.css`, prepends the `@import` to `userChrome.css`, and
 sets `toolkit.legacyUserProfileCustomizations.stylesheets` in `user.js`.
 
-`install_zen_autoconfig` puts `lib/zen/zen-matugen.cfg` and its prefs file beside
-the Zen binary, with sudo. Zen reads `userChrome.css` only at startup, so that
-script polls the rendered palette every 5s and loads it into open windows as a
-user-origin sheet. It also installs `distribution/policies.json`, which disables
-Zen's own updater -- an upgrade replaces these files and ends the live reload.
-After upgrading Zen deliberately, re-run `./setup.sh`.
+`install_zen_autoconfig` puts `lib/zen/zen-matugen.cfg` and its prefs file in
+`/opt/zen-browser-bin`, with sudo. Zen reads `userChrome.css` only at startup, so
+that script polls the rendered palette every 5s and loads it into open windows as
+a user-origin sheet.
 
 Borders go through `hyprctl eval` rather than a config reload: a reload
 re-applies the monitor rules and flickers every display.
@@ -548,7 +545,7 @@ Present in the config and not what a reader would guess:
   `color_scheme_path` takes neither `~` nor an env var, and `AllowUsers nick` in
   the sshd drop-in. Change these first if the repo is reused.
 - **`Config.qml`'s built-in defaults are smaller than `bar.json`** — no Launcher,
-  NowPlaying, Updates or PowerProfile. A missing or malformed `bar.json` yields a
+  NowPlaying, Updates, Weather, Performance, Network or Bluetooth. A missing or malformed `bar.json` yields a
   visibly reduced bar rather than an error.
 - **`hyprctl` exits 0 even when the Lua call fails**, so `hypr-lid.sh` and
   `hypr-monitors.sh` parse output for `error*` rather than checking the status.

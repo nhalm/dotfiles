@@ -274,7 +274,7 @@ link_zen_theme() {
 	local root profile chrome colors userchrome prefs candidate
 
 	root=""
-	for candidate in "$HOME/Library/Application Support/zen" "$HOME/.zen"; do
+	for candidate in "$HOME/Library/Application Support/zen" "${XDG_CONFIG_HOME:-$HOME/.config}/zen"; do
 		[ -d "$candidate" ] && { root="$candidate"; break; }
 	done
 	[ -n "$root" ] || { echo "  zen has no profile yet, skipping theme link"; return 0; }
@@ -320,18 +320,13 @@ link_zen_theme() {
 	echo "zen theme linked ($(basename "$profile"))"
 }
 
-# The directory Zen reads autoconfig from: the bundle's Resources, or wherever
-# the binary lives.
+# The directory Zen reads autoconfig from.
 zen_app_dir() {
 	[ -d "/Applications/Zen.app/Contents/Resources" ] && {
 		echo "/Applications/Zen.app/Contents/Resources"
 		return 0
 	}
-	[ "$(uname)" = Darwin ] && return 1
-	local bin
-	bin="$(command -v zen || command -v zen-browser)" || return 1
-	bin="$(readlink -f "$bin" 2>/dev/null || echo "$bin")"
-	dirname "$bin"
+	[ -d /opt/zen-browser-bin ] && echo /opt/zen-browser-bin
 }
 
 # Copy one file into Zen's install directory.
@@ -369,7 +364,7 @@ zen_first_launch() {
 
 # zen-matugen.cfg: without it a palette change only reaches Zen at its next
 # start. policies.json: without it Zen updates itself and takes both files with
-# it, silently ending the live reload.
+# it, silently ending the live reload. macOS only; pacman owns Linux updates.
 install_zen_autoconfig() {
 	local src="$DOTFILES/lib/zen"
 
@@ -380,8 +375,8 @@ install_zen_autoconfig() {
 
 	if zen_app_install "$src/zen-matugen.cfg" "zen-matugen.cfg" &&
 		zen_app_install "$src/zen-matugen-prefs.js" "defaults/pref/zen-matugen-prefs.js" &&
-		zen_app_install "$src/policies.json" "distribution/policies.json"; then
-		echo "zen live reload installed, updates disabled by policy"
+		{ [ "$(uname)" != Darwin ] || zen_app_install "$src/policies.json" "distribution/policies.json"; }; then
+		echo "zen live reload installed"
 	else
 		echo "  could not write to Zen's install directory"
 		echo "  grant App Management to the terminal in System Settings > Privacy & Security"

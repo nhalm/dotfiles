@@ -57,6 +57,7 @@ ShellRoot {
 
                         Loader {
                             required property var modelData
+                            visible: !(item?.collapsed ?? false)
                             source: "modules/" + modelData + ".qml"
                             onLoaded: {
                                 if (item && item.screenName !== undefined)

@@ -26,6 +26,7 @@ RowLayout {
             Behavior on color { ColorAnimation { duration: 220 } }
 
             Text {
+                font.family: Theme.fontFamily
                 anchors.centerIn: parent
                 text: modelData.id
                 font.pixelSize: 11

@@ -12,8 +12,11 @@
       "Clock"
     ],
     "right": [
+      "Weather",
+      "Performance",
+      "Network",
+      "Bluetooth",
       "Updates",
-      "PowerProfile",
       "Tray",
       "Notifications",
       "PowerMenu"
