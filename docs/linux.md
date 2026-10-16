@@ -365,8 +365,8 @@ same value is repeated as `HYPR_INTERNAL_SCALE` in `hypr-lid.sh`.
 
 A specific arrangement goes in `~/.config/hypr/monitors.lua`, written by
 nwg-displays — untracked, `pcall`ed after the defaults so it overrides them.
-Tick **"use monitor descriptions"** there, so rules match on description rather
-than connector name.
+Its tracked config sets `use-desc`, so rules match on description rather than
+connector name.
 
 `hypr-monitors.sh` re-packs enabled monitors left-to-right from x=0, matching on
 description — connector names are not stable across boots. Only the lid-closed
