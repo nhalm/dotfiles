@@ -2,8 +2,6 @@
 # Idle-suspend only on battery, and only when nothing is really playing.
 set -uo pipefail
 
-# A desktop has no power_supply entries, so require a discharging battery
-# rather than treating a missing AC adapter as being on battery.
 discharging=0
 for f in /sys/class/power_supply/BAT*/status; do
 	[ -r "$f" ] || continue
