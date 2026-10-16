@@ -9,5 +9,5 @@ bun = "1"
 # carbonyl publishes nothing but prereleases, which mise filters out of a range,
 # so it is the one tool that has to name an exact build.
 "npm:carbonyl" = "0.0.3-next.ab80a27"
-"npm:@mermaid-js/mermaid-cli" = "11"
+"npm:@mermaid-js/mermaid-cli" = { version = "11", trust_policy_excludes = ["chromium-bidi@157.0.8090-0"] }
 "npm:ccusage" = "20"

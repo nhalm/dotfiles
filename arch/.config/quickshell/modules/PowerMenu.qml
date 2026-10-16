@@ -10,6 +10,7 @@ Item {
     implicitHeight: 18
 
     Text {
+        font.family: Theme.fontFamily
         anchors.centerIn: parent
         font.pixelSize: Theme.fontSize + 1
         color: hover.hovered ? Theme.warn : Theme.fg
@@ -65,6 +66,7 @@ Item {
                         color: itemHover.hovered ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
 
                         Text {
+                            font.family: Theme.fontFamily
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 10

@@ -13,6 +13,7 @@ Item {
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
     Text {
+        font.family: Theme.fontFamily
         id: label
         color: hover.hovered ? Theme.accent : Theme.fg
         font.pixelSize: Theme.fontSize
@@ -51,6 +52,7 @@ Item {
                 spacing: 8
 
                 Text {
+                    font.family: Theme.fontFamily
                     Layout.alignment: Qt.AlignHCenter
                     color: Theme.fg
                     font.pixelSize: 16
@@ -60,6 +62,7 @@ Item {
                 DayOfWeekRow {
                     Layout.fillWidth: true
                     delegate: Text {
+                        font.family: Theme.fontFamily
                         horizontalAlignment: Text.AlignHCenter
                         color: Theme.dim
                         font.pixelSize: 11
@@ -75,6 +78,7 @@ Item {
                     year: clock.date.getFullYear()
 
                     delegate: Text {
+                        font.family: Theme.fontFamily
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 12

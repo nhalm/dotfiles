@@ -26,6 +26,7 @@ Item {
     }
 
     Text {
+        font.family: Theme.fontFamily
         anchors.centerIn: parent
         font.pixelSize: Theme.fontSize + 1
         color: root.dnd ? Theme.dim : (root.count > 0 ? Theme.accent : Theme.fg)

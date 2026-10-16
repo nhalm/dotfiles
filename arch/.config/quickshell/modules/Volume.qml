@@ -15,12 +15,14 @@ RowLayout {
     PwObjectTracker { objects: [root.sink] }
 
     Text {
+        font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         color: root.muted ? Theme.dim : Theme.fg
         text: root.muted ? "󰝟" : (root.pct > 50 ? "󰕾" : "󰖀")
     }
 
     Text {
+        font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         color: root.muted ? Theme.dim : Theme.fg
         text: root.pct + "%"

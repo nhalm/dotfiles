@@ -7,6 +7,7 @@ Item {
     implicitHeight: 18
 
     Text {
+        font.family: Theme.fontFamily
         anchors.centerIn: parent
         font.pixelSize: Theme.fontSize + 2
         color: hover.hovered ? Theme.accent : Theme.fg
