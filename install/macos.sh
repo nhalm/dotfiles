@@ -1,5 +1,8 @@
 # macOS. Sourced by setup.sh.
 
+PLAN_PACKAGES="install Homebrew if missing, trust taps, brew bundle install/upgrade install/Brewfile"
+PLAN_CONFIGURE="wallpapers, Karabiner config (if missing), ghostty + docker compose links, colima sshConfig off, SbarLua, barpop build, hide menu bar, start sketchybar + borders, Zen theme link, brew cleanup"
+
 install_packages() {
 	[ -x /opt/homebrew/bin/brew ] ||
 		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
