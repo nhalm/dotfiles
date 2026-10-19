@@ -81,7 +81,8 @@ don't run, because `core.hooksPath` is global.
 The key's passphrase is entered once:
 
 - **Linux:** gcr's agent stores it in the login keyring, which ly unlocks at login.
-- **macOS:** setup stores it in Keychain; `.zprofile` loads the key at login.
+- **macOS:** setup stores it in Keychain, and a login item (`install/ssh-add.plist`)
+  loads the key into the agent at every login, before any app needs it.
 
 ## Credits
 

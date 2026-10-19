@@ -16,7 +16,7 @@ export PROJECTS_DIR="$HOME/work:$HOME/personal:$HOME/dev"
 export GOPATH="$HOME/go"
 
 # Linux: gcr's agent, which unlocks the key from the login keyring. macOS:
-# launchd's agent, loaded from Keychain (setup stores the passphrase there).
+# launchd's agent, which a login item fills from Keychain.
 if [[ -n $XDG_RUNTIME_DIR && -S $XDG_RUNTIME_DIR/gcr/ssh ]]; then
 	export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/gcr/ssh"
 elif [[ $OSTYPE == darwin* ]]; then
@@ -25,7 +25,6 @@ elif [[ $OSTYPE == darwin* ]]; then
 	_agent=(/private/{var/run,tmp}/com.apple.launchd.*/Listeners(N=U[1]))
 	(( $#_agent )) && export SSH_AUTH_SOCK=$_agent[1]
 	unset _agent
-	ssh-add -l >/dev/null 2>&1 || /usr/bin/ssh-add --apple-load-keychain -q 2>/dev/null
 fi
 
 path=(

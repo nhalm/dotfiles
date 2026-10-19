@@ -1,7 +1,7 @@
 # macOS. Sourced by setup.sh.
 
 PLAN_PACKAGES="install Homebrew if missing, trust taps, brew bundle install/upgrade install/Brewfile"
-PLAN_CONFIGURE="wallpapers, Karabiner config (if missing), ghostty + docker compose links, colima sshConfig off, SbarLua, barpop build, hide menu bar, start sketchybar + borders, Zen theme link, brew cleanup"
+PLAN_CONFIGURE="wallpapers, login item loading the ssh key from Keychain, Karabiner config (if missing), ghostty + docker compose links, colima sshConfig off, SbarLua, barpop build, hide menu bar, start sketchybar + borders, Zen theme link, brew cleanup"
 
 install_packages() {
 	[ -x /opt/homebrew/bin/brew ] ||
@@ -14,6 +14,15 @@ install_packages() {
 
 configure() {
 	install_wallpapers
+
+	# Loads the ssh key from Keychain into launchd's agent at every login, so
+	# nothing prompts for the passphrase after a reboot. Copied: launchd skips
+	# symlinked plists at login.
+	local plist="$HOME/Library/LaunchAgents/local.ssh-add-keychain.plist"
+	mkdir -p "${plist%/*}"
+	cp "$DOTFILES/install/ssh-add.plist" "$plist"
+	launchctl bootout "gui/$(id -u)/local.ssh-add-keychain" 2>/dev/null || true
+	launchctl bootstrap "gui/$(id -u)" "$plist"
 
 	# The cask installs only the app; snacks.nvim probes for the binary.
 	mkdir -p "$HOME/.local/bin"
