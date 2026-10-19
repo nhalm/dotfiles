@@ -1,0 +1,5 @@
+# Settings only. Tools are in conf.d/: shared.toml, plus darwin.toml on macOS.
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
+auto_install = true
+not_found_auto_install = true

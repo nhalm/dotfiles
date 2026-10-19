@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --git-path follows core.hooksPath (i.e. back to this file), so resolve the
+# repo's own hooks dir explicitly.
+repo_hook="$(git rev-parse --path-format=absolute --git-common-dir)/hooks/pre-commit"
+if [ -x "$repo_hook" ] && ! [ "$repo_hook" -ef "${BASH_SOURCE[0]}" ]; then
+	"$repo_hook" "$@" || exit $?
+fi
+
+command -v gitleaks >/dev/null 2>&1 || exit 0
+
+scan=(gitleaks git --staged)
+
+cfg="$(git rev-parse --show-toplevel 2>/dev/null)/.gitleaks.toml"
+if [ ! -f "$cfg" ]; then
+	cfg="${XDG_CONFIG_HOME:-$HOME/.config}/gitleaks/config.toml"
+fi
+[ -f "$cfg" ] && scan+=(--config "$cfg")
+
+if ! "${scan[@]}" --redact --no-banner --verbose; then
+	echo "gitleaks: secret in staged changes, commit refused" >&2
+	echo "  rotate it if real, or allowlist with a gitleaks:allow comment" >&2
+	exit 1
+fi

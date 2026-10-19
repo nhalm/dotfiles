@@ -1,0 +1,73 @@
+# Full default with every option documented: `herdr --default-config`
+# Validate after editing:                    `herdr config check`
+#
+# Only deviations from the defaults belong in this file. The defaults already
+# cover the bindings: prefix+h/j/k/l focuses panes, prefix+minus splits
+# horizontally, prefix+z zooms.
+
+onboarding = false
+
+[theme]
+name = "tokyo-night"
+
+[terminal]
+# Login shells so ~/.zprofile runs in every pane. The default ("auto") only
+# does this on macOS, which would leave Linux panes without GOPATH, EDITOR and
+# the mise shims when the server outlives the session that started it.
+shell_mode = "login"
+
+# New panes and tabs inherit the cwd of whatever they were opened from.
+new_cwd = "follow"
+
+[keys]
+prefix = "ctrl+space"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+width = "90%"
+height = "90%"
+
+# herdr-splits.nvim. herdr sees these first, forwards them into Neovim when the
+# focused pane is running it, and moves pane focus itself otherwise.
+# Run `herdr server reload-config` after editing.
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+
+[[keys.command]]
+key = "alt+h"
+type = "plugin_action"
+command = "herdr-splits.resize-left"
+
+[[keys.command]]
+key = "alt+j"
+type = "plugin_action"
+command = "herdr-splits.resize-down"
+
+[[keys.command]]
+key = "alt+k"
+type = "plugin_action"
+command = "herdr-splits.resize-up"
+
+[[keys.command]]
+key = "alt+l"
+type = "plugin_action"
+command = "herdr-splits.resize-right"

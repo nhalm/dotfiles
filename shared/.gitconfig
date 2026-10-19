@@ -1,0 +1,130 @@
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  allowedSignersFile = ~/.config/git/allowed_signers
+
+# OS-specific settings from the macos/ stow package. Git ignores a missing include.
+[include]
+  path = ~/.config/git/os.conf
+
+[commit]
+  gpgsign = true
+
+[alias]
+	# reword the last commit
+	amend = commit -a --amend
+
+	# delete branches merged into $1 (default main)
+	bclean = "!f() { git branch --merged ${1-main} | grep -vE '^\\*|^ *'${1-main}'$' | xargs -r git branch -d; }; f"
+
+	# get the branch name
+	bn = "!git rev-parse --abbrev-ref HEAD"
+
+	# simplified check out
+	co = checkout
+
+	# create new branch
+	cob = checkout -b
+
+	# checkout the last tag
+	colasttag = "!f() { \
+		git fetch --tags \
+		&& git co $(git lasttag); \
+		}; f"
+
+	# push with force
+	fpush = push --force
+
+	# List all aliases
+	la = "!git config -l | grep alias | cut -c 7-"
+
+	# show last tag
+	lasttag = describe --tags --abbrev=0
+
+	# simplified log showing changes within commits
+	ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+
+	# simplified log result
+	ls = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate
+
+	# squash last commit
+	sql = merge --squash HEAD@{2}
+
+	# merge branch into current
+	# if $1 not specified "dev"
+	# branch is used
+	mrgr = "!f() { \
+		CURRENT=$(git bn) \
+		&& git checkout ${1-dev} \
+		&& git pull origin ${1-dev} \
+		&& git co ${CURRENT} \
+		&& git merge ${1-dev}; \
+		}; f"
+
+	pof = "!f() { \
+		git fetch \
+		&& git po; \
+		}; f"
+
+	po = "!f() { \
+		CURRENT=$(git bn) \
+		&& git pull origin ${CURRENT}; \
+		}; f"
+
+	upstage = "!f() { \
+		git fetch \
+		&& git co staging \
+		&& git po; \
+		}; f"
+
+	upmain = "!f() { \
+		git fetch \
+		&& git co main \
+		&& git po; \
+		}; f"
+
+	upmaster = "!f() { \
+		git fetch \
+		&& git co master \
+		&& git po; \
+		}; f"
+
+	upprod = "!f() { \
+		git fetch \
+		&& git co production \
+		&& git po; \
+		}; f"
+
+	publish = "!git push -u origin $(git bn)"
+
+[user]
+  signingkey = ~/.ssh/id_ed25519.pub
+[pull]
+	rebase = true
+[init]
+	defaultBranch = main
+[core]
+	excludesfile = ~/.gitignore_global
+	hooksPath = ~/.config/git/hooks
+
+# What `git lfs install` would append. Tracked here instead: ~/.gitconfig is a
+# symlink into this repo, so running that command edits the working tree.
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[transfer]
+	fsckobjects = true
+[fetch]
+	fsckobjects = true
+[receive]
+	fsckObjects = true
+
+# Name and per-directory email, from the private host-setup repo. Git ignores
+# a missing include; without it there is no identity and commits are refused.
+[include]
+	path = ~/.config/git/identity.conf

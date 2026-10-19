@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Set the wallpaper and regenerate every app's colours from it.
+#
+#   wallpaper.sh <image>    set a specific image
+#   wallpaper.sh --random   pick at random
+#   wallpaper.sh --restore  re-apply the remembered one
+#
+# Choosing one interactively is the quickshell carousel's job:
+# `qs ipc call wallpaper toggle`.
+#
+# matugen renders the templates in ~/.config/matugen/config.toml; consumers are
+# then told to reload. The chosen path is remembered so the session can restore
+# it at startup.
+
+set -uo pipefail
+
+# GUI launchers do not run a login shell, so mise's tools are not on PATH.
+PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+export PATH
+
+DIR="${WALLPAPER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/wallpapers}"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
+MODE="${MATUGEN_MODE:-$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/matugen/mode" 2>/dev/null || echo dark)}"
+
+pick() {
+	find -L "$DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null
+}
+
+case "${1:-}" in
+--random) IMAGE="$(pick | shuf -n1)" ;;
+--restore) IMAGE="$(cat "$STATE" 2>/dev/null)" ;;
+"") echo "usage: wallpaper.sh <image> | --random | --restore" >&2; exit 1 ;;
+*) IMAGE="$1" ;;
+esac
+
+[ -n "${IMAGE:-}" ] && [ -f "$IMAGE" ] || { echo "wallpaper: no image" >&2; exit 1; }
+
+# Setup runs this from a TTY to seed the palette; there is no compositor to show
+# an image on yet, and the session applies it at startup with --restore.
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	# The AUR swww package installs its binaries as awww; upstream swww uses swww.
+	SWWW="$(command -v awww || command -v swww)"
+	DAEMON="$(command -v awww-daemon || command -v swww-daemon)"
+
+	if ! "$SWWW" query >/dev/null 2>&1; then
+		"$DAEMON" >/dev/null 2>&1 &
+		sleep 0.5
+	fi
+	"$SWWW" img "$IMAGE" --transition-type grow --transition-fps 60 --transition-duration 1
+fi
+
+matugen image "$IMAGE" -m "$MODE" --source-color-index 0 >/dev/null || echo "wallpaper: matugen failed" >&2
+
+# SIGUSR2 rereads the config, and with it the palette the include pulls in.
+# Any other signal kills it. pgrep does not match the app bundle's binary.
+reload_ghostty() {
+	local pids
+	pids="$(ps -eo pid=,comm= | awk '$2 ~ /(^|\/)ghostty$/ {print $1}')"
+	[ -n "$pids" ] && kill -USR2 $pids 2>/dev/null
+	return 0
+}
+reload_ghostty
+
+# nvim re-reads the palette on command; --remote-expr does not disturb the
+# current mode the way sending keys would.
+reload_nvim() {
+	local sock
+	command -v nvim >/dev/null 2>&1 || return 0
+	for sock in "${TMPDIR:-/tmp}"/nvim."$USER"/*/nvim.*.0 \
+		"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim."$USER"/*/nvim.*.0; do
+		[ -S "$sock" ] || continue
+		nvim --server "$sock" --remote-expr 'execute("MatugenReload")' >/dev/null 2>&1 &
+	done
+	return 0
+}
+reload_nvim
+
+# Zen reads userChrome.css at startup and serves it from a cache it does not
+# invalidate, so the next start would show the previous palette.
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/zen"/*/startupCache 2>/dev/null
+
+mkdir -p "$(dirname "$STATE")"
+printf '%s\n' "$IMAGE" >"$STATE"
+
+# Apply the new border colours directly rather than reloading the config:
+# a reload re-applies the monitor rules too, which makes every display flicker
+# and shuffle on each theme change.
+apply_hypr_colors() {
+	local f="$HOME/.config/hypr/matugen-colors.lua" primary secondary outline
+	[ -r "$f" ] || return 0
+	primary="$(grep -oP '^\tprimary = "\K[^"]+' "$f" | head -1)"
+	secondary="$(grep -oP '^\tsecondary = "\K[^"]+' "$f" | head -1)"
+	outline="$(grep -oP '^\toutline_variant = "\K[^"]+' "$f" | head -1)"
+	[ -n "$primary" ] || return 0
+	hyprctl eval "hl.config({ general = { col = { active_border = { colors = {\"$primary\", \"$secondary\"}, angle = 45 }, inactive_border = \"$outline\" } } })" >/dev/null 2>&1
+}
+
+# GTK apps re-read gtk.css when color-scheme changes, and only then. Bounce it
+# to the other value and back, or they keep the old palette until restarted.
+reload_gtk() {
+	local current other
+	current="$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)" || return 0
+	current="${current//\'/}"
+	[ -n "$current" ] || return 0
+	case "$current" in
+	prefer-dark) other="prefer-light" ;;
+	*) other="prefer-dark" ;;
+	esac
+	gsettings set org.gnome.desktop.interface color-scheme "$other" 2>/dev/null
+	gsettings set org.gnome.desktop.interface color-scheme "$current" 2>/dev/null
+}
+
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	qs ipc call theme-manager reload >/dev/null 2>&1
+	sleep 0.1 # let matugen's write land before swaync re-reads it
+	swaync-client --reload-css >/dev/null 2>&1
+	apply_hypr_colors
+	reload_gtk
+fi

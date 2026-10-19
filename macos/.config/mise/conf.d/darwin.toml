@@ -1,0 +1,5 @@
+[tools]
+# SbarLua builds against 5.5.
+lua = "5.5"
+# No brew formula; pacman carries it on Linux.
+"cargo:matugen" = "4"

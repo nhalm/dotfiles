@@ -1,0 +1,5 @@
+#!/usr/bin/env -S mise x lua@5.5 -- lua
+
+-- Load the sketchybar-package and prepare the helper binaries
+require("helpers")
+require("init")

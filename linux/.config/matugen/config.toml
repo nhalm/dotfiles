@@ -1,0 +1,55 @@
+[config]
+
+[templates.quickshell]
+input_path = '~/.config/quickshell/matugen/colors.json'
+output_path = '~/.local/state/matugen/colors.json'
+
+[templates.hyprland]
+input_path = '~/.config/matugen/templates/hyprland-colors.lua'
+output_path = '~/.config/hypr/matugen-colors.lua'
+
+[templates.ghostty]
+input_path = '~/.config/matugen/templates/ghostty-colors'
+output_path = '~/.config/ghostty/colors'
+
+[templates.fuzzel]
+input_path = '~/.config/matugen/templates/fuzzel-colors.ini'
+output_path = '~/.config/fuzzel/colors.ini'
+
+[templates.swaync]
+input_path = '~/.config/matugen/templates/colors.css'
+output_path = '~/.config/swaync/colors.css'
+
+[templates.starship]
+input_path = '~/.config/matugen/templates/starship.toml'
+output_path = '~/.local/state/matugen/starship.toml'
+
+[templates.btop]
+input_path = '~/.config/matugen/templates/btop.theme'
+output_path = '~/.config/btop/themes/matugen.theme'
+
+[templates.gtk3]
+input_path = '~/.config/matugen/templates/gtk-colors.css'
+output_path = '~/.config/gtk-3.0/colors.css'
+
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk-colors.css'
+output_path = '~/.config/gtk-4.0/colors.css'
+
+[templates.hyprlock]
+input_path = '~/.config/matugen/templates/hyprlock-colors.conf'
+output_path = '~/.local/state/matugen/hyprlock-colors.conf'
+
+[templates.qtct]
+input_path = '~/.config/matugen/templates/qtct-colors.conf'
+output_path = '~/.local/state/matugen/qtct-colors.conf'
+
+# Symlinked into the Zen profile's chrome/ by link_zen_theme.
+[templates.zen]
+input_path = '~/.config/matugen/templates/zen-colors.css'
+output_path = '~/.local/state/matugen/zen-colors.css'
+
+# Read by the tokyonight config; :MatugenReload re-reads it.
+[templates.nvim]
+input_path = '~/.config/matugen/templates/nvim-colors.lua'
+output_path = '~/.local/state/matugen/nvim-colors.lua'

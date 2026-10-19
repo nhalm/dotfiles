@@ -1,0 +1,34 @@
+# Templates live in two packages and land in the same linked directory:
+# ghostty-colors and starship.toml are shared, sketchybar-colors.lua is not.
+
+[config]
+
+[templates.ghostty]
+input_path = '~/.config/matugen/templates/ghostty-colors'
+output_path = '~/.config/ghostty/colors'
+
+# STARSHIP_CONFIG points here, set by .config/zsh/os.zsh.
+[templates.starship]
+input_path = '~/.config/matugen/templates/starship.toml'
+output_path = '~/.local/state/matugen/starship.toml'
+
+# ~/.config/sketchybar is a real directory (stow runs --no-folding), so this
+# write lands outside the repo.
+[templates.sketchybar]
+input_path = '~/.config/matugen/templates/sketchybar-colors.lua'
+output_path = '~/.config/sketchybar/matugen-colors.lua'
+
+# Symlinked into the Zen profile's chrome/ by link_zen_theme.
+[templates.zen]
+input_path = '~/.config/matugen/templates/zen-colors.css'
+output_path = '~/.local/state/matugen/zen-colors.css'
+
+# Read by the tokyonight config; :MatugenReload re-reads it.
+[templates.nvim]
+input_path = '~/.config/matugen/templates/nvim-colors.lua'
+output_path = '~/.local/state/matugen/nvim-colors.lua'
+
+# Read by sketchybar's barpop popups, which reload it on change.
+[templates.barpop]
+input_path = '~/.local/share/barpop/matugen/barpop.json'
+output_path = '~/.local/state/matugen/barpop.json'

@@ -1,0 +1,103 @@
+# pacman -S --needed. Beyond what a CachyOS install provides; dependencies of
+# listed packages are left out.
+
+# security
+gitleaks
+
+# core
+yay
+git-lfs
+stow
+clang
+7zip
+jq
+yq
+# ruby's psych extension, for mise building ruby
+libyaml
+
+# shell
+zsh
+starship
+mise
+
+# editor
+neovim
+python-pynvim
+tree-sitter-cli
+wl-clipboard
+xclip
+
+# search and files
+fd
+fzf
+bat
+glow
+tree
+
+# system
+htop
+
+# git
+github-cli
+
+# containers
+docker
+docker-compose
+docker-buildx
+
+# terminal
+ghostty
+
+# audio
+playerctl
+
+# network
+network-manager-applet
+blueman
+
+# desktop: Hyprland session
+hyprland
+hyprlauncher
+hyprpicker
+hyprpolkitagent
+gnome-keyring
+hyprshutdown
+hyprlock
+hypridle
+hyprshot
+hyprsunset
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt6ct
+qt6-multimedia-ffmpeg
+qt6-virtualkeyboard
+papirus-icon-theme
+swaync
+quickshell
+nwg-displays
+awww
+satty
+wf-recorder
+cliphist
+wl-clip-persist
+fuzzel
+matugen
+ly
+brightnessctl
+wlopm
+
+# desktop apps
+chromium
+nemo
+imv
+mpv
+obs-studio
+telegram-desktop
+imagemagick
+
+# fonts
+ttf-monaspace-variable
+ttf-jetbrains-mono-nerd
+
+# browser
+zen-browser-bin

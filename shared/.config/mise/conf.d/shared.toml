@@ -1,0 +1,19 @@
+# Runtimes for both machines. Pinned to a major version: patches and minors
+# arrive with `mise upgrade`, a major never does. npm tools go through mise's
+# npm backend, not `npm install -g`, so a node major bump can't orphan them.
+[tools]
+node = "24"
+go = "1"
+rust = "1"
+ruby = "3"
+bun = "1"
+zoxide = "0"
+lazygit = "0"
+herdr = "0"
+"npm:ccstatusline" = "2"
+"npm:ccusage" = "20"
+"npm:@mermaid-js/mermaid-cli" = { version = "11", trust_policy_excludes = ["chromium-bidi@157.0.8090-0"] }
+# Only prereleases exist, which a range never matches.
+"npm:carbonyl" = "0.0.3-next.ab80a27"
+
+# No global python: it shadows the distro interpreter. Pin it per project.

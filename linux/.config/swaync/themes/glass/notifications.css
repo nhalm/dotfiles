@@ -1,0 +1,90 @@
+@import '../../colors.css';
+
+@define-color island alpha(@surface_container, 0.92);
+@define-color island_border rgba(255, 255, 255, 0.08);
+@define-color card @surface_container_high;
+@define-color dim @outline;
+@define-color fg @on_surface;
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 12px;
+  font-weight: normal;
+  color: @fg;
+  transition: 150ms;
+}
+
+.floating-notifications.background .notification-row .notification-background {
+  margin: 8px 8px 0 8px;
+}
+
+.floating-notifications.background .notification-row .notification-background .notification {
+  background: @island;
+  border: 1px solid @island_border;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.notification.critical {
+  border: 1px solid @error;
+}
+
+.notification-content {
+  padding: 0;
+}
+
+.notification-content .image {
+  margin-right: 12px;
+  border-radius: 8px;
+}
+
+.summary {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.body {
+  margin-top: 2px;
+  font-size: 11px;
+  color: @dim;
+}
+
+.time {
+  font-size: 10px;
+  color: @dim;
+  margin-right: 24px;
+}
+
+.close-button {
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 9px;
+  background: @card;
+  color: @dim;
+}
+
+.close-button:hover {
+  background: @primary;
+  color: @on_primary;
+}
+
+.notification-action {
+  margin: 8px 4px 0 0;
+  padding: 4px 10px;
+  border-radius: 11px;
+  background: @card;
+  font-size: 11px;
+}
+
+.notification-action:hover {
+  background: @primary;
+  color: @on_primary;
+}
+
+.notification.critical progress,
+.notification.low progress,
+.notification.normal progress {
+  background: @primary;
+  border-radius: 2px;
+}

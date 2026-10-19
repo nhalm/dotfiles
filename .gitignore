@@ -1,0 +1,9 @@
+.netrwhist
+.ruby-version
+
+# Files moved aside by stow_package when a real file already occupied a target
+*.dotfiles-backup
+
+# lazy.nvim rewrites this on every plugin update, and the churn is not worth
+# reviewing -- a fresh machine resolves plugin versions at install time instead
+shared/.config/nvim/lazy-lock.json

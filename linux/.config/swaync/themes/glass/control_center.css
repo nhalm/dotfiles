@@ -1,0 +1,70 @@
+.control-center {
+  background: @island;
+  border: 1px solid @island_border;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.widget-title {
+  margin-bottom: 10px;
+}
+
+.widget-title > label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: @dim;
+}
+
+.widget-title > button {
+  padding: 3px 10px;
+  border-radius: 11px;
+  background: @card;
+}
+
+.widget-title > button label {
+  font-size: 10px;
+}
+
+.widget-title > button:hover {
+  background: @primary;
+  color: @on_primary;
+}
+
+.control-center .notification-row .notification-background {
+  margin-bottom: 6px;
+}
+
+.control-center .notification-row .notification-background .notification {
+  background: @card;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.control-center .notification-row .notification-background .notification:hover {
+  background: alpha(@primary, 0.12);
+}
+
+.notification-group-headers,
+.notification-group-icon {
+  font-size: 10px;
+  color: @dim;
+}
+
+.notification-group-collapse-button,
+.notification-group-close-all-button {
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 9px;
+  background: @card;
+}
+
+.notification-group-collapse-button:hover,
+.notification-group-close-all-button:hover {
+  background: @primary;
+  color: @on_primary;
+}
+
+.control-center-list-placeholder {
+  color: @dim;
+  font-size: 11px;
+}
