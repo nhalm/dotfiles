@@ -133,10 +133,27 @@ setup_ssh_key() {
 
 		EOF
 	fi
-	if [ "$OS" = macos ] && ! security find-generic-password -l "SSH: $key" >/dev/null 2>&1; then
+	if [ "$OS" = macos ] && ! keychain_has_key "$key"; then
 		echo "saving the key's passphrase in Keychain"
 		/usr/bin/ssh-add --apple-use-keychain "$key" </dev/tty
+		keychain_has_key "$key" ||
+			echo "  not saved (Keychain may be unavailable over ssh); rerun from a local terminal"
 	fi
+}
+
+# `security` can't see the entry ssh-add writes, so load from Keychain into a
+# throwaway agent and look for the key there.
+keychain_has_key() {
+	local fp loaded
+	fp="$(/usr/bin/ssh-keygen -lf "$1.pub" | awk '{print $2}')"
+	loaded="$(
+		eval "$(/usr/bin/ssh-agent -s)" >/dev/null
+		/usr/bin/ssh-add --apple-load-keychain -q 2>/dev/null
+		/usr/bin/ssh-add -l 2>/dev/null
+		/usr/bin/ssh-agent -k >/dev/null
+	)"
+	case "$loaded" in *"$fp"*) return 0 ;; esac
+	return 1
 }
 
 # bootstrap clones over https, before a key exists.
