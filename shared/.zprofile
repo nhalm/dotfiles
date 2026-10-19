@@ -20,6 +20,11 @@ export GOPATH="$HOME/go"
 if [[ -n $XDG_RUNTIME_DIR && -S $XDG_RUNTIME_DIR/gcr/ssh ]]; then
 	export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/gcr/ssh"
 elif [[ $OSTYPE == darwin* ]]; then
+	# Always launchd's agent, even when the pane inherited another one (herdr
+	# forwards its attaching client's agent, which can't use this Mac's key).
+	_agent=(/private/{var/run,tmp}/com.apple.launchd.*/Listeners(N=U[1]))
+	(( $#_agent )) && export SSH_AUTH_SOCK=$_agent[1]
+	unset _agent
 	ssh-add -l >/dev/null 2>&1 || /usr/bin/ssh-add --apple-load-keychain -q 2>/dev/null
 fi
 
