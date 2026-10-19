@@ -124,7 +124,7 @@
 [receive]
 	fsckObjects = true
 
-# Name and per-directory email, from the private host-setup repo. Git ignores
+# Name and per-directory email, from a machine-local file. Git ignores
 # a missing include; without it there is no identity and commits are refused.
 [include]
 	path = ~/.config/git/identity.conf

@@ -37,8 +37,7 @@ Clicking an item opens a popup from
 [barpop](https://github.com/nhalm/barpop), a SwiftUI app setup clones to
 `~/.local/share/barpop` and builds; `helpers/barpop.lua` starts it with
 sketchybar. Weather uses `helpers/location.sh`, which caches the last
-CoreLocation fix. The Wi-Fi name needs `ipconfig setverbose 1`, from host-setup's
-`macos-system`.
+CoreLocation fix. The Wi-Fi name needs `sudo ipconfig setverbose 1`, which this repo doesn't run.
 
 Setup hides the system menu bar (`_HIHideMenuBar`), the one macOS default the
 repo writes.
@@ -47,8 +46,7 @@ repo writes.
 
 `wallpaper.sh <image>|--restore` sets the desktop picture, runs matugen and
 reloads sketchybar, barpop, ghostty, Neovim and the window borders. The prompt
-picks up the change at the next prompt; Zen at its next start, or live with
-host-setup's `zen` module. Light/dark follows the system appearance.
+picks up the change at the next prompt, Zen at its next start. Light/dark follows the system appearance.
 
 `caps+w` opens barpop's picker: type to filter, hover to preview a palette,
 return to apply.

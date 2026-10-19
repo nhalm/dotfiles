@@ -53,7 +53,7 @@ quickshell's ships with it. Edit templates, never their output.
 | quickshell, swaync, ghostty, Neovim, Hyprland borders | live, signalled by `wallpaper.sh` |
 | starship, fuzzel, hyprlock | next prompt, launch or lock |
 | gtk | live, by toggling `color-scheme` |
-| Qt (qt6ct), Zen | next start; Zen is live with host-setup's `zen` module |
+| Qt (qt6ct), Zen | next start |
 
 Borders change through `hyprctl eval`, not a reload, which would re-apply
 monitor rules and flicker every display.
@@ -98,5 +98,3 @@ in the login keyring.
 - Outputs power off through `wlopm`; Hyprland's dpms dispatcher is not used.
 - `network-manager-applet` is installed for `nm-connection-editor`; the applet
   never runs.
-- System services, groups and machine packages are set up by host-setup's
-  `linux-system`, not here.
