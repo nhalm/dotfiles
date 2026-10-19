@@ -1,5 +1,8 @@
 # Arch / CachyOS. Sourced by setup.sh.
 
+PLAN_PACKAGES="sudo pacman -Syu + install/pacman.txt; yay install/aur.txt"
+PLAN_CONFIGURE="wallpapers, hyprland-quickshell, palette seed, theme mode, qt6ct.conf (if missing), blueman tray off, gcr ssh agent, Zen theme link"
+
 install_packages() {
 	grep -v '^\s*\(#\|$\)' "$DOTFILES/install/pacman.txt" | sudo pacman -Syu --needed --noconfirm -
 	grep -v '^\s*\(#\|$\)' "$DOTFILES/install/aur.txt" | yay -S --needed --noconfirm -

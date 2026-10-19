@@ -13,11 +13,14 @@ substitution, not `curl … | bash`, which takes the stdin sudo needs. Swap
 `main` for a commit SHA to pin what you run.
 
 ```bash
-~/dotfiles/setup.sh              # packages, links, tools; also the update command
-~/dotfiles/setup.sh --link-only  # re-link only
+machine-setup              # packages, links, tools; also the update command
+machine-setup --link-only  # re-link only
 ```
 
-Every step is safe to re-run. Setup creates a passphrase-protected
+`machine-setup` (on `PATH` after the first run; `~/dotfiles/setup.sh` before)
+prints everything it will do and asks first; Ctrl-C stops it. If a private
+`~/personal/host-setup` checkout exists, its modules for this host are part of
+the same plan. Every step is safe to re-run. Setup creates a passphrase-protected
 `~/.ssh/id_ed25519` and prints the `gh ssh-key add` commands; add it to GitHub
 for authentication and signing, then re-run.
 
