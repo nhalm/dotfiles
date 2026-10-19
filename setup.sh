@@ -2,8 +2,8 @@
 # Set up or update this machine. Shows the plan and asks first; Ctrl-C stops it.
 #
 #   bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/setup.sh)
-#   machine-setup              packages, links, tools, then this host's host-setup
-#   machine-setup --link-only  links only
+#   ~/dotfiles/setup.sh              packages, links, tools
+#   ~/dotfiles/setup.sh --link-only  links only
 #
 # Process substitution rather than `curl | bash`, which would take the stdin
 # that sudo's password prompt needs.
@@ -18,7 +18,6 @@ Linux) OS=linux ;;
 esac
 
 DOTFILES="$HOME/dotfiles"
-HOST_SETUP="$HOME/personal/host-setup"
 
 confirm() {
 	local answer
@@ -56,7 +55,7 @@ case "${1:-}" in
 	link_configs
 	exit 0
 	;;
-*) echo "usage: machine-setup [--link-only]" >&2; exit 1 ;;
+*) echo "usage: setup.sh [--link-only]" >&2; exit 1 ;;
 esac
 
 echo "dotfiles for $OS, in order:"
@@ -65,24 +64,6 @@ echo "  links     — shared/ and $OS/ into ~; real files in the way move to <pa
 echo "  $OS     — $PLAN_CONFIGURE"
 echo "  tools     — mise install/upgrade, zsh plugins, Claude Code (if missing), herdr-splits plugin"
 echo "  ssh       — create ~/.ssh/id_ed25519 (if missing), dotfiles remote to ssh, login shell zsh"
-echo
-RUN_HOST_SETUP=false
-if [ -x "$HOST_SETUP/setup.sh" ]; then
-	if "$HOST_SETUP/setup.sh" --plan; then
-		RUN_HOST_SETUP=true
-	else
-		echo "so host-setup will be skipped."
-	fi
-else
-	cat <<-EOF
-		host-setup is not cloned, so only dotfiles will run. Afterwards, once the ssh
-		key is on GitHub:
-
-		    git clone git@github.com:nhalm/host-setup.git $HOST_SETUP
-		    $HOST_SETUP/setup.sh --new-host    # if this machine has no host file yet
-		    machine-setup
-	EOF
-fi
 echo
 confirm "Run all of this?"
 
@@ -101,10 +82,5 @@ echo "==> ssh"
 setup_ssh_key
 use_ssh_remote
 set_login_shell
-
-if [ "$RUN_HOST_SETUP" = true ]; then
-	echo "==> host-setup"
-	"$HOST_SETUP/setup.sh" --yes
-fi
 
 echo "Done. Open a new terminal."
