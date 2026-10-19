@@ -63,7 +63,7 @@ echo "  packages  — $PLAN_PACKAGES"
 echo "  links     — shared/ and $OS/ into ~; real files in the way move to <path>.dotfiles-backup; stale links removed"
 echo "  $OS     — $PLAN_CONFIGURE"
 echo "  tools     — mise install/upgrade, zsh plugins, Claude Code (if missing), herdr-splits plugin"
-echo "  ssh       — create ~/.ssh/id_ed25519 (if missing), dotfiles remote to ssh, login shell zsh"
+echo "  ssh       — create ~/.ssh/id_ed25519 (if missing), save its passphrase in Keychain on macOS (if missing), dotfiles remote to ssh, login shell zsh"
 echo
 confirm "Run all of this?"
 

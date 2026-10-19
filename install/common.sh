@@ -116,22 +116,27 @@ install_tools() {
 		echo "  herdr-splits failed to install"
 }
 
-# One passphrase-protected key per machine, for ssh and commit signing.
+# One passphrase-protected key per machine, for ssh and commit signing. On
+# macOS its passphrase lives in Keychain, which the login item loads from.
 setup_ssh_key() {
 	local key="$HOME/.ssh/id_ed25519" host
 	host="$(uname -n | cut -d. -f1)"
-	[ -s "$key" ] && return 0
-	mkdir -p -m 700 "$HOME/.ssh"
-	ssh-keygen -t ed25519 -C "$USER@$host" -f "$key" </dev/tty
-	[ "$OS" = macos ] && /usr/bin/ssh-add --apple-use-keychain "$key" </dev/tty
-	cat <<-EOF
+	if [ ! -s "$key" ]; then
+		mkdir -p -m 700 "$HOME/.ssh"
+		ssh-keygen -t ed25519 -C "$USER@$host" -f "$key" </dev/tty
+		cat <<-EOF
 
-		Add the key to GitHub for authentication and signing:
+			Add the key to GitHub for authentication and signing:
 
-		    gh ssh-key add ~/.ssh/id_ed25519.pub --type authentication --title $host
-		    gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title $host
+			    gh ssh-key add ~/.ssh/id_ed25519.pub --type authentication --title $host
+			    gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title $host
 
-	EOF
+		EOF
+	fi
+	if [ "$OS" = macos ] && ! security find-generic-password -l "SSH: $key" >/dev/null 2>&1; then
+		echo "saving the key's passphrase in Keychain"
+		/usr/bin/ssh-add --apple-use-keychain "$key" </dev/tty
+	fi
 }
 
 # bootstrap clones over https, before a key exists.
