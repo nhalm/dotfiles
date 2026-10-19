@@ -54,7 +54,7 @@ anything an app writes next to its config stays out of the repo.
 |---|---|---|
 | `~/.config/zsh/local.zsh` | `.zshrc` | per-machine shell setup |
 | `~/.ssh/config.local` | `.ssh/config` | host aliases |
-| `~/.config/git/identity.conf` | `.gitconfig` | name and per-directory email; without it git refuses to commit |
+| `~/.config/git/identity.conf` | `.gitconfig` | name and email, optionally per directory; without it git refuses to commit |
 | `~/.config/hypr/monitors.lua` | Hyprland | monitor layout, written by nwg-displays |
 
 ## Adding a tool
