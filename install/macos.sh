@@ -9,7 +9,8 @@ install_packages() {
 	eval "$(/opt/homebrew/bin/brew shellenv)"
 	# Homebrew ignores third-party taps it hasn't been told to trust.
 	brew trust --tap felixkratz/formulae nikitabobko/tap hashicorp/tap
-	brew bundle --file "$DOTFILES/install/Brewfile"
+	# --verbose: otherwise nothing prints until every entry is done.
+	brew bundle --verbose --file "$DOTFILES/install/Brewfile"
 }
 
 configure() {
