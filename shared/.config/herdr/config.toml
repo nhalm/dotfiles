@@ -23,8 +23,6 @@ new_cwd = "follow"
 prefix = "ctrl+space"
 previous_workspace = "prefix+shift+k"
 next_workspace = "prefix+shift+j"
-previous_tab = "prefix+shift+h"
-next_tab = "prefix+shift+l"
 
 [[keys.command]]
 key = "prefix+alt+g"
