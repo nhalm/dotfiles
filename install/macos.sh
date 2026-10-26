@@ -1,6 +1,6 @@
 # macOS. Sourced by setup.sh.
 
-PLAN_PACKAGES="install Homebrew if missing, trust taps, brew bundle install/upgrade install/Brewfile"
+PLAN_PACKAGES="install Homebrew if missing, trust taps, brew bundle install/upgrade install/Brewfile, brew upgrade everything else (incl. self-updating casks)"
 PLAN_CONFIGURE="wallpapers, login item loading the ssh key from Keychain, Karabiner config (if missing), ghostty + docker compose links, colima sshConfig off, SbarLua, barpop build, hide menu bar, start sketchybar + borders, Zen theme link, brew cleanup"
 
 install_packages() {
@@ -11,6 +11,9 @@ install_packages() {
 	brew trust --tap felixkratz/formulae nikitabobko/tap hashicorp/tap
 	# --verbose: otherwise nothing prints until every entry is done.
 	brew bundle --verbose --file "$DOTFILES/install/Brewfile"
+	# bundle upgrades only Brewfile entries; --greedy includes casks that
+	# update themselves.
+	brew upgrade --greedy
 }
 
 configure() {
