@@ -10,3 +10,5 @@ fi
 alias ls='ls -G'
 alias ll='ls -lahG'
 
+# mmdc (Mermaid in nvim) has no bundled headless Chrome.
+export PUPPETEER_EXECUTABLE_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"

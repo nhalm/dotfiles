@@ -10,3 +10,6 @@ if (( $+commands[wl-copy] )); then
 	alias pbcopy='wl-copy'
 	alias pbpaste='wl-paste'
 fi
+
+# mmdc (Mermaid in nvim) has no bundled headless Chrome.
+export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
