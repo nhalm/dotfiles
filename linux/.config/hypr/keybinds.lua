@@ -3,7 +3,7 @@
 -- SUPER is the modifier throughout; SUPER+SHIFT acts on the window rather than
 -- the focus.
 --
--- Descriptions read "Category: what it does" -- the SUPER+slash overlay groups
+-- Descriptions read "Category: what it does" -- the SUPER+? overlay groups
 -- on that prefix.
 
 local apps = require("programs")
@@ -130,6 +130,6 @@ hl.bind(
 -- --- notifications ------------------------------------------------------
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"), desc("System: notification centre"))
 hl.bind(mod .. " + A", hl.dsp.exec_cmd("qs ipc call sidebar toggle"), desc("System: quick settings"))
-hl.bind(mod .. " + slash", hl.dsp.exec_cmd("qs ipc call hotkeys toggle"), desc("System: this overlay"))
+hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("qs ipc call hotkeys toggle"), desc("System: this overlay"))
 hl.bind(mod .. " + SHIFT + F", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/scripts/toggle-float.sh"), desc("Window: float all on workspace"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 4000"), desc("Theme: blue light filter"))
