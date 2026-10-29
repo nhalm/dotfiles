@@ -3,6 +3,8 @@
 
 # security
 gitleaks
+sops
+age
 
 # core
 yay
