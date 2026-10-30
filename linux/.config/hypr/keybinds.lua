@@ -23,6 +23,7 @@ hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd(apps.colorPicker), desc("Launch: 
 -- --- window -------------------------------------------------------------
 hl.bind(mod .. " + C", hl.dsp.window.close(), desc("Window: close"))
 hl.bind(mod .. " + F", hl.dsp.window.float({ action = "toggle" }), desc("Window: toggle floating"))
+hl.bind(mod .. " + Return", hl.dsp.window.fullscreen({ action = "toggle" }), desc("Window: toggle fullscreen"))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd("hyprshutdown"), desc("System: shutdown menu"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("loginctl lock-session"), desc("System: lock session"))
 
