@@ -95,6 +95,11 @@ run = 'move-node-to-workspace 1'
 
 [mode.main.binding]
 
+    # Mirrors the Hyprland launch binds (SUPER = caps/hyper here).
+    ctrl-alt-cmd-t = 'exec-and-forget open -a Ghostty'
+    ctrl-alt-cmd-e = 'exec-and-forget open -a Finder'
+    ctrl-alt-cmd-b = 'exec-and-forget open -a Zen'
+
     # The wallpaper popup under sketchybar's wallpaper item, search focused.
     ctrl-alt-cmd-w = 'exec-and-forget sketchybar --trigger barpop_open POPUP=wallpaper'
 
