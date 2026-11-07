@@ -25,4 +25,8 @@ hl.on("hyprland.start", function()
 
 	-- Starts to the tray.
 	hl.exec_cmd("1password --silent")
+
+	-- One signing request unlocks the ssh key via gcr's prompt, so later
+	-- parallel connections (herdr's remotes) don't each prompt.
+	hl.exec_cmd("SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh ssh-add -T $HOME/.ssh/id_ed25519.pub")
 end)
