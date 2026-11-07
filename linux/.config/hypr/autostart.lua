@@ -7,7 +7,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd(os.getenv("HOME") .. "/.local/scripts/wallpaper.sh --restore")
 	hl.exec_cmd("qs -d")
 	hl.exec_cmd("swaync")
-	hl.exec_cmd("hypridle")
+	hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hypridle.service")
 	hl.exec_cmd(os.getenv("HOME") .. "/.local/scripts/low-battery-notify.sh")
 
 	-- Clipboard history, plus keeping the selection alive after the source
@@ -25,4 +25,8 @@ hl.on("hyprland.start", function()
 
 	-- Starts to the tray.
 	hl.exec_cmd("1password --silent")
+
+	-- One signing request unlocks the ssh key via gcr's prompt, so later
+	-- parallel connections (herdr's remotes) don't each prompt.
+	hl.exec_cmd("SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh ssh-add -T $HOME/.ssh/id_ed25519.pub")
 end)
