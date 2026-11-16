@@ -71,10 +71,7 @@ into the active runtime and are orphaned at its next major version.
 
 ## Git
 
-Commits are signed with `~/.ssh/id_ed25519`. The global hooks directory runs
-each repo's own `pre-commit` and `pre-push`, then gitleaks on staged changes
-and `git lfs pre-push`. Other repo-local hooks (`commit-msg`, husky, lefthook)
-don't run, because `core.hooksPath` is global.
+Commits are signed by default with the machine's `~/.ssh/id_ed25519`.
 
 ## SSH agent
 

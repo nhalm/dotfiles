@@ -107,7 +107,6 @@
 	defaultBranch = main
 [core]
 	excludesfile = ~/.gitignore_global
-	hooksPath = ~/.config/git/hooks
 
 # What `git lfs install` would append. Tracked here instead: ~/.gitconfig is a
 # symlink into this repo, so running that command edits the working tree.
