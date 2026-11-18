@@ -107,10 +107,9 @@ Host desktop-vnc
   SessionType none
 ```
 
-`/usr/bin/ssh desktop-vnc`, then Screen Sharing `vnc://127.0.0.1:5901`. Use
-`127.0.0.1`, not `localhost` (resolves to `::1`). On macOS, Homebrew's ssh can
-get "No route to host" on the LAN (Local Network permission); use
-`/usr/bin/ssh`. sshd must allow the forward (`PermitOpen 127.0.0.1:5900`).
+`ssh desktop-vnc`, then Screen Sharing `vnc://127.0.0.1:5901`. Use
+`127.0.0.1`, not `localhost` (resolves to `::1`). sshd must allow the forward
+(`PermitOpen 127.0.0.1:5900`).
 One output at a time: `wayvncctl output-cycle`.
 
 ## Gotchas
