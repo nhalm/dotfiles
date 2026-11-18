@@ -107,7 +107,9 @@ Host desktop-vnc
   SessionType none
 ```
 
-`ssh desktop-vnc`, then Screen Sharing `vnc://127.0.0.1:5901`. Use
+`ssh desktop-vnc`, then TigerVNC viewer (`tigervnc` cask) to `127.0.0.1:5901`,
+RSA-AES with the Linux username and password. macOS Screen Sharing can't
+connect: it negotiates RFB 3.3, which has no auth wayvnc accepts. Use
 `127.0.0.1`, not `localhost` (resolves to `::1`). sshd must allow the forward
 (`PermitOpen 127.0.0.1:5900`).
 One output at a time: `wayvncctl output-cycle`.
