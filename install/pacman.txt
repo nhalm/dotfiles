@@ -88,6 +88,7 @@ matugen
 ly
 brightnessctl
 wlopm
+wayvnc
 
 # desktop apps
 chromium

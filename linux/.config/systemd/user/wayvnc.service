@@ -1,0 +1,12 @@
+[Unit]
+Description=wayvnc (127.0.0.1:5900, reached over ssh)
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+# rsa_key.pem in the config is relative to here; use_relative_paths would
+# resolve against the stow symlink target, inside the repo.
+WorkingDirectory=%h/.config/wayvnc
+ExecStart=/usr/bin/wayvnc
+Restart=on-failure
+RestartSec=5

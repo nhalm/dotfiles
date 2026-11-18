@@ -90,6 +90,26 @@ Only the suspend step ignores inhibitors.
 first use prompts for the key's passphrase, and "automatically unlock" stores it
 in the login keyring.
 
+## Remote desktop
+
+wayvnc (`wayvnc.service`, started from `autostart.lua`) listens on
+`127.0.0.1:5900` only, with PAM login (the Linux account). Client side, in
+`~/.ssh/config.local` (`Match` before `Host`; the `Match` jumps off-LAN):
+
+```
+Match originalhost desktop-vnc !exec "nc -z -G 1 <lan-address> 22"
+  ProxyJump <jump-host>
+
+Host desktop-vnc
+  HostName <lan-address>
+  LocalForward 5901 127.0.0.1:5900
+  ExitOnForwardFailure yes
+  SessionType none
+```
+
+`ssh desktop-vnc`, then Screen Sharing `vnc://localhost:5901`. One output at a
+time: `wayvncctl output-cycle`.
+
 ## Gotchas
 
 - `hyprctl` exits 0 when a Lua call fails, so scripts check its output for
