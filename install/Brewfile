@@ -62,7 +62,6 @@ brew "felixkratz/formulae/sketchybar"
 brew "felixkratz/formulae/borders"
 
 cask "ghostty"
-cask "tigervnc"
 cask "brave-browser"
 cask "zen"
 cask "raycast"

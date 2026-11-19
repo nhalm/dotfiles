@@ -1,6 +1,0 @@
-address=127.0.0.1
-port=5900
-enable_auth=true
-enable_pam=true
-relax_encryption=true
-rsa_private_key_file=rsa_key.pem

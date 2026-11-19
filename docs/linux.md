@@ -93,7 +93,9 @@ in the login keyring.
 ## Remote desktop
 
 wayvnc (`wayvnc.service`, started from `autostart.lua`) listens on
-`127.0.0.1:5900` only, with PAM login (the Linux account). Client side, in
+`127.0.0.1:5900` only. Its config is rendered by setup from
+`install/wayvnc.conf` plus the password in 1Password "BigBox VNC" (DES
+VNC-Auth, what macOS Screen Sharing speaks; 8 characters count). Client side, in
 `~/.ssh/config.local` (`Match` before `Host`; the `Match` jumps off-LAN):
 
 ```
@@ -107,11 +109,9 @@ Host desktop-vnc
   SessionType none
 ```
 
-`ssh desktop-vnc`, then TigerVNC viewer (`tigervnc` cask) to `127.0.0.1:5901`,
-RSA-AES with the Linux username and password. macOS Screen Sharing can't
-connect: it negotiates RFB 3.3, which has no auth wayvnc accepts. Use
-`127.0.0.1`, not `localhost` (resolves to `::1`). sshd must allow the forward
-(`PermitOpen 127.0.0.1:5900`).
+`ssh desktop-vnc`, then Screen Sharing `vnc://127.0.0.1:5901` with that
+password; View menu to scale. Use `127.0.0.1`, not `localhost` (resolves to
+`::1`). sshd must allow the forward (`PermitOpen 127.0.0.1:5900`).
 One output at a time: `wayvncctl output-cycle`.
 
 ## Gotchas
