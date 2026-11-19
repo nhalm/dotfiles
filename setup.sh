@@ -32,7 +32,7 @@ if [ "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" != "$DOTFILES" 
 	else
 		echo "  sudo pacman -Syu git stow base-devel"
 	fi
-	echo "  clone https://github.com/nhalm/dotfiles into $DOTFILES (if missing)"
+	echo "  clone https://github.com/nhalm/dotfiles into $DOTFILES (if missing), then set origin to Forgejo"
 	echo "  then run $DOTFILES/setup.sh, which shows its own plan"
 	confirm "Continue?"
 	if [ "$OS" = macos ]; then
@@ -41,6 +41,8 @@ if [ "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" != "$DOTFILES" 
 		sudo pacman -Syu --needed --noconfirm git stow base-devel
 	fi
 	[ -d "$DOTFILES/.git" ] || git clone https://github.com/nhalm/dotfiles.git "$DOTFILES"
+	# GitHub is a read-only mirror; clone from it (no key yet), push to Forgejo.
+	git -C "$DOTFILES" remote set-url origin ssh://git@git.nickhalm.com:2222/nick.halm/dotfiles.git
 	exec "$DOTFILES/setup.sh" "$@"
 fi
 

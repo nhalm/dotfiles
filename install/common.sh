@@ -126,7 +126,11 @@ setup_ssh_key() {
 		ssh-keygen -t ed25519 -C "$USER@$host" -f "$key" </dev/tty
 		cat <<-EOF
 
-			Add the key to GitHub for authentication and signing:
+			Add the key to Forgejo for authentication and signing:
+
+			    https://git.nickhalm.com/user/settings/keys
+
+			and to GitHub:
 
 			    gh ssh-key add ~/.ssh/id_ed25519.pub --type authentication --title $host
 			    gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title $host
@@ -156,13 +160,10 @@ keychain_has_key() {
 	return 1
 }
 
-# bootstrap clones over https, before a key exists.
+# GitHub is a read-only mirror; move any GitHub origin to Forgejo.
 use_ssh_remote() {
-	local url
-	[ -s "$HOME/.ssh/id_ed25519" ] || return 0
-	url="$(git -C "$DOTFILES" remote get-url origin)"
-	case "$url" in
-	https://github.com/*) git -C "$DOTFILES" remote set-url origin "git@github.com:${url#https://github.com/}" ;;
+	case "$(git -C "$DOTFILES" remote get-url origin)" in
+	https://github.com/* | git@github.com:*) git -C "$DOTFILES" remote set-url origin ssh://git@git.nickhalm.com:2222/nick.halm/dotfiles.git ;;
 	esac
 }
 

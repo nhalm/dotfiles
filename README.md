@@ -8,7 +8,9 @@ My configuration for macOS and CachyOS (Arch), linked with GNU stow.
 bash <(curl -fsSL https://raw.githubusercontent.com/nhalm/dotfiles/main/setup.sh)
 ```
 
-Installs git, clones to `~/dotfiles` and runs the rest from there. Use process
+Installs git, clones to `~/dotfiles` from the GitHub read-only mirror, sets
+origin to Forgejo (`ssh://git@git.nickhalm.com:2222/nick.halm/dotfiles.git`)
+and runs the rest from there. Use process
 substitution, not `curl … | bash`, which takes the stdin sudo needs. Swap
 `main` for a commit SHA to pin what you run.
 
@@ -19,7 +21,7 @@ substitution, not `curl … | bash`, which takes the stdin sudo needs. Swap
 
 It prints everything it will do and asks first; Ctrl-C stops it. Every step is
 safe to re-run. Setup creates a passphrase-protected
-`~/.ssh/id_ed25519` and prints the `gh ssh-key add` commands; add it to GitHub
+`~/.ssh/id_ed25519` and prints how to add it; add it to Forgejo (and GitHub)
 for authentication and signing, then re-run.
 
 On CachyOS, install with Limine, encrypted btrfs, No Desktop, and the default
