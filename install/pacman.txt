@@ -41,7 +41,6 @@ htop
 
 # git
 github-cli
-tea
 
 # containers
 docker
