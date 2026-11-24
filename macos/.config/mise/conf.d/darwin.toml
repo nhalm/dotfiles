@@ -3,5 +3,3 @@
 lua = "5.5"
 # No brew formula; pacman carries it on Linux.
 "cargo:matugen" = "4"
-# Forgejo CLI; Linux gets it from pacman.
-"forgejo:gitea/cli" = { version = "2", api_url = "https://gitea.com/api/v1", asset_pattern = "gitea-cli-*-darwin-arm64.xz", bin = "gt" }
