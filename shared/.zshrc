@@ -82,7 +82,7 @@ unset _zplugdir
 
 # --- tools --------------------------------------------------------------
 # mise resolves the correct runtime version per directory; the shims added in
-# .zprofile only exist for processes that never source a shell rc.
+# .zshenv only exist for processes that never source a shell rc.
 (( $+commands[mise] ))     && eval "$(mise activate zsh)"
 (( $+commands[zoxide] ))   && eval "$(zoxide init zsh --cmd cd)"
 # matugen renders the prompt from the wallpaper; starship uses its defaults until then.
