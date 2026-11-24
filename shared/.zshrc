@@ -25,7 +25,8 @@ setopt NO_FLOW_CONTROL          # free up ctrl-s / ctrl-q
 [[ -r ~/.config/zsh/os.zsh ]] && source ~/.config/zsh/os.zsh
 
 # --- completion ---------------------------------------------------------
-fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins/zsh-completions/src" $fpath)
+# site-functions: per-user completions that other repos install (host-setup).
+fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins/zsh-completions/src" $fpath)
 autoload -Uz compinit
 _zcompdump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
 mkdir -p "${_zcompdump:h}"
