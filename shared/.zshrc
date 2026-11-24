@@ -90,6 +90,7 @@ unset _zplugdir
 	export STARSHIP_CONFIG="${XDG_STATE_HOME:-$HOME/.local/state}/matugen/starship.toml"
 (( $+commands[starship] )) && eval "$(starship init zsh)"
 (( $+commands[fzf] ))      && source <(fzf --zsh)
+(( $+commands[gt] ))       && source <(gt completion zsh)
 
 # --- machine-local ------------------------------------------------------
 [[ -r ~/.config/zsh/local.zsh ]] && source ~/.config/zsh/local.zsh
